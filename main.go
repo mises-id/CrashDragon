@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.1750studios.com/ePirat/CrashDragon/config"
-	"git.1750studios.com/ePirat/CrashDragon/database"
+	"git.1750studios.com/GSoC/CrashDragon/config"
+	"git.1750studios.com/GSoC/CrashDragon/database"
 
 	"github.com/gin-gonic/gin"
 )
