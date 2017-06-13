@@ -1,0 +1,3 @@
+[submodule "minidump-stackwalk"]
+	path = minidump-stackwalk
+	url = ../minidump-stackwalk.git
