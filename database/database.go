@@ -24,11 +24,10 @@ type Symfile struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Os       string
-	Name     string
-	Code     string
-	Arch     string
-	Contents string
+	Os   string
+	Arch string
+	Code string
+	Name string
 }
 
 var Db *gorm.DB
