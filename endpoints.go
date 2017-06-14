@@ -63,7 +63,7 @@ func PostCrashreports(c *gin.Context) {
 
 // PostSymfiles processes symfile
 func PostSymfiles(c *gin.Context) {
-	file, _, err := c.Request.FormFile("file")
+	file, _, err := c.Request.FormFile("symfile")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": http.StatusBadRequest,
