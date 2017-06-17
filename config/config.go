@@ -15,6 +15,8 @@ type Config struct {
 	BindAddress        string
 	BindSocket         string
 	ContentDirectory   string
+	TemplatesDirectory string
+	AssetsDirectory    string
 }
 
 var C Config
@@ -42,6 +44,8 @@ func GetConfig(path string) error {
 	C.BindAddress = "0.0.0.0:8080"
 	C.BindSocket = "/var/run/crashdragon/crashdragon.sock"
 	C.ContentDirectory = filepath.Join(os.Getenv("HOME"), "/CrashDragon/Files")
+	C.TemplatesDirectory = "./templates"
+	C.AssetsDirectory = "./assets"
 
 	var cerr error
 	if _, err := os.Stat(path); err == nil {

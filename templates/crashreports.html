@@ -1,0 +1,33 @@
+{{ template "head.html" . }}
+
+  <!-- Primary Page Layout
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+  <div class="container">
+    <div class="row">
+      <div class="twelve columns">
+        <h1>{{ .title }}</h1>
+        <table class="u-full-width">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Signature</th>
+              <th>Reason</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody>
+              {{ range .items }}
+              <tr>
+                <td>{{ .ID }}</td>
+                <td>{{ .Signature }}</td>
+                <td>{{ .Reason }}</td>
+                <td>{{ .Location }}</td>
+              </tr>
+              {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+{{ template "foot.html" . }}

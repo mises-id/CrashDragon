@@ -22,6 +22,9 @@ func initRouter() *gin.Engine {
 	router.GET("/symfiles/:id", GetSymfile)
 	router.POST("/crashreports", PostCrashreports)
 	router.POST("/symfiles", PostSymfiles)
+
+	router.LoadHTMLGlob(config.C.TemplatesDirectory + "/*.html")
+	router.Static("/static", config.C.AssetsDirectory)
 	return router
 }
 

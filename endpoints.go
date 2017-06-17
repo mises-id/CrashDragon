@@ -22,8 +22,31 @@ import (
 
 // GetCrashreports returns crashreports
 func GetCrashreports(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
+	var Reports []database.Crashreport
+	var List []struct {
+		ID        string
+		Signature string
+		Reason    string
+		Location  string
+	}
+	database.Db.Find(&Reports).Limit(20)
+	for _, Report := range Reports {
+		var Item struct {
+			ID        string
+			Signature string
+			Reason    string
+			Location  string
+		}
+		Item.ID = strconv.Itoa(int(Report.ID))
+		Item.Signature = Report.Report.CrashingThread.Frames[0].Function
+		Item.Reason = Report.Report.CrashInfo.Type
+		filepath := strings.Split(Report.Report.CrashingThread.Frames[0].File, "/")
+		Item.Location = filepath[len(filepath)-1] + ":" + strconv.Itoa(Report.Report.CrashingThread.Frames[0].Line)
+		List = append(List, Item)
+	}
+	c.HTML(200, "crashreports.html", gin.H{
 		"title": "Crashreports",
+		"items": List,
 	})
 }
 
