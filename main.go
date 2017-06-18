@@ -1,8 +1,10 @@
 package main
 
 import (
+	"html/template"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
@@ -13,6 +15,20 @@ import (
 
 func initRouter() *gin.Engine {
 	router := gin.Default()
+	funcMap := template.FuncMap{
+		"fileAbs": func(fpath string) string {
+			if fpath == "" {
+				return ""
+			}
+			return path.Join(path.Dir(fpath), path.Base(fpath))
+		},
+	}
+
+	if tmpl, err := template.New("crashdragonViews").Funcs(funcMap).ParseGlob("templates/*.html"); err == nil {
+		router.SetHTMLTemplate(tmpl)
+	} else {
+		panic(err)
+	}
 	// Endpoints
 	router.GET("/", GetCrashreports)
 	router.GET("/crashreports", GetCrashreports)
@@ -23,7 +39,6 @@ func initRouter() *gin.Engine {
 	router.POST("/crashreports", PostCrashreports)
 	router.POST("/symfiles", PostSymfiles)
 
-	router.LoadHTMLGlob(config.C.TemplatesDirectory + "/*.html")
 	router.Static("/static", config.C.AssetsDirectory)
 	return router
 }

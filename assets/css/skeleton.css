@@ -31,7 +31,7 @@
 .container {
   position: relative;
   width: 100%;
-  max-width: 960px;
+  /*max-width: 960px;*/
   margin: 0 auto;
   padding: 0 20px;
   box-sizing: border-box; }
@@ -51,10 +51,10 @@
 /* For devices larger than 550px */
 @media (min-width: 550px) {
   .container {
-    width: 80%; }
-  .column,
+    width: 95%; }
+  /*.column,
   .columns {
-    margin-left: 4%; }
+    margin-left: 4%; }*/
   .column:first-child,
   .columns:first-child {
     margin-left: 0; }
@@ -124,7 +124,7 @@ body {
   font-size: 1.5em; /* currently ems cause chrome bug misinterpreting rems on body element */
   line-height: 1.6;
   font-weight: 400;
-  font-family: "Raleway", "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #222; }
 
 
@@ -324,15 +324,22 @@ pre > code {
 –––––––––––––––––––––––––––––––––––––––––––––––––– */
 th,
 td {
-  padding: 12px 15px;
+  padding: 10px 5px;
   text-align: left;
   border-bottom: 1px solid #E1E1E1; }
+table.compact td,
+table.compact th {
+  padding: 5px 5px;
+}
 th:first-child,
 td:first-child {
-  padding-left: 0; }
+  padding-left: 5px; }
 th:last-child,
 td:last-child {
-  padding-right: 0; }
+  padding-right: 5px; }
+table.zebra tr:nth-child(even) {
+  background-color: #EEE;
+}
 
 
 /* Spacing

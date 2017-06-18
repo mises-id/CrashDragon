@@ -7,11 +7,12 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //Postgres functions
+	"github.com/satori/go.uuid"
 )
 
 // Crashreport database model
 type Crashreport struct {
-	ID        uint `gorm:"primary_key"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
@@ -25,7 +26,7 @@ type Crashreport struct {
 
 // Symfile database model
 type Symfile struct {
-	ID        uint `gorm:"primary_key"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time

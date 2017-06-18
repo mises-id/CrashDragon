@@ -1,33 +1,41 @@
 {{ template "head.html" . }}
 
-  <!-- Primary Page Layout
-  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-  <div class="container">
+<!-- Primary Page Layout
+–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<div class="container">
     <div class="row">
-      <div class="twelve columns">
-        <h1>{{ .title }}</h1>
-        <table class="u-full-width">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Signature</th>
-              <th>Reason</th>
-              <th>Location</th>
-            </tr>
-          </thead>
-          <tbody>
-              {{ range .items }}
-              <tr>
-                <td>{{ .ID }}</td>
-                <td>{{ .Signature }}</td>
-                <td>{{ .Reason }}</td>
-                <td>{{ .Location }}</td>
-              </tr>
-              {{ end }}
-          </tbody>
-        </table>
-      </div>
+        <div class="twelve columns">
+            <h1>{{ .title }}</h1>
+            <table class="u-full-width zebra">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Product</th>
+                        <th scope="col">Version</th>
+                        <th scope="col">Platform</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .items }}
+                    <tr>
+                        <td><a href="/crashreports/{{ .ID }}">{{ .ID }}</a></td>
+                        <td>{{ .Signature }}</td>
+                        <td>{{ .Date }}</td>
+                        <td>{{ .Product }}</td>
+                        <td>{{ .Version }}</td>
+                        <td>{{ .Platform }}</td>
+                        <td>{{ .Reason }}</td>
+                        <td>{{ .Location }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
+</div>
 
 {{ template "foot.html" . }}

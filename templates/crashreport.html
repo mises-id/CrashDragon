@@ -1,0 +1,149 @@
+{{ template "head.html" . }}
+
+<!-- Primary Page Layout
+–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+<div class="container">
+    <div class="row">
+        <h1>{{ .title }} <small>({{ .item.Signature}})</small></h1>
+        <div class="seven columns">
+            <h2 id="overview">Overview</h2>
+            <table class="">
+                <tbody>
+                    <tr>
+                        <th scope="row">ID</th>
+                        <td>{{ .item.ID }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Signature</th>
+                        <td>{{ .item.Signature }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Location</th>
+                        <td>{{ .item.Location }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date</th>
+                        <td>{{ .item.Date }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Product</th>
+                        <td>{{ .item.Product }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Version</th>
+                        <td>{{ .item.Version }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Platform</th>
+                        <td>{{ .item.Platform }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Arch</th>
+                        <td>{{ .item.Arch }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Processor</th>
+                        <td>{{ .item.Processor }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Reason</th>
+                        <td>{{ .item.Reason }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <aside class="five columns">
+            <nav>
+                <h2>Navigation</h2>
+                <ul>
+                    <li>
+                        <a href="#overview">Overview</a>
+                    </li>
+                    <li>
+                        <a href="#crashing_thread">Crashing thread</a>
+                    </li>
+                    <li>
+                        <a href="#threads">All threads</a>
+                    </li>
+                    <li>
+                        <a href="#modules">Modules</a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+    </div>
+    <div class="row">
+        <div class="tweleve columns">
+            <h2 id="crashing_thread">Crashing thread ({{ .report.CrashInfo.CrashingThread }})</h2>
+            <table class="u-full-width zebra compact">
+                <thead>
+                    <tr>
+                        <th scope="col">Frame</th>
+                        <th scope="col">Module</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .report.CrashingThread.Frames }}
+                    <tr>
+                        <td>{{ .Frame }}</td>
+                        <td>{{ .Module }}</td>
+                        <td>{{ .Function }}</td>
+                        <td>{{ if .Line }}{{ fileAbs .File }}:{{ .Line }}{{ end }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+            <h2 id="threads">All threads</h2>
+            {{ range $i, $v := .report.Threads }}
+            {{ if ne $.report.CrashInfo.CrashingThread $i }}
+            <h3 id="thread_{{ $i }}">Thread {{ $i }}</h2>
+                <table class="u-full-width zebra compact">
+                    <thead>
+                        <tr>
+                            <th scope="col">Frame</th>
+                            <th scope="col">Module</th>
+                            <th scope="col">Signature</th>
+                            <th scope="col">Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range $v.Frames }}
+                        <tr>
+                            <td>{{ .Frame }}</td>
+                            <td>{{ .Module }}</td>
+                            <td>{{ .Function }}</td>
+                            <td>{{ if .Line }}{{ fileAbs .File }}:{{ .Line }}{{ end }}</td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+                {{ end }}
+                {{ end }}
+                <h2 id="modules">Modules</h2>
+                <table class="u-full-width zebra compact">
+                    <thead>
+                        <tr>
+                            <th scope="col">Filename</th>
+                            <th scope="col">Debug Identifier</th>
+                            <th scope="col">Debug Filename</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range .report.Modules }}
+                        {{ if or .LoadedSymbols .MissingSymbols }}
+                        <tr>
+                            <td>{{ .Filename }}</td>
+                            <td>{{ .DebugID }}{{ if .MissingSymbols }} <strong>(missing)</strong>{{ end }}</td>
+                            <td>{{ .DebugFile }}</td>
+                        </tr>
+                        {{ end }}
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{ template "foot.html" . }}

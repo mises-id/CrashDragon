@@ -5,82 +5,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
-	"strconv"
 	"strings"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
-
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
+	uuid "github.com/satori/go.uuid"
 )
-
-// GetCrashreports returns crashreports
-func GetCrashreports(c *gin.Context) {
-	var Reports []database.Crashreport
-	var List []struct {
-		ID        string
-		Signature string
-		Reason    string
-		Location  string
-	}
-	database.Db.Find(&Reports).Limit(20)
-	for _, Report := range Reports {
-		var Item struct {
-			ID        string
-			Signature string
-			Reason    string
-			Location  string
-		}
-		Item.ID = strconv.Itoa(int(Report.ID))
-		Item.Signature = Report.Report.CrashingThread.Frames[0].Function
-		Item.Reason = Report.Report.CrashInfo.Type
-		filepath := strings.Split(Report.Report.CrashingThread.Frames[0].File, "/")
-		Item.Location = filepath[len(filepath)-1] + ":" + strconv.Itoa(Report.Report.CrashingThread.Frames[0].Line)
-		List = append(List, Item)
-	}
-	c.HTML(200, "crashreports.html", gin.H{
-		"title": "Crashreports",
-		"items": List,
-	})
-}
-
-// GetCrashreport returns details of crashreport
-func GetCrashreport(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"title": "Crashreports",
-		"id":    c.Param("id"),
-	})
-}
-
-// GetCrashreportFile returns minidump file of crashreport
-func GetCrashreportFile(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"title": "Crashreports",
-		"id":    c.Param("id"),
-		"name":  c.Param("name"),
-	})
-}
-
-// GetSymfiles returns symfiles
-func GetSymfiles(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"title": "Symfiles",
-	})
-}
-
-// GetSymfile returns details of symfile
-func GetSymfile(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"title": "Symfiles",
-		"id":    c.Param("id"),
-	})
-}
 
 // PostCrashreports processes crashreport
 func PostCrashreports(c *gin.Context) {
@@ -93,17 +28,30 @@ func PostCrashreports(c *gin.Context) {
 		return
 	}
 	defer file.Close()
-	f, err := ioutil.TempFile("", "crashdragon_")
+	var Crashreport database.Crashreport
+	Crashreport.ID = uuid.NewV4()
+	if err = database.Db.Create(&Crashreport).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"error":  err.Error(),
+		})
+		return
+	}
+	Crashreport.Product = c.Request.FormValue("prod")
+	Crashreport.Version = c.Request.FormValue("ver")
+	filepath := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4])
+	os.MkdirAll(filepath, 0755)
+	f, err := os.Create(path.Join(filepath, Crashreport.ID.String()+".dmp"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": http.StatusInternalServerError,
 			"error":  err.Error(),
 		})
+		database.Db.Delete(&Crashreport)
 		return
 	}
 	io.Copy(f, file)
 	f.Close()
-	var Crashreport database.Crashreport
 	cmd := exec.Command("./minidump-stackwalk/stackwalker", f.Name(), path.Join(config.C.ContentDirectory, "Symfiles"))
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -114,6 +62,7 @@ func PostCrashreports(c *gin.Context) {
 			"error":  err.Error(),
 		})
 		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
 		return
 	}
 	err = json.Unmarshal(out.Bytes(), &Crashreport.Report)
@@ -123,6 +72,7 @@ func PostCrashreports(c *gin.Context) {
 			"error":  err.Error(),
 		})
 		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
 		return
 	}
 	if Crashreport.Report.Status != "OK" {
@@ -131,34 +81,21 @@ func PostCrashreports(c *gin.Context) {
 			"error":  Crashreport.Report.Status,
 		})
 		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
 		return
 	}
-	Crashreport.Product = c.Request.FormValue("prod")
-	Crashreport.Version = c.Request.FormValue("ver")
-	if err = database.Db.Create(&Crashreport).Error; err != nil {
-		if err2, ok := err.(*pq.Error); ok {
-			if err2.Code == "23505" {
-				c.JSON(http.StatusConflict, gin.H{
-					"status": http.StatusConflict,
-					"error":  err2.Error(),
-				})
-				os.Remove(f.Name())
-				return
-			}
-		}
+	if err = database.Db.Save(&Crashreport).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": http.StatusBadRequest,
 			"error":  err.Error(),
 		})
 		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
 		return
 	}
-	filepath := path.Join(config.C.ContentDirectory, "Crashreports", strconv.Itoa(int(Crashreport.ID)%100), strconv.Itoa(int(Crashreport.ID)%10))
-	os.MkdirAll(filepath, 0755)
-	os.Rename(f.Name(), path.Join(filepath, strconv.Itoa(int(Crashreport.ID))+".dmp"))
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
-		"error":  "OK",
+		"error":  nil,
 		"object": Crashreport,
 	})
 	return
@@ -193,42 +130,58 @@ func PostSymfiles(c *gin.Context) {
 		})
 		return
 	}
+	updated := true
+	if err = database.Db.Where("code = ?", parts[3]).First(&Symfile).Error; err != nil {
+		Symfile.ID = uuid.NewV4()
+		updated = false
+	}
 	Symfile.Os = parts[1]
 	Symfile.Arch = parts[2]
 	Symfile.Code = parts[3]
 	Symfile.Name = parts[4]
-	if err = database.Db.Create(&Symfile).Error; err != nil {
-		if err2, ok := err.(*pq.Error); ok {
-			if err2.Code == "23505" {
-				c.JSON(http.StatusConflict, gin.H{
-					"status": http.StatusConflict,
-					"error":  err2.Error(),
-				})
-				return
-			}
-		}
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"error":  err.Error(),
-		})
-		return
-	}
 	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
 	os.MkdirAll(filepath, 0755)
+	os.Remove(path.Join(filepath, Symfile.Name+".sym"))
 	f, err := os.Create(path.Join(filepath, Symfile.Name+".sym"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": http.StatusInternalServerError,
 			"error":  err.Error(),
 		})
+		database.Db.Delete(&Symfile)
 		return
 	}
 	defer f.Close()
 	file.Seek(0, 0)
 	io.Copy(f, file)
+	if updated {
+		if err = database.Db.Save(&Symfile).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status": http.StatusBadRequest,
+				"error":  err.Error(),
+			})
+			database.Db.Delete(&Symfile)
+			os.Remove(f.Name())
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"status": http.StatusOK,
+			"error":  nil,
+			"object": Symfile,
+		})
+		return
+	}
+	if err = database.Db.Create(&Symfile).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"error":  err.Error(),
+		})
+		os.Remove(f.Name())
+		return
+	}
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
-		"error":  "OK",
+		"error":  nil,
 		"object": Symfile,
 	})
 	return
