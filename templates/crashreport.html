@@ -2,12 +2,16 @@
 
 <!-- Primary Page Layout
 –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-<div class="container">
+<div class="container-fluid">
     <div class="row">
-        <h1>{{ .title }} <small>({{ .item.Signature}})</small></h1>
-        <div class="seven columns">
+        <div class="col-md-12">
+            <h1>{{ .title }} <small>({{ .item.Signature}})</small></h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7">
             <h2 id="overview">Overview</h2>
-            <table class="">
+            <table class="table">
                 <tbody>
                     <tr>
                         <th scope="row">ID</th>
@@ -52,20 +56,20 @@
                 </tbody>
             </table>
         </div>
-        <aside class="five columns">
+        <aside class="col-md-5">
             <nav>
                 <h2>Navigation</h2>
-                <ul>
-                    <li>
+                <ul class="nav nav-pills nav-stacked">
+                    <li role="presentation">
                         <a href="#overview">Overview</a>
                     </li>
-                    <li>
+                    <li role="presentation">
                         <a href="#crashing_thread">Crashing thread</a>
                     </li>
-                    <li>
+                    <li role="presentation">
                         <a href="#threads">All threads</a>
                     </li>
-                    <li>
+                    <li role="presentation">
                         <a href="#modules">Modules</a>
                     </li>
                 </ul>
@@ -73,9 +77,9 @@
         </aside>
     </div>
     <div class="row">
-        <div class="tweleve columns">
+        <div class="col-md-12">
             <h2 id="crashing_thread">Crashing thread ({{ .report.CrashInfo.CrashingThread }})</h2>
-            <table class="u-full-width zebra compact">
+            <table class="table table-striped table-condensed">
                 <thead>
                     <tr>
                         <th scope="col">Frame</th>
@@ -99,7 +103,7 @@
             {{ range $i, $v := .report.Threads }}
             {{ if ne $.report.CrashInfo.CrashingThread $i }}
             <h3 id="thread_{{ $i }}">Thread {{ $i }}</h2>
-                <table class="u-full-width zebra compact">
+                <table class="table table-striped table-condensed">
                     <thead>
                         <tr>
                             <th scope="col">Frame</th>
@@ -122,7 +126,7 @@
                 {{ end }}
                 {{ end }}
                 <h2 id="modules">Modules</h2>
-                <table class="u-full-width zebra compact">
+                <table class="table table-striped table-condensed">
                     <thead>
                         <tr>
                             <th scope="col">Filename</th>
