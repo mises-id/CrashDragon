@@ -20,8 +20,9 @@ type Crashreport struct {
 	Product string
 	Version string
 
-	ReportContent string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
-	Report        Report `gorm:"-"`
+	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
+	ReportContentTXT  string
+	Report            Report `gorm:"-"`
 }
 
 // Symfile database model
@@ -142,13 +143,13 @@ func InitDb(connection string) error {
 func (c *Crashreport) BeforeSave() (err error) {
 	var b []byte
 	b, err = json.Marshal(c.Report)
-	c.ReportContent = string(b)
+	c.ReportContentJSON = string(b)
 	return
 }
 
 // AfterFind is called on finds, maps JSON string to Report
 func (c *Crashreport) AfterFind() (err error) {
-	b := []byte(c.ReportContent)
+	b := []byte(c.ReportContentJSON)
 	err = json.Unmarshal(b, &c.Report)
 	return
 }

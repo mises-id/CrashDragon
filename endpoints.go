@@ -52,53 +52,51 @@ func PostCrashreports(c *gin.Context) {
 	}
 	io.Copy(f, file)
 	f.Close()
-	cmd := exec.Command("./minidump-stackwalk/stackwalker", f.Name(), path.Join(config.C.ContentDirectory, "Symfiles"))
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err = cmd.Run()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": http.StatusInternalServerError,
-			"error":  err.Error(),
-		})
-		os.Remove(f.Name())
-		database.Db.Delete(&Crashreport)
-		return
-	}
-	err = json.Unmarshal(out.Bytes(), &Crashreport.Report)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"status": http.StatusInternalServerError,
-			"error":  err.Error(),
-		})
-		os.Remove(f.Name())
-		database.Db.Delete(&Crashreport)
-		return
-	}
-	if Crashreport.Report.Status != "OK" {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"status": http.StatusUnprocessableEntity,
-			"error":  Crashreport.Report.Status,
-		})
-		os.Remove(f.Name())
-		database.Db.Delete(&Crashreport)
-		return
-	}
-	if err = database.Db.Save(&Crashreport).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"error":  err.Error(),
-		})
-		os.Remove(f.Name())
-		database.Db.Delete(&Crashreport)
-		return
-	}
+	go processReport(Crashreport, f)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
 		"error":  nil,
 		"object": Crashreport,
 	})
 	return
+}
+
+func processReport(Crashreport database.Crashreport, f *os.File) {
+	cmdJSON := exec.Command("./minidump-stackwalk/stackwalker", f.Name(), path.Join(config.C.ContentDirectory, "Symfiles"))
+	var out bytes.Buffer
+	cmdJSON.Stdout = &out
+	err := cmdJSON.Run()
+	if err != nil {
+		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
+		return
+	}
+	err = json.Unmarshal(out.Bytes(), &Crashreport.Report)
+	if err != nil {
+		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
+		return
+	}
+	if Crashreport.Report.Status != "OK" {
+		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
+		return
+	}
+	cmdTXT := exec.Command("./minidump-stackwalk/stackwalk/bin/minidump_stackwalk", f.Name(), path.Join(config.C.ContentDirectory, "Symfiles"))
+	out.Reset()
+	cmdTXT.Stdout = &out
+	err = cmdTXT.Run()
+	if err != nil {
+		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
+		return
+	}
+	Crashreport.ReportContentTXT = out.String()
+	if err = database.Db.Save(&Crashreport).Error; err != nil {
+		os.Remove(f.Name())
+		database.Db.Delete(&Crashreport)
+		return
+	}
 }
 
 // PostSymfiles processes symfile
