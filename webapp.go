@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -106,11 +107,40 @@ func GetCrashreport(c *gin.Context) {
 
 // GetCrashreportFile returns minidump file of crashreport
 func GetCrashreportFile(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"title": "Crashreports",
-		"id":    c.Param("id"),
-		"name":  c.Param("name"),
-	})
+	var Crashreport database.Crashreport
+	if err := database.Db.Where("id = ?", c.Param("id")).First(&Crashreport).Error; err != nil {
+		c.AbortWithError(http.StatusNotFound, err)
+		return
+	}
+	name := c.Param("name")
+	switch name {
+	case "upload_file_minidump":
+		file := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4], Crashreport.ID.String()+".dmp")
+		f, err := os.Open(file)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		data, err := ioutil.ReadAll(f)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.Header("Content-Disposition", "attachment; filename=\""+Crashreport.ID.String()+".dmp\"")
+		c.Data(http.StatusOK, "application/octet-stream", data)
+		return
+	case "processed_json":
+		c.Header("Content-Disposition", "attachment; filename=\""+Crashreport.ID.String()+".json\"")
+		c.Data(http.StatusOK, "application/json", []byte(Crashreport.ReportContentJSON))
+		return
+	case "processed_txt":
+		c.Header("Content-Disposition", "attachment; filename=\""+Crashreport.ID.String()+".txt\"")
+		c.Data(http.StatusOK, "text/plain", []byte(Crashreport.ReportContentTXT))
+		return
+	default:
+		c.AbortWithError(http.StatusBadRequest, errors.New(name+" is a unknwon file"))
+		return
+	}
 }
 
 // GetSymfiles returns symfiles
@@ -123,7 +153,7 @@ func GetSymfiles(c *gin.Context) {
 	})
 }
 
-// GetSymfile returns details of symfile
+// GetSymfile returns content of symfile
 func GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.Db.Where("id = ?", c.Param("id")).First(&Symfile)

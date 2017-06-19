@@ -1,7 +1,4 @@
 {{ template "head.html" . }}
-
-<!-- Primary Page Layout
-–––––––––––––––––––––––––––––––––––––––––––––––––– -->
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
@@ -74,6 +71,18 @@
                     </li>
                 </ul>
             </nav>
+            <h2>Downloads</h2>
+            <ul class="nav nav-pills nav-stacked">
+                <li role="presentation">
+                    <a href="/crashreports/{{ .item.ID }}/files/upload_file_minidump">Original Minidump</a>
+                </li>
+                <li role="presentation">
+                    <a href="/crashreports/{{ .item.ID }}/files/processed_json">Crashreport (JSON)</a>
+                </li>
+                <li role="presentation">
+                    <a href="/crashreports/{{ .item.ID }}/files/processed_txt">Crashreport (TXT)</a>
+                </li>
+            </ul>
         </aside>
     </div>
     <div class="row">
