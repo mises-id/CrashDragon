@@ -38,6 +38,7 @@ func initRouter() *gin.Engine {
 	router.GET("/symfiles/:id", GetSymfile)
 	router.POST("/crashreports", PostCrashreports)
 	router.POST("/symfiles", PostSymfiles)
+	router.GET("/crashreports/:id/reprocess", ReprocessCrashreport)
 
 	router.Static("/static", config.C.AssetsDirectory)
 	return router

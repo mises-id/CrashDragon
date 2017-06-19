@@ -17,8 +17,9 @@ type Crashreport struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Product string
-	Version string
+	Product   string
+	Version   string
+	Processed bool
 
 	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	ReportContentTXT  string

@@ -26,7 +26,7 @@ func GetCrashreports(c *gin.Context) {
 		Reason    string
 		Location  string
 	}
-	database.Db.Order("created_at DESC").Find(&Reports)
+	database.Db.Where("processed = true").Order("created_at DESC").Find(&Reports)
 	for _, Report := range Reports {
 		var Item struct {
 			ID        string
