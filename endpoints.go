@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strconv"
 	"strings"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
@@ -40,6 +41,9 @@ func PostCrashreports(c *gin.Context) {
 	}
 	Crashreport.Product = c.Request.FormValue("prod")
 	Crashreport.Version = c.Request.FormValue("ver")
+	Crashreport.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
+	Crashreport.EMail = c.Request.FormValue("email")
+	Crashreport.Comment = c.Request.FormValue("comments")
 	filepath := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4])
 	os.MkdirAll(filepath, 0755)
 	f, err := os.Create(path.Join(filepath, Crashreport.ID.String()+".dmp"))
@@ -62,11 +66,14 @@ func PostCrashreports(c *gin.Context) {
 	return
 }
 
+// ReprocessCrashreport processes the Crashreport again with current symbols
 func ReprocessCrashreport(c *gin.Context) {
 	var Report database.Crashreport
 	database.Db.Where("id = ?", c.Param("id")).First(&Report)
 	processReport(Report)
-	GetCrashreport(c)
+	c.SetCookie("result", "OK", 0, "/", "", false, false)
+	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Report.ID.String())
+	return
 }
 
 func processReport(Crashreport database.Crashreport) {

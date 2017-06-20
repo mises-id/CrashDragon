@@ -78,6 +78,8 @@ func GetCrashreport(c *gin.Context) {
 		Processor string
 		Reason    string
 		Location  string
+		Comment   string
+		Uptime    int
 	}
 	Item.ID = Report.ID.String()
 	Item.Date = Report.CreatedAt.Format("2006-01-02 15:04:05")
@@ -87,6 +89,8 @@ func GetCrashreport(c *gin.Context) {
 	Item.Arch = Report.Report.SystemInfo.CPUArch
 	Item.Processor = Report.Report.SystemInfo.CPUInfo + " (" + strconv.Itoa(Report.Report.SystemInfo.CPUCount) + " cores)"
 	Item.Reason = Report.Report.CrashInfo.Type
+	Item.Comment = Report.Comment
+	Item.Uptime = Report.ProcessUptime
 	for _, Frame := range Report.Report.CrashingThread.Frames {
 		if Frame.File == "" && Item.Signature != "" {
 			continue
@@ -98,10 +102,15 @@ func GetCrashreport(c *gin.Context) {
 		Item.Location = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
 		break
 	}
+	result, _ := c.Cookie("result")
+	if result != "" {
+		c.SetCookie("result", "", 1, "/", "", false, false)
+	}
 	c.HTML(http.StatusOK, "crashreport.html", gin.H{
 		"title":  "Crashreport",
 		"item":   Item,
 		"report": Report.Report,
+		"result": result,
 	})
 }
 
