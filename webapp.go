@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -100,7 +101,7 @@ func GetCrashreport(c *gin.Context) {
 		Reason    string
 		Location  string
 		Comment   string
-		Uptime    int
+		Uptime    string
 	}
 	Item.ID = Report.ID.String()
 	Item.Date = Report.CreatedAt.Format("2006-01-02 15:04:05")
@@ -111,7 +112,10 @@ func GetCrashreport(c *gin.Context) {
 	Item.Processor = Report.Report.SystemInfo.CPUInfo + " (" + strconv.Itoa(Report.Report.SystemInfo.CPUCount) + " cores)"
 	Item.Reason = Report.Report.CrashInfo.Type
 	Item.Comment = Report.Comment
-	Item.Uptime = Report.ProcessUptime
+	h := (Report.ProcessUptime / 3600000) % 24
+	m := (Report.ProcessUptime / 60000) % 60
+	s := (Report.ProcessUptime / 1000) % 60
+	Item.Uptime = fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 	for _, Frame := range Report.Report.CrashingThread.Frames {
 		if Frame.File == "" && Item.Signature != "" {
 			continue

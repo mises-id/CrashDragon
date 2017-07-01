@@ -65,7 +65,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Uptime</th>
-                        <td>{{ formatUptime .item.Uptime }}</td>
+                        <td>{{ .item.Uptime }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Comment</th>
@@ -124,7 +124,7 @@
                         <td>{{ .Frame }}</td>
                         <td>{{ .Module }}</td>
                         <td>{{ .Function }}</td>
-                        <td>{{ if .Line }}{{ fileAbs .File }}:{{ .Line }}{{ end }}</td>
+                        <td>{{ if .Line }}{{ .File }}:{{ .Line }}{{ end }}</td>
                     </tr>
                     {{ end }}
                 </tbody>
@@ -148,7 +148,7 @@
                             <td>{{ .Frame }}</td>
                             <td>{{ .Module }}</td>
                             <td>{{ .Function }}</td>
-                            <td>{{ if .Line }}{{ fileAbs .File }}:{{ .Line }}{{ end }}</td>
+                            <td>{{ if .Line }}{{ .File }}:{{ .Line }}{{ end }}</td>
                         </tr>
                         {{ end }}
                     </tbody>
