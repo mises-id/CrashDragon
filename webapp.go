@@ -63,7 +63,7 @@ func GetCrashreports(c *gin.Context) {
 		Item.Date = Report.CreatedAt.Format("2006-01-02 15:04:05")
 		Item.Product = Report.Product
 		Item.Version = Report.Version
-		Item.Platform = Report.Report.SystemInfo.Os
+		Item.Platform = Report.Os
 		Item.Reason = Report.Report.CrashInfo.Type
 		for _, Frame := range Report.Report.CrashingThread.Frames {
 			if Frame.File == "" && Item.Signature != "" {
@@ -106,8 +106,8 @@ func GetCrashreport(c *gin.Context) {
 	Item.Date = Report.CreatedAt.Format("2006-01-02 15:04:05")
 	Item.Product = Report.Product
 	Item.Version = Report.Version
-	Item.Platform = Report.Report.SystemInfo.Os + " " + Report.Report.SystemInfo.OsVer
-	Item.Arch = Report.Report.SystemInfo.CPUArch
+	Item.Platform = Report.Os + " " + Report.OsVersion
+	Item.Arch = Report.Arch
 	Item.Processor = Report.Report.SystemInfo.CPUInfo + " (" + strconv.Itoa(Report.Report.SystemInfo.CPUCount) + " cores)"
 	Item.Reason = Report.Report.CrashInfo.Type
 	Item.Comment = Report.Comment

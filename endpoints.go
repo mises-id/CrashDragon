@@ -109,6 +109,9 @@ func processReport(Crashreport database.Crashreport, reprocess bool) {
 	}
 	Crashreport.ReportContentTXT = out.String()
 	Crashreport.Processed = true
+	Crashreport.Os = Crashreport.Report.SystemInfo.Os
+	Crashreport.OsVersion = Crashreport.Report.SystemInfo.OsVer
+	Crashreport.Arch = Crashreport.Report.SystemInfo.CPUArch
 	if err = database.Db.Save(&Crashreport).Error; err != nil {
 		os.Remove(file)
 		database.Db.Delete(&Crashreport)

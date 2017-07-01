@@ -45,6 +45,10 @@ type Crashreport struct {
 	Comment       string
 	Processed     bool
 
+	Os        string
+	OsVersion string
+	Arch      string
+
 	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	ReportContentTXT  string
 	Report            Report `gorm:"-"`
