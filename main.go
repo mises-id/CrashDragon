@@ -37,7 +37,9 @@ func initRouter() *gin.Engine {
 		panic(err)
 	}
 	// Endpoints
-	router.GET("/", GetCrashreports)
+	router.GET("/", GetCrashes)
+	router.GET("/crashes", GetCrashes)
+	router.GET("/crashes/:id", GetCrash)
 	router.GET("/crashreports", GetCrashreports)
 	router.GET("/crashreports/:id", GetCrashreport)
 	router.GET("/crashreports/:id/files/:name", GetCrashreportFile)

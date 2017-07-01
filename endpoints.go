@@ -57,7 +57,7 @@ func PostCrashreports(c *gin.Context) {
 	}
 	io.Copy(f, file)
 	f.Close()
-	go processReport(Crashreport)
+	go processReport(Crashreport, false)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
 		"error":  nil,
@@ -70,13 +70,13 @@ func PostCrashreports(c *gin.Context) {
 func ReprocessCrashreport(c *gin.Context) {
 	var Report database.Crashreport
 	database.Db.Where("id = ?", c.Param("id")).First(&Report)
-	processReport(Report)
+	processReport(Report, true)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
 	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Report.ID.String())
 	return
 }
 
-func processReport(Crashreport database.Crashreport) {
+func processReport(Crashreport database.Crashreport, reprocess bool) {
 	file := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4], Crashreport.ID.String()+".dmp")
 	cmdJSON := exec.Command("./minidump-stackwalk/stackwalker", file, path.Join(config.C.ContentDirectory, "Symfiles"))
 	var out bytes.Buffer
@@ -114,6 +114,55 @@ func processReport(Crashreport database.Crashreport) {
 		database.Db.Delete(&Crashreport)
 		return
 	}
+	var signature string
+	for _, frame := range Crashreport.Report.CrashingThread.Frames {
+		if frame.Function == "" {
+			continue
+		} else {
+			signature = frame.Function
+			break
+		}
+	}
+	if signature == "" {
+		return
+	}
+
+	var Crash database.Crash
+	if reprocess && Crashreport.CrashID != uuid.Nil {
+		database.Db.First(&Crash, "id = ?", Crashreport.CrashID)
+		Crash.Signature = signature
+		database.Db.Save(&Crash)
+	} else {
+		database.Db.FirstOrInit(&Crash, "signature = ?", signature)
+	}
+	if Crash.ID == uuid.Nil {
+		Crash.ID = uuid.NewV4()
+
+		Crash.FirstReported = Crashreport.CreatedAt
+		Crash.Signature = signature
+
+		Crash.AllCrashCount = 0
+		Crash.WinCrashCount = 0
+		Crash.MacCrashCount = 0
+		Crash.LinCrashCount = 0
+
+		database.Db.Create(&Crash)
+		reprocess = false
+	}
+	if !reprocess || Crashreport.CrashID == uuid.Nil {
+		Crash.LastReported = Crashreport.CreatedAt
+		Crash.AllCrashCount++
+		if Crashreport.Os == "Windows" {
+			Crash.WinCrashCount++
+		} else if Crashreport.Os == "Linux" {
+			Crash.LinCrashCount++
+		} else if Crashreport.Os == "Mac OS X" {
+			Crash.MacCrashCount++
+		}
+		database.Db.Save(&Crash)
+	}
+	Crashreport.CrashID = Crash.ID
+	database.Db.Save(&Crashreport)
 }
 
 // PostSymfiles processes symfile

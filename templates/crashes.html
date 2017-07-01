@@ -1,0 +1,38 @@
+{{ template "head.html" . }}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>{{ .title }}</h1>
+            <table class="table table-striped table-hover table-condensed">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Signature</th>
+                        <th scope="col">All</th>
+                        <th scope="col">Windows</th>
+                        <th scope="col">Mac OS X</th>
+                        <th scope="col">Linux</th>
+                        <th scope="col">First reported</th>
+                        <th scope="col">Last reported</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range .items }}
+                    <tr>
+                        <td><a href="/crashes/{{ .ID }}">{{ .ID }}</a></td>
+                        <td>{{ .Signature }}</td>
+                        <td>{{ .AllCrashCount }}</td>
+                        <td>{{ .WinCrashCount }}</td>
+                        <td>{{ .MacCrashCount }}</td>
+                        <td>{{ .LinCrashCount }}</td>
+                        <td>{{ .FirstReported }}</td>
+                        <td>{{ .LastReported }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{{ template "foot.html" . }}

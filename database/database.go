@@ -10,12 +10,33 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+// Crash database model
+type Crash struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	Signature     string
+	AllCrashCount uint
+	WinCrashCount uint
+	MacCrashCount uint
+	LinCrashCount uint
+
+	Crashreports []Crashreport
+
+	FirstReported time.Time
+	LastReported  time.Time
+}
+
 // Crashreport database model
 type Crashreport struct {
 	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+
+	CrashID uuid.UUID
 
 	Product       string
 	Version       string
@@ -139,7 +160,7 @@ func InitDb(connection string) error {
 	}
 	Db.LogMode(true)
 
-	Db.AutoMigrate(&Crashreport{}, &Symfile{})
+	Db.AutoMigrate(&Crash{}, &Crashreport{}, &Symfile{})
 	return err
 }
 

@@ -13,6 +13,27 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetCrashes returns crashes
+func GetCrashes(c *gin.Context) {
+	var Crashes []database.Crash
+	database.Db.Order("all_crash_count DESC").Find(&Crashes)
+	c.HTML(http.StatusOK, "crashes.html", gin.H{
+		"title": "Crashes",
+		"items": Crashes,
+	})
+}
+
+// GetCrash returns details of a crash
+func GetCrash(c *gin.Context) {
+	var Crash database.Crash
+	var Crashreports []database.Crashreport
+	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Crashreports)
+	c.HTML(http.StatusOK, "crash.html", gin.H{
+		"title": "Crash",
+		"items": Crashreports,
+	})
+}
+
 // GetCrashreports returns crashreports
 func GetCrashreports(c *gin.Context) {
 	var Reports []database.Crashreport
