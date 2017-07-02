@@ -124,7 +124,7 @@
                         <td>{{ .Frame }}</td>
                         <td>{{ .Module }}</td>
                         <td>{{ .Function }}</td>
-                        <td>{{ if .Line }}{{ .File }}:{{ .Line }}{{ end }}</td>
+                        <td>{{ if .Line }}<a href="http://git.videolan.org/?p=vlc.git;a=blob;f={{ .File }}#l{{ .Line }}">{{ .File }}:{{ .Line }}</a>{{ end }}</td>
                     </tr>
                     {{ end }}
                 </tbody>
@@ -148,7 +148,7 @@
                             <td>{{ .Frame }}</td>
                             <td>{{ .Module }}</td>
                             <td>{{ .Function }}</td>
-                            <td>{{ if .Line }}{{ .File }}:{{ .Line }}{{ end }}</td>
+                            <td>{{ if .Line }}<a href="http://git.videolan.org/?p=vlc.git;a=blob;f={{ .File }}#l{{ .Line }}">{{ .File }}:{{ .Line }}</a>{{ end }}</td>
                         </tr>
                         {{ end }}
                     </tbody>
