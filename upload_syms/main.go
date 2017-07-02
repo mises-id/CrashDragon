@@ -8,6 +8,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"os/exec"
 	"path"
 	"strings"
@@ -24,8 +25,13 @@ func init() {
 }
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+	log.SetOutput(os.Stderr)
 	flag.Parse()
+	defer os.RemoveAll(file + ".sym")
+	defer os.RemoveAll(file + ".dSYM")
 	dsymutil := exec.Command("dsymutil", file)
+	dsymutil.Stderr = os.Stderr
 	err := dsymutil.Run()
 	if err != nil {
 		log.Fatal(err)
@@ -34,6 +40,7 @@ func main() {
 	dumpsyms := exec.Command("dump_syms", "-r", "-g", file+".dSYM", file)
 	var in bytes.Buffer
 	dumpsyms.Stdout = &in
+	dumpsyms.Stderr = os.Stderr
 	err = dumpsyms.Run()
 	if err != nil {
 		log.Fatal(err)
@@ -44,16 +51,13 @@ func main() {
 		if strings.HasPrefix(line, "FILE") {
 			parts := strings.Split(line, " ")
 			num := parts[1]
-			opath := parts[2]
+			opath := path.Join(path.Dir(parts[2]), path.Base(parts[2]))
 			if !strings.HasPrefix(opath, repo) {
 				continue
 			}
-			opath = path.Join(path.Dir(opath), path.Base(opath))
-
 			gitparts := strings.Split(repo, "/")
 			origparts := strings.Split(opath, "/")
 			npath := strings.Join(origparts[len(gitparts):], "/")
-
 			lines[i] = fmt.Sprintf("FILE %s %s", num, npath)
 		}
 	}
