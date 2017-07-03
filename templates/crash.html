@@ -26,6 +26,19 @@
                     {{ end }}
                 </tbody>
             </table>
+            <h2>Comments</h2>
+            {{ range .comments }}
+            <div class="well" id="comment-{{ .ID }}">
+                {{ .Content }}
+            </div>
+            {{ end }}
+            <h3>Add comment</h3>
+            <form method="post" action="/crashes/{{ .ID }}/comments">
+                <div class="form-group">
+                    <textarea class="form-control" name="comment"></textarea>
+                </div>
+                <button class="btn btn-default" type="submit">Submit</button>
+            </form>
         </div>
     </div>
 </div>

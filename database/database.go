@@ -2,6 +2,7 @@ package database
 
 import (
 	"encoding/json"
+	"html/template"
 	"log"
 	"time"
 
@@ -9,6 +10,19 @@ import (
 	_ "github.com/lib/pq" //Postgres functions
 	"github.com/satori/go.uuid"
 )
+
+// Comment defines the structure of a comment
+type Comment struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	CrashID       uuid.UUID `sql:"DEFAULT NULL"`
+	CrashreportID uuid.UUID `sql:"DEFAULT NULL"`
+
+	Content template.HTML
+}
 
 // Crash database model
 type Crash struct {
@@ -24,6 +38,7 @@ type Crash struct {
 	LinCrashCount uint
 
 	Crashreports []Crashreport
+	Comments     []Comment
 
 	FirstReported time.Time
 	LastReported  time.Time
@@ -48,6 +63,8 @@ type Crashreport struct {
 	Os        string
 	OsVersion string
 	Arch      string
+
+	Comments []Comment
 
 	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	ReportContentTXT  string
@@ -164,7 +181,7 @@ func InitDb(connection string) error {
 	}
 	Db.LogMode(true)
 
-	Db.AutoMigrate(&Crash{}, &Crashreport{}, &Symfile{})
+	Db.AutoMigrate(&Comment{}, &Crash{}, &Crashreport{}, &Symfile{})
 	return err
 }
 

@@ -69,6 +69,18 @@
 			"revisionTime": "2017-03-22T23:44:13Z"
 		},
 		{
+			"checksumSHA1": "DWtoL5LzvhxQ6LuchRPoSbsNhp4=",
+			"path": "github.com/microcosm-cc/bluemonday",
+			"revision": "e79763773ab6222ca1d5a7cbd9d62d83c1f77081",
+			"revisionTime": "2016-12-02T14:38:24Z"
+		},
+		{
+			"checksumSHA1": "jgYnx5m5SrWrh9GE5kNZlpMWyCY=",
+			"path": "github.com/russross/blackfriday",
+			"revision": "067529f716f4c3f5e37c8c95ddd59df1007290ae",
+			"revisionTime": "2017-06-10T17:02:32Z"
+		},
+		{
 			"checksumSHA1": "zmC8/3V4ls53DJlNTKDZwPSC/dA=",
 			"path": "github.com/satori/go.uuid",
 			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
@@ -79,6 +91,18 @@
 			"path": "golang.org/x/net/context",
 			"revision": "ddf80d0970594e2e4cccf5a98861cad3d9eaa4cd",
 			"revisionTime": "2017-06-14T13:40:53Z"
+		},
+		{
+			"checksumSHA1": "vqc3a+oTUGX8PmD0TS+qQ7gmN8I=",
+			"path": "golang.org/x/net/html",
+			"revision": "1f9224279e98554b6a6432d4dd998a739f8b2b7c",
+			"revisionTime": "2017-06-29T16:46:45Z"
+		},
+		{
+			"checksumSHA1": "z79z5msRzgU48FCZxSuxfU8b4rs=",
+			"path": "golang.org/x/net/html/atom",
+			"revision": "1f9224279e98554b6a6432d4dd998a739f8b2b7c",
+			"revisionTime": "2017-06-29T16:46:45Z"
 		},
 		{
 			"checksumSHA1": "rIYurTMbnyUj/eMHsaxTBnTvSnY=",

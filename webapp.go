@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,7 +13,55 @@ import (
 	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
 	"github.com/gin-gonic/gin"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
+	uuid "github.com/satori/go.uuid"
 )
+
+// PostCrashComment allows you to post a comment to a crash
+func PostCrashComment(c *gin.Context) {
+	var Crash database.Crash
+	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	if Crash.ID == uuid.Nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	var Comment database.Comment
+	database.Db.FirstOrInit(&Comment)
+	Comment.ID = uuid.NewV4()
+	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
+	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
+	if Comment.Content == "" {
+		c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String())
+		return
+	}
+	Comment.CrashreportID = uuid.Nil
+	Comment.CrashID = Crash.ID
+	database.Db.Save(&Comment)
+	c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String()+"#comment-"+Comment.ID.String())
+}
+
+// PostCrashreportComment allows you to post a comment to a crashreport
+func PostCrashreportComment(c *gin.Context) {
+	var Crashreport database.Crashreport
+	database.Db.First(&Crashreport, "id = ?", c.Param("id"))
+	if Crashreport.ID == uuid.Nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	var Comment database.Comment
+	database.Db.FirstOrInit(&Comment)
+	Comment.ID = uuid.NewV4()
+	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
+	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
+	if Comment.Content == "" {
+		c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String())
+	}
+	Comment.CrashreportID = Crashreport.ID
+	Comment.CrashID = uuid.Nil
+	database.Db.Save(&Comment)
+	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String()+"#comment-"+Comment.ID.String())
+}
 
 // GetCrashes returns crashes
 func GetCrashes(c *gin.Context) {
@@ -28,10 +77,13 @@ func GetCrashes(c *gin.Context) {
 func GetCrash(c *gin.Context) {
 	var Crash database.Crash
 	var Crashreports []database.Crashreport
-	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Crashreports)
+	var Comments []database.Comment
+	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Crashreports).Related(&Comments)
 	c.HTML(http.StatusOK, "crash.html", gin.H{
-		"title": "Crash",
-		"items": Crashreports,
+		"title":    "Crash",
+		"items":    Crashreports,
+		"comments": Comments,
+		"ID":       Crash.ID.String(),
 	})
 }
 
@@ -88,7 +140,8 @@ func GetCrashreports(c *gin.Context) {
 // GetCrashreport returns details of crashreport
 func GetCrashreport(c *gin.Context) {
 	var Report database.Crashreport
-	database.Db.Where("id = ?", c.Param("id")).First(&Report)
+	var Comments []database.Comment
+	database.Db.First(&Report, "id = ?", c.Param("id")).Related(&Comments)
 	var Item struct {
 		ID        string
 		Signature string
@@ -132,10 +185,11 @@ func GetCrashreport(c *gin.Context) {
 		c.SetCookie("result", "", 1, "/", "", false, false)
 	}
 	c.HTML(http.StatusOK, "crashreport.html", gin.H{
-		"title":  "Crashreport",
-		"item":   Item,
-		"report": Report.Report,
-		"result": result,
+		"title":    "Crashreport",
+		"item":     Item,
+		"report":   Report.Report,
+		"result":   result,
+		"comments": Comments,
 	})
 }
 
