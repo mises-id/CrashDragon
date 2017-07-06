@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -252,4 +254,38 @@ func PostSymfiles(c *gin.Context) {
 		"object": Symfile,
 	})
 	return
+}
+
+// Auth middleware which checks the Authorization header field and looks up the user in the database
+func Auth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var auth string
+		var user string
+		// FIXME: Change the Header workaround to use the native gin function once it is stable
+		//c.GetHeader("Authorization") //gin gonic develop branch
+		// Workaround
+		log.Printf("%#v", c.Request.Header["Authorization"])
+		if auths, _ := c.Request.Header["Authorization"]; len(auths) > 0 {
+			auth = auths[0]
+		} else {
+			c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
+			c.AbortWithStatus(http.StatusUnauthorized)
+		}
+		// End of workaround
+		if strings.HasPrefix(auth, "Basic ") {
+			base := strings.Split(auth, " ")[1]
+			userpass, _ := base64.StdEncoding.DecodeString(base)
+			user = strings.Split(string(userpass), ":")[0]
+		}
+		var User database.User
+		database.Db.FirstOrInit(&User, "name = ?", user)
+		if User.ID == uuid.Nil {
+			User.ID = uuid.NewV4()
+			User.IsAdmin = false
+			User.Name = user
+			database.Db.Create(&User)
+		}
+		c.Set("user", User)
+		c.Next()
+	}
 }

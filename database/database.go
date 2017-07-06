@@ -11,6 +11,19 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+// User defines the structure of a user
+type User struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	Name    string
+	IsAdmin bool
+
+	Comments []Comment
+}
+
 // Comment defines the structure of a comment
 type Comment struct {
 	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
@@ -18,8 +31,11 @@ type Comment struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	CrashID       uuid.UUID `sql:"DEFAULT NULL"`
-	CrashreportID uuid.UUID `sql:"DEFAULT NULL"`
+	CrashID       uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	CrashreportID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+
+	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	User   User
 
 	Content template.HTML
 }
@@ -51,7 +67,7 @@ type Crashreport struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	CrashID uuid.UUID
+	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
 
 	Product       string
 	Version       string
@@ -181,7 +197,7 @@ func InitDb(connection string) error {
 	}
 	Db.LogMode(true)
 
-	Db.AutoMigrate(&Comment{}, &Crash{}, &Crashreport{}, &Symfile{})
+	Db.AutoMigrate(&User{}, &Comment{}, &Crash{}, &Crashreport{}, &Symfile{})
 	return err
 }
 

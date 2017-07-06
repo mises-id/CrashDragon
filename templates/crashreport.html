@@ -90,6 +90,9 @@
                     <li role="presentation">
                         <a href="#modules">Modules</a>
                     </li>
+                    <li role="presentation">
+                        <a href="#comments">Comments</a>
+                    </li>
                 </ul>
             </nav>
             <h2>Downloads</h2>
@@ -176,10 +179,11 @@
                         {{ end }}
                     </tbody>
                 </table>
-                <h2>Comments</h2>
+                <h2 id="comments">Comments</h2>
                 {{ range .comments }}
                 <div class="well" id="comment-{{ .ID }}">
                     {{ .Content }}
+                        — by {{ .User.Name }} on {{ .CreatedAt }}
                 </div>
                 {{ end }}
                 <h3>Add comment</h3>

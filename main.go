@@ -14,6 +14,11 @@ import (
 func initRouter() *gin.Engine {
 	router := gin.Default()
 
+	auth := router.Group("/", Auth())
+	//auth.Use(Auth())
+	auth.POST("/crashreports/:id/reprocess", ReprocessCrashreport)
+	auth.POST("/crashreports/:id/comments", PostCrashreportComment)
+
 	// Endpoints
 	router.GET("/", GetCrashes)
 	router.GET("/crashes", GetCrashes)
@@ -26,8 +31,6 @@ func initRouter() *gin.Engine {
 
 	router.POST("/crashreports", PostCrashreports)
 	router.POST("/symfiles", PostSymfiles)
-	router.POST("/crashreports/:id/reprocess", ReprocessCrashreport)
-	router.POST("/crashreports/:id/comments", PostCrashreportComment)
 	router.POST("/crashes/:id/comments", PostCrashComment)
 
 	router.Static("/static", config.C.AssetsDirectory)

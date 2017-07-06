@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
@@ -20,6 +21,10 @@ import (
 
 // PostCrashComment allows you to post a comment to a crash
 func PostCrashComment(c *gin.Context) {
+	// FIXME Fix middleware, wich gets not called somehow
+	foo := Auth()
+	foo(c)
+	User := c.MustGet("user").(database.User)
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
 	if Crash.ID == uuid.Nil {
@@ -28,10 +33,11 @@ func PostCrashComment(c *gin.Context) {
 	}
 	var Comment database.Comment
 	database.Db.FirstOrInit(&Comment)
+	Comment.UserID = User.ID
 	Comment.ID = uuid.NewV4()
 	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
 	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
-	if Comment.Content == "" {
+	if len(strings.TrimSpace(string(Comment.Content))) == 0 {
 		c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String())
 		return
 	}
@@ -43,6 +49,10 @@ func PostCrashComment(c *gin.Context) {
 
 // PostCrashreportComment allows you to post a comment to a crashreport
 func PostCrashreportComment(c *gin.Context) {
+	// FIXME Fix middleware, wich gets not called somehow
+	foo := Auth()
+	foo(c)
+	User := c.MustGet("user").(database.User)
 	var Crashreport database.Crashreport
 	database.Db.First(&Crashreport, "id = ?", c.Param("id"))
 	if Crashreport.ID == uuid.Nil {
@@ -51,10 +61,11 @@ func PostCrashreportComment(c *gin.Context) {
 	}
 	var Comment database.Comment
 	database.Db.FirstOrInit(&Comment)
+	Comment.UserID = User.ID
 	Comment.ID = uuid.NewV4()
 	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
 	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
-	if Comment.Content == "" {
+	if len(strings.TrimSpace(string(Comment.Content))) == 0 {
 		c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String())
 	}
 	Comment.CrashreportID = Crashreport.ID
@@ -78,7 +89,10 @@ func GetCrash(c *gin.Context) {
 	var Crash database.Crash
 	var Crashreports []database.Crashreport
 	var Comments []database.Comment
-	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Crashreports).Related(&Comments)
+	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Crashreports).Order("created_at DESC").Related(&Comments)
+	for i, Comment := range Comments {
+		database.Db.Model(&Comment).Related(&Comments[i].User)
+	}
 	c.HTML(http.StatusOK, "crash.html", gin.H{
 		"title":    "Crash",
 		"items":    Crashreports,
@@ -141,7 +155,10 @@ func GetCrashreports(c *gin.Context) {
 func GetCrashreport(c *gin.Context) {
 	var Report database.Crashreport
 	var Comments []database.Comment
-	database.Db.First(&Report, "id = ?", c.Param("id")).Related(&Comments)
+	database.Db.First(&Report, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Comments)
+	for i, Comment := range Comments {
+		database.Db.Model(&Comment).Related(&Comments[i].User)
+	}
 	var Item struct {
 		ID        string
 		Signature string
