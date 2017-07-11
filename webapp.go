@@ -21,9 +21,6 @@ import (
 
 // PostCrashComment allows you to post a comment to a crash
 func PostCrashComment(c *gin.Context) {
-	// FIXME Fix middleware, wich gets not called somehow
-	foo := Auth()
-	foo(c)
 	User := c.MustGet("user").(database.User)
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
@@ -49,9 +46,6 @@ func PostCrashComment(c *gin.Context) {
 
 // PostCrashreportComment allows you to post a comment to a crashreport
 func PostCrashreportComment(c *gin.Context) {
-	// FIXME Fix middleware, wich gets not called somehow
-	foo := Auth()
-	foo(c)
 	User := c.MustGet("user").(database.User)
 	var Crashreport database.Crashreport
 	database.Db.First(&Crashreport, "id = ?", c.Param("id"))
