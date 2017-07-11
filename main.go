@@ -18,6 +18,7 @@ func initRouter() *gin.Engine {
 	auth.POST("/crashes/:id/comments", PostCrashComment)
 	auth.POST("/crashreports/:id/comments", PostCrashreportComment)
 	auth.POST("/crashreports/:id/reprocess", ReprocessCrashreport)
+	auth.POST("/symfiles", PostSymfiles)
 
 	// Endpoints
 	router.GET("/", GetCrashes)
@@ -30,7 +31,6 @@ func initRouter() *gin.Engine {
 	router.GET("/symfiles/:id", GetSymfile)
 
 	router.POST("/crashreports", PostCrashreports)
-	router.POST("/symfiles", PostSymfiles)
 
 	router.Static("/static", config.C.AssetsDirectory)
 	router.LoadHTMLGlob("templates/*.html")
