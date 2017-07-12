@@ -39,7 +39,7 @@ func WriteConfig(path string) error {
 
 func GetConfig(path string) error {
 	//Set default values if there is no config
-	C.DatabaseConnection = "host=localhost user=crashdragon dbname=crashdragon password=crashdragon sslmode=disable"
+	C.DatabaseConnection = "host=localhost user=crashdragon dbname=crashdragon sslmode=disable"
 	C.UseSocket = false
 	C.BindAddress = "0.0.0.0:8080"
 	C.BindSocket = "/var/run/crashdragon/crashdragon.sock"

@@ -13,9 +13,7 @@ RUN govendor sync
 
 RUN make
 
-RUN postgres -D /usr/local/pgsql/data >/var/log/postgres 2>&1 &; \
-    psql -c "CREATE USER CrashDragon; CREATE DATABASE CrashDragon OWNER CrashDragon;"
+RUN /etc/init.d/postgres start && su postgres -c 'createuser -w crashdragon' && su postgres -c 'createdb -w -O crashdragon crashdragon'
 
 EXPOSE 8080
-CMD postgres -D /usr/local/pgsql/data >/var/log/postgres 2>&1 &; \
-    ./bin/CrashDragon
+CMD /etc/init.d/postgres start && sleep 15 && ./bin/CrashDragon
