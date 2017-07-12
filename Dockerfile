@@ -13,7 +13,7 @@ RUN govendor sync
 
 RUN make
 
-RUN /etc/init.d/postgres start && su postgres -c 'createuser -w crashdragon' && su postgres -c 'createdb -w -O crashdragon crashdragon'
+RUN /etc/init.d/postgresql start && su postgres -c 'createuser -w crashdragon' && su postgres -c 'createdb -w -O crashdragon crashdragon'
 
 EXPOSE 8080
-CMD /etc/init.d/postgres start && sleep 15 && ./bin/CrashDragon
+CMD /etc/init.d/postgresql start && sleep 15 && ./bin/CrashDragon
