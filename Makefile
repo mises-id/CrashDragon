@@ -3,15 +3,19 @@ SRC=$(wildcard *.go)
 
 all: CrashDragon upload_syms minidump-stackwalk/stackwalker
 
-CrashDragon: $(SRC)
+CrashDragon: $(SRC) assets/stylesheets/app.css
 	go build -o bin/CrashDragon $(SRC)
 
 upload_syms: $(SRC)
 	go build -o bin/upload_syms upload_syms/main.go
+
+assets/stylesheets/app.css:
+	sassc -t compressed $(@D)/app.scss > $@
 
 minidump-stackwalk/stackwalker:
 	cd minidump-stackwalk && make
 
 clean:
 	rm -rf bin/
+	rm -f assets/stylesheets/app.css
 	cd minidump-stackwalk && make distclean

@@ -17,7 +17,5 @@ RUN /etc/init.d/postgresql start && su postgres -c 'createuser -w crashdragon' &
 RUN echo "local all all trust" > /etc/postgresql/9.6/main/pg_hba.conf
 RUN echo "host all all all trust" >> /etc/postgresql/9.6/main/pg_hba.conf
 
-RUN cd assets/stylesheets && sassc -t compressed app.scss > app.css
-
 EXPOSE 8080
 CMD /etc/init.d/postgresql start && sleep 15 && ./bin/CrashDragon
