@@ -14,6 +14,8 @@ RUN govendor sync
 RUN make
 
 RUN /etc/init.d/postgresql start && su postgres -c 'createuser -w crashdragon' && su postgres -c 'createdb -w -O crashdragon crashdragon'
+RUN echo >> /etc/postgresql/9.4/main/pg_hba.conf
+RUN echo "host all all all trust" >> /etc/postgresql/9.4/main/pg_hba.conf
 
 EXPOSE 8080
 CMD /etc/init.d/postgresql start && sleep 15 && ./bin/CrashDragon
