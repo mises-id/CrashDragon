@@ -2,6 +2,7 @@ FROM golang:1.9-stretch
 
 ENV GOPATH /go
 ENV PATH $PATH:$GOPATH/bin
+ENV GIN_MODE release
 
 ADD . $GOPATH/src/git.1750studios.com/GSoC/CrashDragon
 WORKDIR $GOPATH/src/git.1750studios.com/GSoC/CrashDragon
