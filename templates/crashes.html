@@ -8,12 +8,12 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
-                        <th scope="col">All</th>
-                        <th scope="col">Windows</th>
-                        <th scope="col">Mac OS X</th>
-                        <th scope="col">Linux</th>
-                        <th scope="col">First reported</th>
-                        <th scope="col">Last reported</th>
+                        <th scope="col">All <a href="/crashes?sort=all_crash_count&order=asc">A</a>/<a href="/crashes?sort=all_crash_count&order=desc">D</a></th>
+                        <th scope="col">Windows <a href="/crashes?sort=win_crash_count&order=asc">A</a>/<a href="/crashes?sort=win_crash_count&order=desc">D</a></th>
+                        <th scope="col">Mac OS X <a href="/crashes?sort=mac_crash_count&order=asc">A</a>/<a href="/crashes?sort=mac_crash_count&order=desc">D</a></th>
+                        <th scope="col">Linux <a href="/crashes?sort=lin_crash_count&order=asc">A</a>/<a href="/crashes?sort=lin_crash_count&order=desc">D</a></th>
+                        <th scope="col">First reported <a href="/crashes?sort=first_reported&order=asc">A</a>/<a href="/crashes?sort=first_reported&order=desc">D</a></th>
+                        <th scope="col">Last reported <a href="/crashes?sort=last_reported&order=asc">A</a>/<a href="/crashes?sort=last_reported&order=desc">D</a></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -25,8 +25,8 @@
                         <td>{{ .WinCrashCount }}</td>
                         <td>{{ .MacCrashCount }}</td>
                         <td>{{ .LinCrashCount }}</td>
-                        <td>{{ .FirstReported }}</td>
-                        <td>{{ .LastReported }}</td>
+                        <td>{{ .FirstReported.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
+                        <td>{{ .LastReported.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                     </tr>
                     {{ end }}
                 </tbody>

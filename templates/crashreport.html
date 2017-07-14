@@ -37,7 +37,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Date</th>
-                        <td>{{ .item.Date }}</td>
+                        <td>{{ .item.Date.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Product</th>
@@ -183,7 +183,7 @@
                 {{ range .comments }}
                 <div class="well" id="comment-{{ .ID }}">
                     {{ .Content }}
-                        — by {{ .User.Name }} on {{ .CreatedAt }}
+                    <footer>— by {{ .User.Name }} on {{ .CreatedAt.Format "02. Jan. 2006 15:04:05 UTC" }}</footer>
                 </div>
                 {{ end }}
                 <h3>Add comment</h3>

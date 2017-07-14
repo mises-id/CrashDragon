@@ -18,7 +18,7 @@
                     {{ range .items }}
                     <tr>
                         <td><a href="/crashreports/{{ .ID }}">{{ .ID }}</a></td>
-                        <td>{{ .CreatedAt }}</td>
+                        <td>{{ .CreatedAt.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                         <td>{{ .Product }}</td>
                         <td>{{ .Version }}</td>
                         <td>{{ .Os }}</td>
@@ -30,7 +30,7 @@
             {{ range .comments }}
             <div class="well" id="comment-{{ .ID }}">
                 {{ .Content }}
-                    — by {{ .User.Name }} on {{ .CreatedAt }}
+                <footer>— by {{ .User.Name }} on {{ .CreatedAt.Format "02. Jan. 2006 15:04:05 UTC" }}</footer>
             </div>
             {{ end }}
             <h3>Add comment</h3>

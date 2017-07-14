@@ -8,10 +8,10 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
-                        <th scope="col">Date</th>
-                        <th scope="col">Product</th>
-                        <th scope="col">Version</th>
-                        <th scope="col">Platform</th>
+                        <th scope="col">Date <a href="/crashes?sort=created_at&order=asc">A</a>/<a href="/crashes?sort=created_at&order=desc">D</a></th>
+                        <th scope="col">Product <a href="/crashes?sort=product&order=asc">A</a>/<a href="/crashes?sort=product&order=desc">D</a></th>
+                        <th scope="col">Version <a href="/crashes?sort=version&order=asc">A</a>/<a href="/crashes?sort=version&order=desc">D</a></th>
+                        <th scope="col">Platform <a href="/crashes?sort=os&order=asc">A</a>/<a href="/crashes?sort=os&order=desc">D</a></th>
                         <th scope="col">Reason</th>
                         <th scope="col">Location</th>
                     </tr>
@@ -21,7 +21,7 @@
                     <tr>
                         <td><a href="/crashreports/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .Signature }}</td>
-                        <td>{{ .Date }}</td>
+                        <td>{{ .Date.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                         <td>{{ .Product }}</td>
                         <td>{{ .Version }}</td>
                         <td>{{ .Platform }}</td>

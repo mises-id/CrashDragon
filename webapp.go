@@ -10,6 +10,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
@@ -71,7 +72,33 @@ func PostCrashreportComment(c *gin.Context) {
 // GetCrashes returns crashes
 func GetCrashes(c *gin.Context) {
 	var Crashes []database.Crash
-	database.Db.Order("all_crash_count DESC").Find(&Crashes)
+	sort := c.DefaultQuery("sort", "all_crash_count")
+	switch sort {
+	case "all_crash_count":
+		sort = "all_crash_count"
+	case "win_crash_count":
+		sort = "win_crash_count"
+	case "mac_crash_count":
+		sort = "mac_crash_count"
+	case "lin_crash_count":
+		sort = "lin_crash_count"
+	case "first_reported":
+		sort = "first_reported"
+	case "last_reported":
+		sort = "last_reported"
+	default:
+		sort = "all_crash_count"
+	}
+	order := c.DefaultQuery("order", "desc")
+	switch order {
+	case "desc":
+		order = "DESC"
+	case "asc":
+		order = "ASC"
+	default:
+		order = "DESC"
+	}
+	database.Db.Order(sort + " " + order).Find(&Crashes)
 	c.HTML(http.StatusOK, "crashes.html", gin.H{
 		"title": "Crashes",
 		"items": Crashes,
@@ -101,19 +128,39 @@ func GetCrashreports(c *gin.Context) {
 	var List []struct {
 		ID        string
 		Signature string
-		Date      string
+		Date      time.Time
 		Product   string
 		Version   string
 		Platform  string
 		Reason    string
 		Location  string
 	}
-	database.Db.Where("processed = true").Order("created_at DESC").Find(&Reports)
+	sort := c.DefaultQuery("sort", "created_at")
+	switch sort {
+	case "product":
+		sort = "product"
+	case "version":
+		sort = "version"
+	case "os":
+		sort = "os"
+	default:
+		sort = "created_at"
+	}
+	order := c.DefaultQuery("order", "desc")
+	switch order {
+	case "desc":
+		order = "DESC"
+	case "asc":
+		order = "ASC"
+	default:
+		order = "DESC"
+	}
+	database.Db.Where("processed = true").Order(sort + " " + order).Find(&Reports)
 	for _, Report := range Reports {
 		var Item struct {
 			ID        string
 			Signature string
-			Date      string
+			Date      time.Time
 			Product   string
 			Version   string
 			Platform  string
@@ -121,7 +168,7 @@ func GetCrashreports(c *gin.Context) {
 			Location  string
 		}
 		Item.ID = Report.ID.String()
-		Item.Date = Report.CreatedAt.Format("2006-01-02 15:04:05")
+		Item.Date = Report.CreatedAt
 		Item.Product = Report.Product
 		Item.Version = Report.Version
 		Item.Platform = Report.Os
@@ -156,7 +203,7 @@ func GetCrashreport(c *gin.Context) {
 	var Item struct {
 		ID        string
 		Signature string
-		Date      string
+		Date      time.Time
 		Product   string
 		Version   string
 		Platform  string
@@ -168,7 +215,7 @@ func GetCrashreport(c *gin.Context) {
 		Uptime    string
 	}
 	Item.ID = Report.ID.String()
-	Item.Date = Report.CreatedAt.Format("2006-01-02 15:04:05")
+	Item.Date = Report.CreatedAt
 	Item.Product = Report.Product
 	Item.Version = Report.Version
 	Item.Platform = Report.Os + " " + Report.OsVersion
