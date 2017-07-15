@@ -114,6 +114,17 @@ func processReport(Crashreport database.Crashreport, reprocess bool) {
 	Crashreport.Os = Crashreport.Report.SystemInfo.Os
 	Crashreport.OsVersion = Crashreport.Report.SystemInfo.OsVer
 	Crashreport.Arch = Crashreport.Report.SystemInfo.CPUArch
+	for _, Frame := range Crashreport.Report.CrashingThread.Frames {
+		if Frame.File == "" && Crashreport.Signature != "" {
+			continue
+		}
+		Crashreport.Signature = Frame.Function
+		if Frame.File == "" {
+			continue
+		}
+		Crashreport.CrashLocation = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
+		break
+	}
 	if err = database.Db.Save(&Crashreport).Error; err != nil {
 		os.Remove(file)
 		database.Db.Delete(&Crashreport)

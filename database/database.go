@@ -76,9 +76,11 @@ type Crashreport struct {
 	Comment       string
 	Processed     bool
 
-	Os        string
-	OsVersion string
-	Arch      string
+	Os            string
+	OsVersion     string
+	Arch          string
+	Signature     string
+	CrashLocation string
 
 	Comments []Comment
 

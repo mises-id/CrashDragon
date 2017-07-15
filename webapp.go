@@ -98,7 +98,25 @@ func GetCrashes(c *gin.Context) {
 	default:
 		order = "DESC"
 	}
-	database.Db.Order(sort + " " + order).Find(&Crashes)
+	query := database.Db
+	if platform := c.Query("platform"); platform != "" {
+		platforms := strings.Split(platform, ",")
+		var filter []string
+		for _, os := range platforms {
+			if os == "mac" {
+				filter = append(filter, "mac_crash_count > 0")
+			} else if os == "win" {
+				filter = append(filter, "win_crash_count > 0")
+			} else if os == "lin" {
+				filter = append(filter, "lin_crash_count > 0")
+			}
+		}
+		if len(filter) > 0 {
+			whereQuery := strings.Join(filter, " AND ")
+			query = query.Where(whereQuery)
+		}
+	}
+	query.Order(sort + " " + order).Find(&Crashes)
 	c.HTML(http.StatusOK, "crashes.html", gin.H{
 		"title": "Crashes",
 		"items": Crashes,
@@ -155,7 +173,37 @@ func GetCrashreports(c *gin.Context) {
 	default:
 		order = "DESC"
 	}
-	database.Db.Where("processed = true").Order(sort + " " + order).Find(&Reports)
+	query := database.Db
+	if sig := c.Query("signature"); sig != "" {
+		query = query.Where("signature = ?", sig)
+	}
+	if prod := c.Query("product"); prod != "" {
+		query = query.Where("product = ?", prod)
+	}
+	if ver := c.Query("version"); ver != "" {
+		query = query.Where("version = ?", ver)
+	}
+	if platform := c.Query("platform"); platform != "" {
+		platforms := strings.Split(platform, ",")
+		var filter []string
+		for _, os := range platforms {
+			if os == "mac" {
+				filter = append(filter, "'Mac OS X'")
+			} else if os == "win" {
+				filter = append(filter, "'Windows'")
+			} else if os == "lin" {
+				filter = append(filter, "'Linux'")
+			}
+		}
+		if len(filter) > 0 {
+			whereQuery := strings.Join(filter, ", ")
+			query = query.Where("os IN (" + whereQuery + ")")
+		}
+	}
+	if reason := c.Query("reason"); reason != "" {
+		query = query.Where("reason = ?", reason)
+	}
+	query.Where("processed = true").Order(sort + " " + order).Find(&Reports)
 	for _, Report := range Reports {
 		var Item struct {
 			ID        string
@@ -173,17 +221,8 @@ func GetCrashreports(c *gin.Context) {
 		Item.Version = Report.Version
 		Item.Platform = Report.Os
 		Item.Reason = Report.Report.CrashInfo.Type
-		for _, Frame := range Report.Report.CrashingThread.Frames {
-			if Frame.File == "" && Item.Signature != "" {
-				continue
-			}
-			Item.Signature = Frame.Function
-			if Frame.File == "" {
-				continue
-			}
-			Item.Location = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
-			break
-		}
+		Item.Signature = Report.Signature
+		Item.Location = Report.CrashLocation
 		List = append(List, Item)
 	}
 	c.HTML(http.StatusOK, "crashreports.html", gin.H{
