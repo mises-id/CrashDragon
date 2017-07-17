@@ -28,6 +28,10 @@
                         <td>{{ .item.ID }}</td>
                     </tr>
                     <tr>
+                        <th scope="row">Crash ID</th>
+                        <td id="crashid"><a href="/crashes/{{ .item.CrashID }}">{{ .item.CrashID }}</a> <small><a onclick="changeCID()">(change)</a></small></td>
+                    </tr>
+                    <tr>
                         <th scope="row">Signature</th>
                         <td>{{ .item.Signature }}</td>
                     </tr>
@@ -196,5 +200,12 @@
             </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+    function changeCID() {
+        cell = document.getElementById("crashid");
+        cell.innerHTML = "<form action=\"/crashreports/{{ .item.ID }}/crashid\" method=\"post\"><input type=\"text\" value=\"{{ .item.CrashID }}\" style=\"width:70%;margin-right:1em;\" name=\"crashid\"><button class=\"btn btn-default\" type=\"submit\">Change</button></form>";
+    }
+    </script>
 
     {{ template "foot.html" . }}

@@ -20,6 +20,20 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+// PostCrashreportCrashID allows you to change the crash id of a crashreport
+func PostCrashreportCrashID(c *gin.Context) {
+	var Crashreport database.Crashreport
+	database.Db.First(&Crashreport, "id = ?", c.Param("id"))
+	id, err := uuid.FromString(c.PostForm("crashid"))
+	if err != nil {
+		c.AbortWithStatus(http.StatusPreconditionFailed)
+		return
+	}
+	Crashreport.CrashID = id
+	database.Db.Save(&Crashreport)
+	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String())
+}
+
 // PostCrashComment allows you to post a comment to a crash
 func PostCrashComment(c *gin.Context) {
 	User := c.MustGet("user").(database.User)
@@ -241,6 +255,7 @@ func GetCrashreport(c *gin.Context) {
 	}
 	var Item struct {
 		ID        string
+		CrashID   string
 		Signature string
 		Date      time.Time
 		Product   string
@@ -254,6 +269,7 @@ func GetCrashreport(c *gin.Context) {
 		Uptime    string
 	}
 	Item.ID = Report.ID.String()
+	Item.CrashID = Report.CrashID.String()
 	Item.Date = Report.CreatedAt
 	Item.Product = Report.Product
 	Item.Version = Report.Version

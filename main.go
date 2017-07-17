@@ -17,6 +17,7 @@ func initRouter() *gin.Engine {
 	auth := router.Group("/", Auth)
 	auth.POST("/crashes/:id/comments", PostCrashComment)
 	auth.POST("/crashreports/:id/comments", PostCrashreportComment)
+	auth.POST("/crashreports/:id/crashid", PostCrashreportCrashID)
 	auth.POST("/crashreports/:id/reprocess", ReprocessCrashreport)
 	auth.POST("/symfiles", PostSymfiles)
 
