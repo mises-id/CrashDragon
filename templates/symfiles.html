@@ -25,6 +25,16 @@
                     {{ end }}
                 </tbody>
             </table>
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item">
+                        <a class="page-link" href="?last_date={{ .prevDate }}&dir=down" rel="prev">Previous</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?last_date={{ .nextDate }}&dir=up" rel="next">Next</a>
+                    </li>
+                </ul>
+            </nav>
         </div>
     </div>
 </div>

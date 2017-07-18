@@ -130,10 +130,26 @@ func GetCrashes(c *gin.Context) {
 			query = query.Where(whereQuery)
 		}
 	}
-	query.Order(sort + " " + order).Find(&Crashes)
+	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
+	dir := c.DefaultQuery("dir", "up")
+	if lastDate == "" || lastDate == "Mon Jan  1 00:00:00 UTC 0001" {
+		query.Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
+	} else if dir == "up" {
+		query.Where("created_at < ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
+	} else {
+		query.Where("created_at > ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
+	}
+	var nextDate string
+	var prevDate string
+	if len(Crashes) > 0 {
+		nextDate = Crashes[len(Crashes)-1].CreatedAt.Format(time.UnixDate)
+		prevDate = Crashes[0].CreatedAt.Format(time.UnixDate)
+	}
 	c.HTML(http.StatusOK, "crashes.html", gin.H{
-		"title": "Crashes",
-		"items": Crashes,
+		"title":    "Crashes",
+		"items":    Crashes,
+		"nextDate": nextDate,
+		"prevDate": prevDate,
 	})
 }
 
@@ -217,7 +233,21 @@ func GetCrashreports(c *gin.Context) {
 	if reason := c.Query("reason"); reason != "" {
 		query = query.Where("reason = ?", reason)
 	}
-	query.Where("processed = true").Order(sort + " " + order).Find(&Reports)
+	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
+	dir := c.DefaultQuery("dir", "up")
+	if lastDate == "" || lastDate == "Mon Jan  1 00:00:00 UTC 0001" {
+		query.Where("processed = true").Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
+	} else if dir == "up" {
+		query.Where("processed = true").Where("created_at < ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
+	} else {
+		query.Where("processed = true").Where("created_at > ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
+	}
+	var nextDate string
+	var prevDate string
+	if len(Reports) > 0 {
+		nextDate = Reports[len(Reports)-1].CreatedAt.Format(time.UnixDate)
+		prevDate = Reports[0].CreatedAt.Format(time.UnixDate)
+	}
 	for _, Report := range Reports {
 		var Item struct {
 			ID        string
@@ -240,8 +270,10 @@ func GetCrashreports(c *gin.Context) {
 		List = append(List, Item)
 	}
 	c.HTML(http.StatusOK, "crashreports.html", gin.H{
-		"title": "Crashreports",
-		"items": List,
+		"title":    "Crashreports",
+		"items":    List,
+		"nextDate": nextDate,
+		"prevDate": prevDate,
 	})
 }
 
@@ -347,10 +379,26 @@ func GetCrashreportFile(c *gin.Context) {
 // GetSymfiles returns symfiles
 func GetSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
-	database.Db.Find(&Symfiles)
+	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
+	dir := c.DefaultQuery("dir", "up")
+	if lastDate == "" || lastDate == "Mon Jan  1 00:00:00 UTC 0001" {
+		database.Db.Order("created_at ASC").Limit(50).Find(&Symfiles)
+	} else if dir == "up" {
+		database.Db.Where("created_at > ?", lastDate).Order("created_at ASC").Limit(50).Find(&Symfiles)
+	} else {
+		database.Db.Where("created_at < ?", lastDate).Order("created_at ASC").Limit(50).Find(&Symfiles)
+	}
+	var nextDate string
+	var prevDate string
+	if len(Symfiles) > 0 {
+		nextDate = Symfiles[len(Symfiles)-1].CreatedAt.Format(time.UnixDate)
+		prevDate = Symfiles[0].CreatedAt.Format(time.UnixDate)
+	}
 	c.HTML(http.StatusOK, "symfiles.html", gin.H{
-		"title": "Symfiles",
-		"items": Symfiles,
+		"title":    "Symfiles",
+		"items":    Symfiles,
+		"nextDate": nextDate,
+		"prevDate": prevDate,
 	})
 }
 
