@@ -20,18 +20,18 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// PostCrashreportCrashID allows you to change the crash id of a crashreport
-func PostCrashreportCrashID(c *gin.Context) {
-	var Crashreport database.Crashreport
-	database.Db.First(&Crashreport, "id = ?", c.Param("id"))
+// PostReportCrashID allows you to change the crash id of a crashreport
+func PostReportCrashID(c *gin.Context) {
+	var Report database.Report
+	database.Db.First(&Report, "id = ?", c.Param("id"))
 	id, err := uuid.FromString(c.PostForm("crashid"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusPreconditionFailed)
 		return
 	}
-	Crashreport.CrashID = id
-	database.Db.Save(&Crashreport)
-	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String())
+	Report.CrashID = id
+	database.Db.Save(&Report)
+	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
 }
 
 // PostCrashComment allows you to post a comment to a crash
@@ -53,18 +53,18 @@ func PostCrashComment(c *gin.Context) {
 		c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String())
 		return
 	}
-	Comment.CrashreportID = uuid.Nil
+	Comment.ReportID = uuid.Nil
 	Comment.CrashID = Crash.ID
 	database.Db.Save(&Comment)
 	c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String()+"#comment-"+Comment.ID.String())
 }
 
-// PostCrashreportComment allows you to post a comment to a crashreport
-func PostCrashreportComment(c *gin.Context) {
+// PostReportComment allows you to post a comment to a crashreport
+func PostReportComment(c *gin.Context) {
 	User := c.MustGet("user").(database.User)
-	var Crashreport database.Crashreport
-	database.Db.First(&Crashreport, "id = ?", c.Param("id"))
-	if Crashreport.ID == uuid.Nil {
+	var Report database.Report
+	database.Db.First(&Report, "id = ?", c.Param("id"))
+	if Report.ID == uuid.Nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
@@ -75,12 +75,12 @@ func PostCrashreportComment(c *gin.Context) {
 	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
 	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
 	if len(strings.TrimSpace(string(Comment.Content))) == 0 {
-		c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String())
+		c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
 	}
-	Comment.CrashreportID = Crashreport.ID
+	Comment.ReportID = Report.ID
 	Comment.CrashID = uuid.Nil
 	database.Db.Save(&Comment)
-	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Crashreport.ID.String()+"#comment-"+Comment.ID.String())
+	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String()+"#comment-"+Comment.ID.String())
 }
 
 // GetCrashes returns crashes
@@ -156,23 +156,23 @@ func GetCrashes(c *gin.Context) {
 // GetCrash returns details of a crash
 func GetCrash(c *gin.Context) {
 	var Crash database.Crash
-	var Crashreports []database.Crashreport
+	var Reports []database.Report
 	var Comments []database.Comment
-	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Crashreports).Order("created_at DESC").Related(&Comments)
+	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Reports).Order("created_at DESC").Related(&Comments)
 	for i, Comment := range Comments {
 		database.Db.Model(&Comment).Related(&Comments[i].User)
 	}
 	c.HTML(http.StatusOK, "crash.html", gin.H{
 		"title":    "Crash",
-		"items":    Crashreports,
+		"items":    Reports,
 		"comments": Comments,
 		"ID":       Crash.ID.String(),
 	})
 }
 
-// GetCrashreports returns crashreports
-func GetCrashreports(c *gin.Context) {
-	var Reports []database.Crashreport
+// GetReports returns crashreports
+func GetReports(c *gin.Context) {
+	var Reports []database.Report
 	var List []struct {
 		ID        string
 		Signature string
@@ -269,17 +269,17 @@ func GetCrashreports(c *gin.Context) {
 		Item.Location = Report.CrashLocation
 		List = append(List, Item)
 	}
-	c.HTML(http.StatusOK, "crashreports.html", gin.H{
-		"title":    "Crashreports",
+	c.HTML(http.StatusOK, "reports.html", gin.H{
+		"title":    "Reports",
 		"items":    List,
 		"nextDate": nextDate,
 		"prevDate": prevDate,
 	})
 }
 
-// GetCrashreport returns details of crashreport
-func GetCrashreport(c *gin.Context) {
-	var Report database.Crashreport
+// GetReport returns details of crashreport
+func GetReport(c *gin.Context) {
+	var Report database.Report
 	var Comments []database.Comment
 	database.Db.First(&Report, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Comments)
 	for i, Comment := range Comments {
@@ -329,8 +329,8 @@ func GetCrashreport(c *gin.Context) {
 	if result != "" {
 		c.SetCookie("result", "", 1, "/", "", false, false)
 	}
-	c.HTML(http.StatusOK, "crashreport.html", gin.H{
-		"title":    "Crashreport",
+	c.HTML(http.StatusOK, "report.html", gin.H{
+		"title":    "Report",
 		"item":     Item,
 		"report":   Report.Report,
 		"result":   result,
@@ -338,17 +338,17 @@ func GetCrashreport(c *gin.Context) {
 	})
 }
 
-// GetCrashreportFile returns minidump file of crashreport
-func GetCrashreportFile(c *gin.Context) {
-	var Crashreport database.Crashreport
-	if err := database.Db.Where("id = ?", c.Param("id")).First(&Crashreport).Error; err != nil {
+// GetReportFile returns minidump file of crashreport
+func GetReportFile(c *gin.Context) {
+	var Report database.Report
+	if err := database.Db.Where("id = ?", c.Param("id")).First(&Report).Error; err != nil {
 		c.AbortWithError(http.StatusNotFound, err)
 		return
 	}
 	name := c.Param("name")
 	switch name {
 	case "upload_file_minidump":
-		file := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4], Crashreport.ID.String()+".dmp")
+		file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 		f, err := os.Open(file)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -359,16 +359,16 @@ func GetCrashreportFile(c *gin.Context) {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		c.Header("Content-Disposition", "attachment; filename=\""+Crashreport.ID.String()+".dmp\"")
+		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".dmp\"")
 		c.Data(http.StatusOK, "application/octet-stream", data)
 		return
 	case "processed_json":
-		c.Header("Content-Disposition", "attachment; filename=\""+Crashreport.ID.String()+".json\"")
-		c.Data(http.StatusOK, "application/json", []byte(Crashreport.ReportContentJSON))
+		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".json\"")
+		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		c.Header("Content-Disposition", "attachment; filename=\""+Crashreport.ID.String()+".txt\"")
-		c.Data(http.StatusOK, "text/plain", []byte(Crashreport.ReportContentTXT))
+		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".txt\"")
+		c.Data(http.StatusOK, "text/plain", []byte(Report.ReportContentTXT))
 		return
 	default:
 		c.AbortWithError(http.StatusBadRequest, errors.New(name+" is a unknwon file"))

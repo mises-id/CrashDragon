@@ -8,10 +8,10 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
-                        <th scope="col">Date <a href="/crashes?sort=created_at&order=asc">A</a>/<a href="/crashes?sort=created_at&order=desc">D</a></th>
-                        <th scope="col">Product <a href="/crashes?sort=product&order=asc">A</a>/<a href="/crashes?sort=product&order=desc">D</a></th>
-                        <th scope="col">Version <a href="/crashes?sort=version&order=asc">A</a>/<a href="/crashes?sort=version&order=desc">D</a></th>
-                        <th scope="col">Platform <a href="/crashes?sort=os&order=asc">A</a>/<a href="/crashes?sort=os&order=desc">D</a></th>
+                        <th scope="col">Date <a href="/reports?sort=created_at&order=asc">A</a>/<a href="/reports?sort=created_at&order=desc">D</a></th>
+                        <th scope="col">Product <a href="/reports?sort=product&order=asc">A</a>/<a href="/reports?sort=product&order=desc">D</a></th>
+                        <th scope="col">Version <a href="/reports?sort=version&order=asc">A</a>/<a href="/reports?sort=version&order=desc">D</a></th>
+                        <th scope="col">Platform <a href="/reports?sort=os&order=asc">A</a>/<a href="/reports?sort=os&order=desc">D</a></th>
                         <th scope="col">Reason</th>
                         <th scope="col">Location</th>
                     </tr>
@@ -19,7 +19,7 @@
                 <tbody>
                     {{ range .items }}
                     <tr>
-                        <td><a href="/crashreports/{{ .ID }}">{{ .ID }}</a></td>
+                        <td><a href="/reports/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .Signature }}</td>
                         <td>{{ .Date.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                         <td>{{ .Product }}</td>

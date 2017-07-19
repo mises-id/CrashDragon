@@ -4,8 +4,8 @@
         <div class="col-md-12">
             <h1>
                 {{ .title }}{{ if .item.Signature }} <small>({{ .item.Signature}})</small>{{ end }}
-                <form action="/crashreports/{{ .item.ID }}/reprocess" method="post" style="display: inline">
-                    <button type="submit" class="btn btn-default pull-right" href="/crashreports/{{ .item.ID }}/reprocess" id="reprocess" role="button">
+                <form action="/reports/{{ .item.ID }}/reprocess" method="post" style="display: inline">
+                    <button type="submit" class="btn btn-default pull-right" href="/reports/{{ .item.ID }}/reprocess" id="reprocess" role="button">
                         <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
                          Reprocess
                     </button>
@@ -102,13 +102,13 @@
             <h2>Downloads</h2>
             <ul class="nav nav-pills nav-stacked">
                 <li role="presentation">
-                    <a href="/crashreports/{{ .item.ID }}/files/upload_file_minidump">Original Minidump</a>
+                    <a href="/reports/{{ .item.ID }}/files/upload_file_minidump">Original Minidump</a>
                 </li>
                 <li role="presentation">
-                    <a href="/crashreports/{{ .item.ID }}/files/processed_json">Crashreport (JSON)</a>
+                    <a href="/reports/{{ .item.ID }}/files/processed_json">Crashreport (JSON)</a>
                 </li>
                 <li role="presentation">
-                    <a href="/crashreports/{{ .item.ID }}/files/processed_txt">Crashreport (TXT)</a>
+                    <a href="/reports/{{ .item.ID }}/files/processed_txt">Crashreport (TXT)</a>
                 </li>
             </ul>
         </aside>
@@ -191,7 +191,7 @@
                 </div>
                 {{ end }}
                 <h3>Add comment</h3>
-                <form method="post" action="/crashreports/{{ .item.ID }}/comments">
+                <form method="post" action="/reports/{{ .item.ID }}/comments">
                     <div class="form-group">
                         <textarea class="form-control" name="comment"></textarea>
                     </div>
@@ -204,7 +204,7 @@
     <script type="text/javascript">
     function changeCID() {
         cell = document.getElementById("crashid");
-        cell.innerHTML = "<form action=\"/crashreports/{{ .item.ID }}/crashid\" method=\"post\"><input type=\"text\" value=\"{{ .item.CrashID }}\" style=\"width:70%;margin-right:1em;\" name=\"crashid\"><button class=\"btn btn-default\" type=\"submit\">Change</button></form>";
+        cell.innerHTML = "<form action=\"/reports/{{ .item.ID }}/crashid\" method=\"post\"><input type=\"text\" value=\"{{ .item.CrashID }}\" style=\"width:70%;margin-right:1em;\" name=\"crashid\"><button class=\"btn btn-default\" type=\"submit\">Change</button></form>";
     }
     </script>
 

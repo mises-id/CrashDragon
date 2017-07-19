@@ -20,8 +20,8 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-// PostCrashreports processes crashreport
-func PostCrashreports(c *gin.Context) {
+// PostReports processes crashreport
+func PostReports(c *gin.Context) {
 	file, _, err := c.Request.FormFile("upload_file_minidump")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -31,46 +31,46 @@ func PostCrashreports(c *gin.Context) {
 		return
 	}
 	defer file.Close()
-	var Crashreport database.Crashreport
-	Crashreport.Processed = false
-	Crashreport.ID = uuid.NewV4()
-	if err = database.Db.Create(&Crashreport).Error; err != nil {
+	var Report database.Report
+	Report.Processed = false
+	Report.ID = uuid.NewV4()
+	if err = database.Db.Create(&Report).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": http.StatusBadRequest,
 			"error":  err.Error(),
 		})
 		return
 	}
-	Crashreport.Product = c.Request.FormValue("prod")
-	Crashreport.Version = c.Request.FormValue("ver")
-	Crashreport.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
-	Crashreport.EMail = c.Request.FormValue("email")
-	Crashreport.Comment = c.Request.FormValue("comments")
-	filepath := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4])
+	Report.Product = c.Request.FormValue("prod")
+	Report.Version = c.Request.FormValue("ver")
+	Report.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
+	Report.EMail = c.Request.FormValue("email")
+	Report.Comment = c.Request.FormValue("comments")
+	filepath := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
 	os.MkdirAll(filepath, 0755)
-	f, err := os.Create(path.Join(filepath, Crashreport.ID.String()+".dmp"))
+	f, err := os.Create(path.Join(filepath, Report.ID.String()+".dmp"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": http.StatusInternalServerError,
 			"error":  err.Error(),
 		})
-		database.Db.Delete(&Crashreport)
+		database.Db.Delete(&Report)
 		return
 	}
 	io.Copy(f, file)
 	f.Close()
-	go processReport(Crashreport, false)
+	go processReport(Report, false)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
 		"error":  nil,
-		"object": Crashreport,
+		"object": Report,
 	})
 	return
 }
 
-// ReprocessCrashreport processes the Crashreport again with current symbols
-func ReprocessCrashreport(c *gin.Context) {
-	var Report database.Crashreport
+// ReprocessReport processes the Crashreport again with current symbols
+func ReprocessReport(c *gin.Context) {
+	var Report database.Report
 	database.Db.Where("id = ?", c.Param("id")).First(&Report)
 	processReport(Report, true)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
@@ -78,26 +78,26 @@ func ReprocessCrashreport(c *gin.Context) {
 	return
 }
 
-func processReport(Crashreport database.Crashreport, reprocess bool) {
-	file := path.Join(config.C.ContentDirectory, "Crashreports", Crashreport.ID.String()[0:2], Crashreport.ID.String()[0:4], Crashreport.ID.String()+".dmp")
+func processReport(Report database.Report, reprocess bool) {
+	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 	cmdJSON := exec.Command("./minidump-stackwalk/stackwalker", file, path.Join(config.C.ContentDirectory, "Symfiles"))
 	var out bytes.Buffer
 	cmdJSON.Stdout = &out
 	err := cmdJSON.Run()
 	if err != nil {
 		os.Remove(file)
-		database.Db.Delete(&Crashreport)
+		database.Db.Delete(&Report)
 		return
 	}
-	err = json.Unmarshal(out.Bytes(), &Crashreport.Report)
+	err = json.Unmarshal(out.Bytes(), &Report.Report)
 	if err != nil {
 		os.Remove(file)
-		database.Db.Delete(&Crashreport)
+		database.Db.Delete(&Report)
 		return
 	}
-	if Crashreport.Report.Status != "OK" {
+	if Report.Report.Status != "OK" {
 		os.Remove(file)
-		database.Db.Delete(&Crashreport)
+		database.Db.Delete(&Report)
 		return
 	}
 	cmdTXT := exec.Command("./minidump-stackwalk/stackwalk/bin/minidump_stackwalk", file, path.Join(config.C.ContentDirectory, "Symfiles"))
@@ -106,32 +106,32 @@ func processReport(Crashreport database.Crashreport, reprocess bool) {
 	err = cmdTXT.Run()
 	if err != nil {
 		os.Remove(file)
-		database.Db.Delete(&Crashreport)
+		database.Db.Delete(&Report)
 		return
 	}
-	Crashreport.ReportContentTXT = out.String()
-	Crashreport.Processed = true
-	Crashreport.Os = Crashreport.Report.SystemInfo.Os
-	Crashreport.OsVersion = Crashreport.Report.SystemInfo.OsVer
-	Crashreport.Arch = Crashreport.Report.SystemInfo.CPUArch
-	for _, Frame := range Crashreport.Report.CrashingThread.Frames {
-		if Frame.File == "" && Crashreport.Signature != "" {
+	Report.ReportContentTXT = out.String()
+	Report.Processed = true
+	Report.Os = Report.Report.SystemInfo.Os
+	Report.OsVersion = Report.Report.SystemInfo.OsVer
+	Report.Arch = Report.Report.SystemInfo.CPUArch
+	for _, Frame := range Report.Report.CrashingThread.Frames {
+		if Frame.File == "" && Report.Signature != "" {
 			continue
 		}
-		Crashreport.Signature = Frame.Function
+		Report.Signature = Frame.Function
 		if Frame.File == "" {
 			continue
 		}
-		Crashreport.CrashLocation = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
+		Report.CrashLocation = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
 		break
 	}
-	if err = database.Db.Save(&Crashreport).Error; err != nil {
+	if err = database.Db.Save(&Report).Error; err != nil {
 		os.Remove(file)
-		database.Db.Delete(&Crashreport)
+		database.Db.Delete(&Report)
 		return
 	}
 	var signature string
-	for _, frame := range Crashreport.Report.CrashingThread.Frames {
+	for _, frame := range Report.Report.CrashingThread.Frames {
 		if frame.Function == "" {
 			continue
 		} else {
@@ -144,8 +144,8 @@ func processReport(Crashreport database.Crashreport, reprocess bool) {
 	}
 
 	var Crash database.Crash
-	if reprocess && Crashreport.CrashID != uuid.Nil {
-		database.Db.First(&Crash, "id = ?", Crashreport.CrashID)
+	if reprocess && Report.CrashID != uuid.Nil {
+		database.Db.First(&Crash, "id = ?", Report.CrashID)
 		Crash.Signature = signature
 		database.Db.Save(&Crash)
 	} else {
@@ -154,7 +154,7 @@ func processReport(Crashreport database.Crashreport, reprocess bool) {
 	if Crash.ID == uuid.Nil {
 		Crash.ID = uuid.NewV4()
 
-		Crash.FirstReported = Crashreport.CreatedAt
+		Crash.FirstReported = Report.CreatedAt
 		Crash.Signature = signature
 
 		Crash.AllCrashCount = 0
@@ -165,20 +165,20 @@ func processReport(Crashreport database.Crashreport, reprocess bool) {
 		database.Db.Create(&Crash)
 		reprocess = false
 	}
-	if !reprocess || Crashreport.CrashID == uuid.Nil {
-		Crash.LastReported = Crashreport.CreatedAt
+	if !reprocess || Report.CrashID == uuid.Nil {
+		Crash.LastReported = Report.CreatedAt
 		Crash.AllCrashCount++
-		if Crashreport.Os == "Windows" {
+		if Report.Os == "Windows" {
 			Crash.WinCrashCount++
-		} else if Crashreport.Os == "Linux" {
+		} else if Report.Os == "Linux" {
 			Crash.LinCrashCount++
-		} else if Crashreport.Os == "Mac OS X" {
+		} else if Report.Os == "Mac OS X" {
 			Crash.MacCrashCount++
 		}
 		database.Db.Save(&Crash)
 	}
-	Crashreport.CrashID = Crash.ID
-	database.Db.Save(&Crashreport)
+	Report.CrashID = Crash.ID
+	database.Db.Save(&Report)
 }
 
 // PostSymfiles processes symfile

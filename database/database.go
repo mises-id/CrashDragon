@@ -31,8 +31,8 @@ type Comment struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	CrashID       uuid.UUID `sql:"type:uuid DEFAULT NULL"`
-	CrashreportID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
 
 	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	User   User
@@ -53,15 +53,15 @@ type Crash struct {
 	MacCrashCount uint
 	LinCrashCount uint
 
-	Crashreports []Crashreport
-	Comments     []Comment
+	Reports  []Report
+	Comments []Comment
 
 	FirstReported time.Time
 	LastReported  time.Time
 }
 
-// Crashreport database model
-type Crashreport struct {
+// Report database model
+type Report struct {
 	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -86,7 +86,7 @@ type Crashreport struct {
 
 	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	ReportContentTXT  string
-	Report            Report `gorm:"-"`
+	Report            ReportContent `gorm:"-"`
 }
 
 // Symfile database model
@@ -96,14 +96,17 @@ type Symfile struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Os   string
+	Os      string
+	Product string
+	Version string
+
 	Arch string
 	Code string `gorm:"unique;index"`
 	Name string
 }
 
-// Report content of a crashreport
-type Report struct {
+// ReportContent of a crashreport
+type ReportContent struct {
 	CrashInfo struct {
 		Address        string `json:"address"`
 		CrashingThread int    `json:"crashing_thread"`
@@ -199,21 +202,21 @@ func InitDb(connection string) error {
 	}
 	Db.LogMode(true)
 
-	Db.AutoMigrate(&User{}, &Comment{}, &Crash{}, &Crashreport{}, &Symfile{})
+	Db.AutoMigrate(&User{}, &Comment{}, &Crash{}, &Report{}, &Symfile{})
 	return err
 }
 
 // BeforeSave is called before a crashreport is saved and maps the Report to a JSON string
-func (c *Crashreport) BeforeSave() (err error) {
+func (c *Report) BeforeSave() error {
 	var b []byte
-	b, err = json.Marshal(c.Report)
+	b, err := json.Marshal(c.Report)
 	c.ReportContentJSON = string(b)
-	return
+	return err
 }
 
 // AfterFind is called on finds, maps JSON string to Report
-func (c *Crashreport) AfterFind() (err error) {
+func (c *Report) AfterFind() error {
 	b := []byte(c.ReportContentJSON)
-	err = json.Unmarshal(b, &c.Report)
-	return
+	err := json.Unmarshal(b, &c.Report)
+	return err
 }
