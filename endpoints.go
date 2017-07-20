@@ -48,7 +48,15 @@ func PostReports(c *gin.Context) {
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
 	filepath := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
-	os.MkdirAll(filepath, 0755)
+	err = os.MkdirAll(filepath, 0755)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  err.Error(),
+		})
+		database.Db.Delete(&Report)
+		return
+	}
 	f, err := os.Create(path.Join(filepath, Report.ID.String()+".dmp"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -237,8 +245,24 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.Code = parts[3]
 	Symfile.Name = parts[4]
 	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
-	os.MkdirAll(filepath, 0755)
-	os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+	err = os.MkdirAll(filepath, 0755)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  err.Error(),
+		})
+		database.Db.Delete(&Symfile)
+		return
+	}
+	err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": http.StatusInternalServerError,
+			"error":  err.Error(),
+		})
+		database.Db.Delete(&Symfile)
+		return
+	}
 	f, err := os.Create(path.Join(filepath, Symfile.Name+".sym"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

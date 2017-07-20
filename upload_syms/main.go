@@ -86,12 +86,18 @@ func upload(url, filename string, filedata bytes.Buffer) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	pw.Write([]byte(prod))
+	_, err = pw.Write([]byte(prod))
+	if err != nil {
+		log.Fatal(err)
+	}
 	vw, err := w.CreateFormField("ver")
 	if err != nil {
 		log.Fatal(err)
 	}
-	vw.Write([]byte(ver))
+	_, err = vw.Write([]byte(ver))
+	if err != nil {
+		log.Fatal(err)
+	}
 	w.Close()
 
 	req, err := http.NewRequest("POST", url+"/symfiles", &b)

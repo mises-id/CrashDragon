@@ -39,7 +39,10 @@ func WriteConfig(path string) error {
 	if err != nil {
 		return err
 	}
-	os.MkdirAll(filepath.Dir(path), 0775)
+	err = os.MkdirAll(filepath.Dir(path), 0775)
+	if err != nil {
+		return err
+	}
 	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
 	return err
 }
