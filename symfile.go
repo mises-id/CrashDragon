@@ -44,18 +44,12 @@ func GetSymfile(c *gin.Context) {
 	database.Db.Where("id = ?", c.Param("id")).First(&Symfile)
 	f, err := os.Open(path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"error":  err.Error,
-		})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"error":  err.Error,
-		})
+		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	c.Data(http.StatusOK, "text/plain", data)
