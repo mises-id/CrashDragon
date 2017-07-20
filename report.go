@@ -34,31 +34,6 @@ func PostReportCrashID(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
 }
 
-// PostCrashComment allows you to post a comment to a crash
-func PostCrashComment(c *gin.Context) {
-	User := c.MustGet("user").(database.User)
-	var Crash database.Crash
-	database.Db.First(&Crash, "id = ?", c.Param("id"))
-	if Crash.ID == uuid.Nil {
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
-	var Comment database.Comment
-	database.Db.FirstOrInit(&Comment)
-	Comment.UserID = User.ID
-	Comment.ID = uuid.NewV4()
-	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
-	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
-	if len(strings.TrimSpace(string(Comment.Content))) == 0 {
-		c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String())
-		return
-	}
-	Comment.ReportID = uuid.Nil
-	Comment.CrashID = Crash.ID
-	database.Db.Save(&Comment)
-	c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String()+"#comment-"+Comment.ID.String())
-}
-
 // PostReportComment allows you to post a comment to a crashreport
 func PostReportComment(c *gin.Context) {
 	User := c.MustGet("user").(database.User)
@@ -81,93 +56,6 @@ func PostReportComment(c *gin.Context) {
 	Comment.CrashID = uuid.Nil
 	database.Db.Save(&Comment)
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String()+"#comment-"+Comment.ID.String())
-}
-
-// GetCrashes returns crashes
-func GetCrashes(c *gin.Context) {
-	var Crashes []database.Crash
-	sort := c.DefaultQuery("sort", "all_crash_count")
-	switch sort {
-	case "all_crash_count":
-		sort = "all_crash_count"
-	case "win_crash_count":
-		sort = "win_crash_count"
-	case "mac_crash_count":
-		sort = "mac_crash_count"
-	case "lin_crash_count":
-		sort = "lin_crash_count"
-	case "first_reported":
-		sort = "first_reported"
-	case "last_reported":
-		sort = "last_reported"
-	default:
-		sort = "all_crash_count"
-	}
-	order := c.DefaultQuery("order", "desc")
-	switch order {
-	case "desc":
-		order = "DESC"
-	case "asc":
-		order = "ASC"
-	default:
-		order = "DESC"
-	}
-	query := database.Db
-	if platform := c.Query("platform"); platform != "" {
-		platforms := strings.Split(platform, ",")
-		var filter []string
-		for _, os := range platforms {
-			if os == "mac" {
-				filter = append(filter, "mac_crash_count > 0")
-			} else if os == "win" {
-				filter = append(filter, "win_crash_count > 0")
-			} else if os == "lin" {
-				filter = append(filter, "lin_crash_count > 0")
-			}
-		}
-		if len(filter) > 0 {
-			whereQuery := strings.Join(filter, " AND ")
-			query = query.Where(whereQuery)
-		}
-	}
-	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
-	dir := c.DefaultQuery("dir", "up")
-	if lastDate == "" || lastDate == "Mon Jan  1 00:00:00 UTC 0001" {
-		query.Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
-	} else if dir == "up" {
-		query.Where("created_at < ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
-	} else {
-		query.Where("created_at > ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
-	}
-	var nextDate string
-	var prevDate string
-	if len(Crashes) > 0 {
-		nextDate = Crashes[len(Crashes)-1].CreatedAt.Format(time.UnixDate)
-		prevDate = Crashes[0].CreatedAt.Format(time.UnixDate)
-	}
-	c.HTML(http.StatusOK, "crashes.html", gin.H{
-		"title":    "Crashes",
-		"items":    Crashes,
-		"nextDate": nextDate,
-		"prevDate": prevDate,
-	})
-}
-
-// GetCrash returns details of a crash
-func GetCrash(c *gin.Context) {
-	var Crash database.Crash
-	var Reports []database.Report
-	var Comments []database.Comment
-	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Reports).Order("created_at DESC").Related(&Comments)
-	for i, Comment := range Comments {
-		database.Db.Model(&Comment).Related(&Comments[i].User)
-	}
-	c.HTML(http.StatusOK, "crash.html", gin.H{
-		"title":    "Crash",
-		"items":    Reports,
-		"comments": Comments,
-		"ID":       Crash.ID.String(),
-	})
 }
 
 // GetReports returns crashreports
@@ -235,7 +123,7 @@ func GetReports(c *gin.Context) {
 	}
 	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
 	dir := c.DefaultQuery("dir", "up")
-	if lastDate == "" || lastDate == "Mon Jan  1 00:00:00 UTC 0001" {
+	if lastDate == "" || lastDate == config.NilDate {
 		query.Where("processed = true").Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
 	} else if dir == "up" {
 		query.Where("processed = true").Where("created_at < ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
@@ -374,53 +262,4 @@ func GetReportFile(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, errors.New(name+" is a unknwon file"))
 		return
 	}
-}
-
-// GetSymfiles returns symfiles
-func GetSymfiles(c *gin.Context) {
-	var Symfiles []database.Symfile
-	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
-	dir := c.DefaultQuery("dir", "up")
-	if lastDate == "" || lastDate == "Mon Jan  1 00:00:00 UTC 0001" {
-		database.Db.Order("created_at ASC").Limit(50).Find(&Symfiles)
-	} else if dir == "up" {
-		database.Db.Where("created_at > ?", lastDate).Order("created_at ASC").Limit(50).Find(&Symfiles)
-	} else {
-		database.Db.Where("created_at < ?", lastDate).Order("created_at ASC").Limit(50).Find(&Symfiles)
-	}
-	var nextDate string
-	var prevDate string
-	if len(Symfiles) > 0 {
-		nextDate = Symfiles[len(Symfiles)-1].CreatedAt.Format(time.UnixDate)
-		prevDate = Symfiles[0].CreatedAt.Format(time.UnixDate)
-	}
-	c.HTML(http.StatusOK, "symfiles.html", gin.H{
-		"title":    "Symfiles",
-		"items":    Symfiles,
-		"nextDate": nextDate,
-		"prevDate": prevDate,
-	})
-}
-
-// GetSymfile returns content of symfile
-func GetSymfile(c *gin.Context) {
-	var Symfile database.Symfile
-	database.Db.Where("id = ?", c.Param("id")).First(&Symfile)
-	f, err := os.Open(path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"error":  err.Error,
-		})
-		return
-	}
-	data, err := ioutil.ReadAll(f)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": http.StatusBadRequest,
-			"error":  err.Error,
-		})
-		return
-	}
-	c.Data(http.StatusOK, "text/plain", data)
 }

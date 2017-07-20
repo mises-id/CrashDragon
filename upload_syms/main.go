@@ -17,11 +17,15 @@ import (
 var file string
 var repo string
 var host string
+var prod string
+var ver string
 
 func init() {
 	flag.StringVar(&file, "file", "", "file to upload symbols of")
 	flag.StringVar(&repo, "repo", "", "the git repo the source file is part of")
 	flag.StringVar(&host, "host", "", "host (with protocol) to upload symbols to")
+	flag.StringVar(&prod, "prod", "", "the product for which this symfile is")
+	flag.StringVar(&ver, "ver", "", "the version of the product")
 }
 
 func main() {
@@ -78,6 +82,16 @@ func upload(url, filename string, filedata bytes.Buffer) []byte {
 	if _, err = io.Copy(fw, &filedata); err != nil {
 		log.Fatal(err)
 	}
+	pw, err := w.CreateFormField("prod")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pw.Write([]byte(prod))
+	vw, err := w.CreateFormField("ver")
+	if err != nil {
+		log.Fatal(err)
+	}
+	vw.Write([]byte(ver))
 	w.Close()
 
 	req, err := http.NewRequest("POST", url+"/symfiles", &b)

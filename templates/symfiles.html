@@ -8,9 +8,9 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Name</th>
-                        <th scope="col">Code</th>
+                        <th scope="col">Product</th>
+                        <th scope="col">Version</th>
                         <th scope="col">OS</th>
-                        <th scope="col">Arch</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -18,9 +18,9 @@
                     <tr>
                         <td><a href="/symfiles/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .Name }}</td>
-                        <td>{{ .Code }}</td>
+                        <td>{{ .Product }}</td>
+                        <td>{{ .Version }}</td>
                         <td>{{ .Os }}</td>
-                        <td>{{ .Arch }}</td>
                     </tr>
                     {{ end }}
                 </tbody>

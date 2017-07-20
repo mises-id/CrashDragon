@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"net/http"
@@ -193,6 +194,22 @@ func PostSymfiles(c *gin.Context) {
 	}
 	defer file.Close()
 	var Symfile database.Symfile
+	Symfile.Product = c.Request.FormValue("prod")
+	if Symfile.Product == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"error":  errors.New("prod required"),
+		})
+		return
+	}
+	Symfile.Version = c.Request.FormValue("ver")
+	if Symfile.Version == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": http.StatusBadRequest,
+			"error":  errors.New("ver required"),
+		})
+		return
+	}
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err = scanner.Err(); err != nil {
