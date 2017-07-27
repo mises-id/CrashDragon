@@ -57,6 +57,12 @@
 			"revisionTime": "2017-06-03T22:54:54Z"
 		},
 		{
+			"checksumSHA1": "VMAg35RiK4lB2AWuA34n66CenME=",
+			"path": "github.com/lucasb-eyer/go-colorful",
+			"revision": "d1be5f1fbc7f63e693f460df83d52772eae2ca54",
+			"revisionTime": "2017-07-09T22:14:42Z"
+		},
+		{
 			"checksumSHA1": "b0T0Hzd+zYk+OCDTFMps+jwa/nY=",
 			"path": "github.com/manucorporat/sse",
 			"revision": "ee05b128a739a0fb76c7ebd3ae4810c1de808d6d",

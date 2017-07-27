@@ -22,7 +22,7 @@ func initRouter() *gin.Engine {
 	auth.POST("/symfiles", PostSymfiles)
 
 	// Endpoints
-	router.GET("/", GetCrashes)
+	router.GET("/", GetIndex)
 	router.GET("/crashes", GetCrashes)
 	router.GET("/crashes/:id", GetCrash)
 	router.GET("/reports", GetReports)

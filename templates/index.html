@@ -1,0 +1,46 @@
+{{ template "head.html" . }}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>{{ .title }}</h1>
+            <h2>Versions</h2>
+            <canvas id="versionsChart" style="height:80vh;width:100%;"></canvas>
+            <h2>Products</h2>
+            <canvas id="productsChart" style="height:80vh;width:100%;"></canvas>
+            <h2>Platforms</h2>
+            <canvas id="platformsChart" style="height:80vh;width:100%;"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.min.js" integrity="sha256-VNbX9NjQNRW+Bk02G/RO6WiTKuhncWI4Ey7LkSbE+5s=" crossorigin="anonymous"></script>
+<script>
+var versionsData = {{ .versions }};
+var versionsCtx = document.getElementById("versionsChart").getContext('2d');
+var versionsChart = new Chart(versionsCtx, {
+    type: 'line',
+    data: versionsData,
+    scaleBeginAtZero: true,
+    multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>"
+});
+
+var productsData = {{ .products }};
+var productsCtx = document.getElementById("productsChart").getContext('2d');
+var productsChart = new Chart(productsCtx, {
+    type: 'line',
+    data: productsData,
+    scaleBeginAtZero: true,
+    multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>"
+});
+
+var platformsData = {{ .platforms }};
+var platformsCtx = document.getElementById("platformsChart").getContext('2d');
+var platformsChart = new Chart(platformsCtx, {
+    type: 'line',
+    data: platformsData,
+    scaleBeginAtZero: true,
+    multiTooltipTemplate: "<%= datasetLabel %> - <%= value %>"
+});
+</script>
+
+{{ template "foot.html" . }}
