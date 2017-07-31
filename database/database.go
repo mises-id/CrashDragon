@@ -195,7 +195,16 @@ var Db *gorm.DB
 // InitDb sets up the database
 func InitDb(connection string) error {
 	var err error
-	Db, err = gorm.Open("postgres", connection)
+	var tries int
+	for tries < 10 {
+		Db, err = gorm.Open("postgres", connection)
+		if err == nil {
+			break
+		}
+		log.Printf("Try %d was not successful...", tries)
+		time.Sleep(time.Second * 5)
+		tries++
+	}
 	if err != nil {
 		log.Fatalf("FAT Database error: %+v", err)
 		return err
