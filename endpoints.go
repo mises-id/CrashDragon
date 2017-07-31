@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -223,7 +222,9 @@ func PostSymfiles(c *gin.Context) {
 		database.Db.Delete(&Symfile)
 		return
 	}
-	err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+	if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
+		err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		database.Db.Delete(&Symfile)
@@ -270,7 +271,6 @@ func Auth(c *gin.Context) {
 	// FIXME: Change the Header workaround to use the native gin function once it is stable
 	//c.GetHeader("Authorization") //gin gonic develop branch
 	// Workaround
-	log.Printf("%#v", c.Request.Header["Authorization"])
 	if auths, _ := c.Request.Header["Authorization"]; len(auths) > 0 {
 		auth = auths[0]
 	} else {
