@@ -3,10 +3,9 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"strconv"
 	"strings"
-	"time"
 
-	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
@@ -42,86 +41,47 @@ func PostCrashComment(c *gin.Context) {
 // GetCrashes returns crashes
 func GetCrashes(c *gin.Context) {
 	var Crashes []database.Crash
-	sort := c.DefaultQuery("sort", "all_crash_count")
-	switch sort {
-	case "all_crash_count":
-		sort = "all_crash_count"
-	case "win_crash_count":
-		sort = "win_crash_count"
-	case "mac_crash_count":
-		sort = "mac_crash_count"
-	case "lin_crash_count":
-		sort = "lin_crash_count"
-	case "first_reported":
-		sort = "first_reported"
-	case "last_reported":
-		sort = "last_reported"
-	default:
-		sort = "all_crash_count"
-	}
-	order := c.DefaultQuery("order", "desc")
-	switch order {
-	case "desc":
-		order = "DESC"
-	case "asc":
-		order = "ASC"
-	default:
-		order = "DESC"
-	}
 	query := database.Db
-	if platform := c.Query("platform"); platform != "" {
-		platforms := strings.Split(platform, ",")
-		var filter []string
-		for _, os := range platforms {
-			if os == "mac" {
-				filter = append(filter, "mac_crash_count > 0")
-			} else if os == "win" {
-				filter = append(filter, "win_crash_count > 0")
-			} else if os == "lin" {
-				filter = append(filter, "lin_crash_count > 0")
-			}
-		}
-		if len(filter) > 0 {
-			whereQuery := strings.Join(filter, " AND ")
-			query = query.Where(whereQuery)
-		}
+	all, prod := GetProductCookie(c)
+	if !all {
+		query = query.Where("product_id = ?", prod.ID)
 	}
-	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
-	dir := c.DefaultQuery("dir", "up")
-	if lastDate == "" || lastDate == config.NilDate {
-		query.Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
-	} else if dir == "up" {
-		query.Where("created_at < ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
+	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if err != nil {
+		offset = 0
+	}
+	var count int
+	query.Model(database.Crash{}).Count(&count)
+	query.Order("created_at DESC").Offset(offset).Limit(50).Find(&Crashes)
+	var next int
+	var prev int
+	if (offset + 50) >= count {
+		next = -1
 	} else {
-		query.Where("created_at > ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Crashes)
+		next = offset + 50
 	}
-	var nextDate string
-	var prevDate string
-	if len(Crashes) > 0 {
-		nextDate = Crashes[len(Crashes)-1].CreatedAt.Format(time.UnixDate)
-		prevDate = Crashes[0].CreatedAt.Format(time.UnixDate)
-	}
+	prev = offset - 50
 	c.HTML(http.StatusOK, "crashes.html", gin.H{
-		"title":    "Crashes",
-		"items":    Crashes,
-		"nextDate": nextDate,
-		"prevDate": prevDate,
+		"prods":      database.Products,
+		"title":      "Crashes",
+		"items":      Crashes,
+		"nextOffset": next,
+		"prevOffset": prev,
 	})
 }
 
 // GetCrash returns details of a crash
 func GetCrash(c *gin.Context) {
 	var Crash database.Crash
-	var Reports []database.Report
-	var Comments []database.Comment
-	database.Db.First(&Crash, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Reports).Order("created_at DESC").Related(&Comments)
-	for i, Comment := range Comments {
-		database.Db.Model(&Comment).Related(&Comments[i].User)
-	}
+	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	database.Db.Model(&Crash).Preload("Product").Preload("Version").Related(&Crash.Reports)
+	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
 	c.HTML(http.StatusOK, "crash.html", gin.H{
-		"title":    "Crash",
-		"items":    Reports,
-		"comments": Comments,
-		"ID":       Crash.ID.String(),
+		"prods":      database.Products,
+		"detailView": true,
+		"title":      "Crash",
+		"items":      Crash.Reports,
+		"comments":   Crash.Comments,
+		"ID":         Crash.ID.String(),
 	})
 }

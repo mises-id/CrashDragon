@@ -19,8 +19,8 @@
                     <tr>
                         <td><a href="/reports/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .CreatedAt.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
-                        <td>{{ .Product }}</td>
-                        <td>{{ .Version }}</td>
+                        <td>{{ .Product.Name }}</td>
+                        <td>{{ .Version.Name }}</td>
                         <td>{{ .Os }}</td>
                     </tr>
                     {{ end }}

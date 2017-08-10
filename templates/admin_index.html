@@ -1,0 +1,47 @@
+{{ template "head.html" . }}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>{{ .title }}</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9">
+            Fooba
+        </div>
+        <div class="col-md-3">
+            <h2>Stats</h2>
+            <div class="list-group">
+                <a class="list-group-item" href="#">
+                    <span class="badge">{{ .countReports }}</span>
+                    Reports
+                </a>
+        		<a class="list-group-item" href="#">
+                    <span class="badge">{{ .countCrashes }}</span>
+                    Crashes
+                </a>
+        		<a class="list-group-item" href="#">
+                    <span class="badge">{{ .countSymfiles }}</span>
+                    Symfiles
+                </a>
+        		<a class="list-group-item" href="#">
+                    <span class="badge">{{ .countProducts }}</span>
+                    Products
+                </a>
+        		<a class="list-group-item" href="#">
+                    <span class="badge">{{ .countVersions }}</span>
+                    Versions
+                </a>
+        		<a class="list-group-item" href="#">
+                    <span class="badge">{{ .countUsers }}</span>
+                    Users
+                </a>
+        		<a class="list-group-item" href="#">
+                    <span class="badge">{{ .countComments }}</span>
+                    Comments
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{{ template "foot.html" . }}

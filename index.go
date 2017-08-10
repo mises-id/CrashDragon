@@ -13,6 +13,7 @@ import (
 
 type chartDataset struct {
 	Label           string `json:"label"`
+	ID              string `json:"-"`
 	BackgroundColor string `json:"backgroundColor"`
 	Data            []int  `json:"data"`
 }
@@ -40,14 +41,17 @@ func GetIndex(c *gin.Context) {
 	var VersionStatResult []statResult
 	var VersionResult []genericResult
 	var VersionData chartData
-	database.Db.Raw("SELECT version AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY version;").Scan(&VersionResult)
-	database.Db.Raw("SELECT created_at::date::text AS date, version AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, version ORDER BY created_at::date ASC, version ASC;").Scan(&VersionStatResult)
+	database.Db.Raw("SELECT version_id AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY version_id;").Scan(&VersionResult)
+	database.Db.Raw("SELECT created_at::date::text AS date, version_id AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, version_id ORDER BY created_at::date ASC, version_id ASC;").Scan(&VersionStatResult)
 	for _, row := range DateResult {
 		VersionData.Labels = append(VersionData.Labels, row.Result)
 	}
 	for _, row := range VersionResult {
+		var Version database.Version
+		database.Db.First(&Version, "id = ?", row.Result)
 		var ChartDataset chartDataset
-		ChartDataset.Label = row.Result
+		ChartDataset.ID = row.Result
+		ChartDataset.Label = Version.Name
 		sum := sha256.Sum256([]byte(ChartDataset.Label))
 		c, _ := colorful.Hex(fmt.Sprintf("#%x", sum[7:10]))
 		r, g, b := c.RGB255()
@@ -58,7 +62,7 @@ func GetIndex(c *gin.Context) {
 		for i, version := range VersionData.Datasets {
 			versionAndDateInRow := false
 			for _, row := range VersionStatResult {
-				if row.Date == date && row.Field == version.Label {
+				if row.Date == date && row.Field == version.ID {
 					versionAndDateInRow = true
 					VersionData.Datasets[i].Data = append(version.Data, row.Count)
 				}
@@ -73,14 +77,17 @@ func GetIndex(c *gin.Context) {
 	var ProductStatResult []statResult
 	var ProductResult []genericResult
 	var ProductData chartData
-	database.Db.Raw("SELECT product AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY product;").Scan(&ProductResult)
-	database.Db.Raw("SELECT created_at::date::text AS date, product AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, product ORDER BY created_at::date ASC, product ASC;").Scan(&ProductStatResult)
+	database.Db.Raw("SELECT product_id AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY product_id;").Scan(&ProductResult)
+	database.Db.Raw("SELECT created_at::date::text AS date, product_id AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, product_id ORDER BY created_at::date ASC, product_id ASC;").Scan(&ProductStatResult)
 	for _, row := range DateResult {
 		ProductData.Labels = append(ProductData.Labels, row.Result)
 	}
 	for _, row := range ProductResult {
+		var Product database.Product
+		database.Db.First(&Product, "id = ?", row.Result)
 		var ChartDataset chartDataset
-		ChartDataset.Label = row.Result
+		ChartDataset.ID = row.Result
+		ChartDataset.Label = Product.Name
 		sum := sha256.Sum256([]byte(ChartDataset.Label))
 		c, _ := colorful.Hex(fmt.Sprintf("#%x", sum[7:10]))
 		r, g, b := c.RGB255()
@@ -91,7 +98,7 @@ func GetIndex(c *gin.Context) {
 		for i, product := range ProductData.Datasets {
 			productAndDateInRow := false
 			for _, row := range ProductStatResult {
-				if row.Date == date && row.Field == product.Label {
+				if row.Date == date && row.Field == product.ID {
 					productAndDateInRow = true
 					ProductData.Datasets[i].Data = append(product.Data, row.Count)
 				}
@@ -135,6 +142,7 @@ func GetIndex(c *gin.Context) {
 		}
 	}
 	c.HTML(http.StatusOK, "index.html", gin.H{
+		"prods":     database.Products,
 		"title":     "Stats",
 		"versions":  VersionData,
 		"products":  ProductData,

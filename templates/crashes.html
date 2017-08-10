@@ -8,12 +8,12 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
-                        <th scope="col">All <a href="/crashes?sort=all_crash_count&order=asc">A</a>/<a href="/crashes?sort=all_crash_count&order=desc">D</a></th>
-                        <th scope="col">Windows <a href="/crashes?sort=win_crash_count&order=asc">A</a>/<a href="/crashes?sort=win_crash_count&order=desc">D</a></th>
-                        <th scope="col">Mac OS X <a href="/crashes?sort=mac_crash_count&order=asc">A</a>/<a href="/crashes?sort=mac_crash_count&order=desc">D</a></th>
-                        <th scope="col">Linux <a href="/crashes?sort=lin_crash_count&order=asc">A</a>/<a href="/crashes?sort=lin_crash_count&order=desc">D</a></th>
-                        <th scope="col">First reported <a href="/crashes?sort=first_reported&order=asc">A</a>/<a href="/crashes?sort=first_reported&order=desc">D</a></th>
-                        <th scope="col">Last reported <a href="/crashes?sort=last_reported&order=asc">A</a>/<a href="/crashes?sort=last_reported&order=desc">D</a></th>
+                        <th scope="col">All</th>
+                        <th scope="col">Windows</th>
+                        <th scope="col">Mac OS X</th>
+                        <th scope="col">Linux</th>
+                        <th scope="col">First reported</th>
+                        <th scope="col">Last reported</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,11 +33,19 @@
             </table>
             <nav>
                 <ul class="pagination">
-                    <li class="page-item">
-                        <a class="page-link" href="?last_date={{ .prevDate }}&dir=down" rel="prev">Previous</a>
+                    <li class="page-item {{ if lt .prevOffset 0 }}disabled{{ end }}">
+                        {{ if lt .prevOffset 0 }}
+                        <span class="page-link">Previous</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .prevOffset }}" rel="prev">Previous</a>
+                        {{ end }}
                     </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?last_date={{ .nextDate }}&dir=up" rel="next">Next</a>
+                    <li class="page-item {{ if lt .nextOffset 0 }}disabled{{ end }}">
+                        {{ if lt .nextOffset 0 }}
+                        <span class="page-link">Next</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .nextOffset }}" rel="next">Next</a>
+                        {{ end }}
                     </li>
                 </ul>
             </nav>

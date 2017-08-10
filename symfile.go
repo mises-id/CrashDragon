@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"time"
+	"strconv"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
@@ -15,26 +15,32 @@ import (
 // GetSymfiles returns symfiles
 func GetSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
-	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
-	dir := c.DefaultQuery("dir", "up")
-	if lastDate == "" || lastDate == config.NilDate {
-		database.Db.Order("created_at ASC").Limit(50).Find(&Symfiles)
-	} else if dir == "up" {
-		database.Db.Where("created_at > ?", lastDate).Order("created_at ASC").Limit(50).Find(&Symfiles)
+	query := database.Db
+	all, prod := GetProductCookie(c)
+	if !all {
+		query = query.Where("product_id = ?", prod.ID)
+	}
+	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if err != nil {
+		offset = 0
+	}
+	var count int
+	query.Model(database.Symfile{}).Count(&count)
+	query.Order("created_at ASC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Symfiles)
+	var next int
+	var prev int
+	if (offset + 50) >= count {
+		next = -1
 	} else {
-		database.Db.Where("created_at < ?", lastDate).Order("created_at ASC").Limit(50).Find(&Symfiles)
+		next = offset + 50
 	}
-	var nextDate string
-	var prevDate string
-	if len(Symfiles) > 0 {
-		nextDate = Symfiles[len(Symfiles)-1].CreatedAt.Format(time.UnixDate)
-		prevDate = Symfiles[0].CreatedAt.Format(time.UnixDate)
-	}
+	prev = offset - 50
 	c.HTML(http.StatusOK, "symfiles.html", gin.H{
-		"title":    "Symfiles",
-		"items":    Symfiles,
-		"nextDate": nextDate,
-		"prevDate": prevDate,
+		"prods":      database.Products,
+		"title":      "Symfiles",
+		"items":      Symfiles,
+		"nextOffset": next,
+		"prevOffset": prev,
 	})
 }
 

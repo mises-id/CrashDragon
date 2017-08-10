@@ -18,8 +18,8 @@
                     <tr>
                         <td><a href="/symfiles/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .Name }}</td>
-                        <td>{{ .Product }}</td>
-                        <td>{{ .Version }}</td>
+                        <td>{{ .Product.Name }}</td>
+                        <td>{{ .Version.Name }}</td>
                         <td>{{ .Os }}</td>
                     </tr>
                     {{ end }}
@@ -27,11 +27,19 @@
             </table>
             <nav>
                 <ul class="pagination">
-                    <li class="page-item">
-                        <a class="page-link" href="?last_date={{ .prevDate }}&dir=down" rel="prev">Previous</a>
+                    <li class="page-item {{ if lt .prevOffset 0 }}disabled{{ end }}">
+                        {{ if lt .prevOffset 0 }}
+                        <span class="page-link">Previous</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .prevOffset }}" rel="prev">Previous</a>
+                        {{ end }}
                     </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?last_date={{ .nextDate }}&dir=up" rel="next">Next</a>
+                    <li class="page-item {{ if lt .nextOffset 0 }}disabled{{ end }}">
+                        {{ if lt .nextOffset 0 }}
+                        <span class="page-link">Next</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .nextOffset }}" rel="next">Next</a>
+                        {{ end }}
                     </li>
                 </ul>
             </nav>

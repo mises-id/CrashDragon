@@ -37,7 +37,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Location</th>
-                        <td>{{ .item.Location }}</td>
+                        <td>{{ if .item.Line }}<a href="http://git.videolan.org/?p=vlc.git;a=blob;f={{ .item.File }}#l{{ .item.Line }}">{{ .item.Location }}</a>{{ end }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Date</th>
@@ -173,13 +173,13 @@
                     </thead>
                     <tbody>
                         {{ range .report.Modules }}
-                        {{ if or .LoadedSymbols .MissingSymbols }}
+                        {{/*{{ if or .LoadedSymbols .MissingSymbols }}*/}}
                         <tr>
                             <td>{{ .Filename }}</td>
                             <td>{{ .DebugID }}{{ if .MissingSymbols }} <strong>(missing)</strong>{{ end }}</td>
                             <td>{{ .DebugFile }}</td>
                         </tr>
-                        {{ end }}
+                        {{/*{{ end }}*/}}
                         {{ end }}
                     </tbody>
                 </table>

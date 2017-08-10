@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"io"
@@ -13,6 +12,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"git.1750studios.com/GSoC/CrashDragon/config"
 	"git.1750studios.com/GSoC/CrashDragon/database"
@@ -31,12 +31,22 @@ func PostReports(c *gin.Context) {
 	var Report database.Report
 	Report.Processed = false
 	Report.ID = uuid.NewV4()
-	if err = database.Db.Create(&Report).Error; err != nil {
+	if err = database.Db.FirstOrInit(&Report).Error; err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	Report.Product = c.Request.FormValue("prod")
-	Report.Version = c.Request.FormValue("ver")
+	var Product database.Product
+	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("the specified prod does not exist"))
+		return
+	}
+	Report.ProductID = Product.ID
+	var Version database.Version
+	if err = database.Db.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist"))
+		return
+	}
+	Report.VersionID = Version.ID
 	Report.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
@@ -69,7 +79,7 @@ func ReprocessReport(c *gin.Context) {
 	database.Db.Where("id = ?", c.Param("id")).First(&Report)
 	processReport(Report, true)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
-	c.Redirect(http.StatusMovedPermanently, "/crashreports/"+Report.ID.String())
+	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
 	return
 }
 
@@ -120,11 +130,12 @@ func processReport(Report database.Report, reprocess bool) {
 		Report.CrashLocation = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
 		break
 	}
-	if err = database.Db.Save(&Report).Error; err != nil {
+	/*if err = database.Db.Save(&Report).Error; err != nil {
 		os.Remove(file)
 		database.Db.Delete(&Report)
 		return
-	}
+	}*/
+	Report.CreatedAt = time.Now()
 	var signature string
 	for _, frame := range Report.Report.CrashingThread.Frames {
 		if frame.Function == "" {
@@ -134,9 +145,9 @@ func processReport(Report database.Report, reprocess bool) {
 			break
 		}
 	}
-	if signature == "" {
+	/*if signature == "" {
 		return
-	}
+	}*/
 
 	var Crash database.Crash
 	if reprocess && Report.CrashID != uuid.Nil {
@@ -157,6 +168,9 @@ func processReport(Report database.Report, reprocess bool) {
 		Crash.MacCrashCount = 0
 		Crash.LinCrashCount = 0
 
+		Crash.ProductID = Report.ProductID
+		Crash.VersionID = Report.VersionID
+
 		database.Db.Create(&Crash)
 		reprocess = false
 	}
@@ -173,7 +187,11 @@ func processReport(Report database.Report, reprocess bool) {
 		database.Db.Save(&Crash)
 	}
 	Report.CrashID = Crash.ID
-	database.Db.Save(&Report)
+	if reprocess {
+		database.Db.Save(&Report)
+	} else {
+		database.Db.Create(&Report)
+	}
 }
 
 // PostSymfiles processes symfile
@@ -185,16 +203,18 @@ func PostSymfiles(c *gin.Context) {
 	}
 	defer file.Close()
 	var Symfile database.Symfile
-	Symfile.Product = c.Request.FormValue("prod")
-	if Symfile.Product == "" {
-		c.AbortWithError(http.StatusBadRequest, errors.New("prod required"))
+	var Product database.Product
+	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("the specified prod does not exist"))
 		return
 	}
-	Symfile.Version = c.Request.FormValue("ver")
-	if Symfile.Version == "" {
-		c.AbortWithError(http.StatusBadRequest, errors.New("ver required"))
+	Symfile.ProductID = Product.ID
+	var Version database.Version
+	if err = database.Db.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Symfile.ProductID).Error; err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist"))
 		return
 	}
+	Symfile.VersionID = Version.ID
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err = scanner.Err(); err != nil {
@@ -203,7 +223,7 @@ func PostSymfiles(c *gin.Context) {
 	}
 	parts := strings.Split(scanner.Text(), " ")
 	if parts[0] != "MODULE" {
-		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("Sym-file does not start with 'MODULE'!"))
+		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file does not start with 'MODULE'"))
 		return
 	}
 	updated := true
@@ -262,35 +282,4 @@ func PostSymfiles(c *gin.Context) {
 		"object": Symfile,
 	})
 	return
-}
-
-// Auth middleware which checks the Authorization header field and looks up the user in the database
-func Auth(c *gin.Context) {
-	var auth string
-	var user string
-	// FIXME: Change the Header workaround to use the native gin function once it is stable
-	//c.GetHeader("Authorization") //gin gonic develop branch
-	// Workaround
-	if auths, _ := c.Request.Header["Authorization"]; len(auths) > 0 {
-		auth = auths[0]
-	} else {
-		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
-		c.AbortWithStatus(http.StatusUnauthorized)
-	}
-	// End of workaround
-	if strings.HasPrefix(auth, "Basic ") {
-		base := strings.Split(auth, " ")[1]
-		userpass, _ := base64.StdEncoding.DecodeString(base)
-		user = strings.Split(string(userpass), ":")[0]
-	}
-	var User database.User
-	database.Db.FirstOrInit(&User, "name = ?", user)
-	if User.ID == uuid.Nil {
-		User.ID = uuid.NewV4()
-		User.IsAdmin = false
-		User.Name = user
-		database.Db.Create(&User)
-	}
-	c.Set("user", User)
-	c.Next()
 }

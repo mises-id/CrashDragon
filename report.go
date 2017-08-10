@@ -71,32 +71,13 @@ func GetReports(c *gin.Context) {
 		Reason    string
 		Location  string
 	}
-	sort := c.DefaultQuery("sort", "created_at")
-	switch sort {
-	case "product":
-		sort = "product"
-	case "version":
-		sort = "version"
-	case "os":
-		sort = "os"
-	default:
-		sort = "created_at"
-	}
-	order := c.DefaultQuery("order", "desc")
-	switch order {
-	case "desc":
-		order = "DESC"
-	case "asc":
-		order = "ASC"
-	default:
-		order = "DESC"
-	}
 	query := database.Db
+	all, prod := GetProductCookie(c)
+	if !all {
+		query = query.Where("product_id = ?", prod.ID)
+	}
 	if sig := c.Query("signature"); sig != "" {
 		query = query.Where("signature = ?", sig)
-	}
-	if prod := c.Query("product"); prod != "" {
-		query = query.Where("product = ?", prod)
 	}
 	if ver := c.Query("version"); ver != "" {
 		query = query.Where("version = ?", ver)
@@ -105,11 +86,11 @@ func GetReports(c *gin.Context) {
 		platforms := strings.Split(platform, ",")
 		var filter []string
 		for _, os := range platforms {
-			if os == "mac" {
+			if os == "Mac OS X" {
 				filter = append(filter, "'Mac OS X'")
-			} else if os == "win" {
+			} else if os == "Windows" {
 				filter = append(filter, "'Windows'")
-			} else if os == "lin" {
+			} else if os == "Linux" {
 				filter = append(filter, "'Linux'")
 			}
 		}
@@ -121,21 +102,22 @@ func GetReports(c *gin.Context) {
 	if reason := c.Query("reason"); reason != "" {
 		query = query.Where("reason = ?", reason)
 	}
-	lastDate := c.DefaultQuery("last_date", time.Time{}.Format(time.UnixDate))
-	dir := c.DefaultQuery("dir", "up")
-	if lastDate == "" || lastDate == config.NilDate {
-		query.Where("processed = true").Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
-	} else if dir == "up" {
-		query.Where("processed = true").Where("created_at < ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
+	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	if err != nil {
+		offset = 0
+	}
+	query = query.Where("processed = true")
+	var count int
+	query.Model(database.Report{}).Count(&count)
+	query.Order("created_at DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Reports)
+	var next int
+	var prev int
+	if (offset + 50) >= count {
+		next = -1
 	} else {
-		query.Where("processed = true").Where("created_at > ?", lastDate).Order(sort + " " + order).Order("created_at DESC").Limit(50).Find(&Reports)
+		next = offset + 50
 	}
-	var nextDate string
-	var prevDate string
-	if len(Reports) > 0 {
-		nextDate = Reports[len(Reports)-1].CreatedAt.Format(time.UnixDate)
-		prevDate = Reports[0].CreatedAt.Format(time.UnixDate)
-	}
+	prev = offset - 50
 	for _, Report := range Reports {
 		var Item struct {
 			ID        string
@@ -149,8 +131,8 @@ func GetReports(c *gin.Context) {
 		}
 		Item.ID = Report.ID.String()
 		Item.Date = Report.CreatedAt
-		Item.Product = Report.Product
-		Item.Version = Report.Version
+		Item.Product = Report.Product.Name
+		Item.Version = Report.Version.Name
 		Item.Platform = Report.Os
 		Item.Reason = Report.Report.CrashInfo.Type
 		Item.Signature = Report.Signature
@@ -158,21 +140,19 @@ func GetReports(c *gin.Context) {
 		List = append(List, Item)
 	}
 	c.HTML(http.StatusOK, "reports.html", gin.H{
-		"title":    "Reports",
-		"items":    List,
-		"nextDate": nextDate,
-		"prevDate": prevDate,
+		"prods":      database.Products,
+		"title":      "Reports",
+		"items":      List,
+		"nextOffset": next,
+		"prevOffset": prev,
 	})
 }
 
 // GetReport returns details of crashreport
 func GetReport(c *gin.Context) {
 	var Report database.Report
-	var Comments []database.Comment
-	database.Db.First(&Report, "id = ?", c.Param("id")).Order("created_at DESC").Related(&Comments)
-	for i, Comment := range Comments {
-		database.Db.Model(&Comment).Related(&Comments[i].User)
-	}
+	database.Db.First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
+	database.Db.Model(&Report).Preload("User").Order("created_at ASC").Related(&Report.Comments)
 	var Item struct {
 		ID        string
 		CrashID   string
@@ -187,12 +167,17 @@ func GetReport(c *gin.Context) {
 		Location  string
 		Comment   string
 		Uptime    string
+		File      string
+		Line      int
 	}
+	var Product database.Product
+	var Version database.Version
+	database.Db.Model(&Report).Related(&Product).Related(&Version)
 	Item.ID = Report.ID.String()
 	Item.CrashID = Report.CrashID.String()
 	Item.Date = Report.CreatedAt
-	Item.Product = Report.Product
-	Item.Version = Report.Version
+	Item.Product = Product.Name
+	Item.Version = Version.Name
 	Item.Platform = Report.Os + " " + Report.OsVersion
 	Item.Arch = Report.Arch
 	Item.Processor = Report.Report.SystemInfo.CPUInfo + " (" + strconv.Itoa(Report.Report.SystemInfo.CPUCount) + " cores)"
@@ -211,6 +196,8 @@ func GetReport(c *gin.Context) {
 			continue
 		}
 		Item.Location = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
+		Item.File = Frame.File
+		Item.Line = Frame.Line
 		break
 	}
 	result, _ := c.Cookie("result")
@@ -218,11 +205,13 @@ func GetReport(c *gin.Context) {
 		c.SetCookie("result", "", 1, "/", "", false, false)
 	}
 	c.HTML(http.StatusOK, "report.html", gin.H{
-		"title":    "Report",
-		"item":     Item,
-		"report":   Report.Report,
-		"result":   result,
-		"comments": Comments,
+		"prods":      database.Products,
+		"detailView": true,
+		"title":      "Report",
+		"item":       Item,
+		"report":     Report.Report,
+		"result":     result,
+		"comments":   Report.Comments,
 	})
 }
 

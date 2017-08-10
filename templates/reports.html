@@ -8,10 +8,10 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
-                        <th scope="col">Date <a href="/reports?sort=created_at&order=asc">A</a>/<a href="/reports?sort=created_at&order=desc">D</a></th>
-                        <th scope="col">Product <a href="/reports?sort=product&order=asc">A</a>/<a href="/reports?sort=product&order=desc">D</a></th>
-                        <th scope="col">Version <a href="/reports?sort=version&order=asc">A</a>/<a href="/reports?sort=version&order=desc">D</a></th>
-                        <th scope="col">Platform <a href="/reports?sort=os&order=asc">A</a>/<a href="/reports?sort=os&order=desc">D</a></th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Product</th>
+                        <th scope="col">Version</th>
+                        <th scope="col">Platform</th>
                         <th scope="col">Reason</th>
                         <th scope="col">Location</th>
                     </tr>
@@ -33,11 +33,19 @@
             </table>
             <nav>
                 <ul class="pagination">
-                    <li class="page-item">
-                        <a class="page-link" href="?last_date={{ .prevDate }}&dir=down" rel="prev">Previous</a>
+                    <li class="page-item {{ if lt .prevOffset 0 }}disabled{{ end }}">
+                        {{ if lt .prevOffset 0 }}
+                        <span class="page-link">Previous</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .prevOffset }}" rel="prev">Previous</a>
+                        {{ end }}
                     </li>
-                    <li class="page-item">
-                        <a class="page-link" href="?last_date={{ .nextDate }}&dir=up" rel="next">Next</a>
+                    <li class="page-item {{ if lt .nextOffset 0 }}disabled{{ end }}">
+                        {{ if lt .nextOffset 0 }}
+                        <span class="page-link">Next</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .nextOffset }}" rel="next">Next</a>
+                        {{ end }}
                     </li>
                 </ul>
             </nav>

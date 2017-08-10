@@ -11,6 +11,33 @@ import (
 	"github.com/satori/go.uuid"
 )
 
+// Product defines the structure of a product
+type Product struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	Name string
+	Slug string
+}
+
+// Products contains all currently available products and is used for the switcher in the header
+var Products []Product
+
+// Version defines the structure of a product
+type Version struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+
+	Name string
+	Slug string
+
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+}
+
 // User defines the structure of a user
 type User struct {
 	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
@@ -58,6 +85,12 @@ type Crash struct {
 
 	FirstReported time.Time
 	LastReported  time.Time
+
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Product   Product
+
+	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Version   Version
 }
 
 // Report database model
@@ -68,9 +101,8 @@ type Report struct {
 	DeletedAt *time.Time
 
 	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	Crash   Crash
 
-	Product       string
-	Version       string
 	ProcessUptime int
 	EMail         string
 	Comment       string
@@ -87,6 +119,12 @@ type Report struct {
 	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
 	ReportContentTXT  string
 	Report            ReportContent `gorm:"-"`
+
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Product   Product
+
+	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Version   Version
 }
 
 // Symfile database model
@@ -96,13 +134,17 @@ type Symfile struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Os      string
-	Product string
-	Version string
+	Os string
 
 	Arch string
 	Code string `gorm:"unique;index"`
 	Name string
+
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Product   Product
+
+	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Version   Version
 }
 
 // ReportContent of a crashreport
@@ -211,7 +253,23 @@ func InitDb(connection string) error {
 	}
 	Db.LogMode(true)
 
-	Db.AutoMigrate(&User{}, &Comment{}, &Crash{}, &Report{}, &Symfile{})
+	Db.AutoMigrate(&Product{}, &Version{}, &User{}, &Comment{}, &Crash{}, &Report{}, &Symfile{})
+
+	Db.Model(&Version{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
+	Db.Model(&Comment{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
+	Db.Model(&Report{}).AddForeignKey("crash_id", "crashes(id)", "RESTRICT", "RESTRICT")
+	Db.Model(&Report{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
+	Db.Model(&Report{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
+	Db.Model(&Symfile{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
+	Db.Model(&Symfile{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
+
+	Db.Model(&Product{}).AddUniqueIndex("idx_product_slug", "slug")
+	Db.Model(&Version{}).AddUniqueIndex("idx_version_slug_product", "slug", "product_id")
+	Db.Model(&User{}).AddUniqueIndex("idx_user_name", "name")
+	Db.Model(&Crash{}).AddUniqueIndex("idx_crash_signature", "signature")
+	Db.Model(&Symfile{}).AddUniqueIndex("idx_symfile_code", "code")
+
+	Db.Find(&Products)
 	return err
 }
 
@@ -227,5 +285,11 @@ func (c *Report) BeforeSave() error {
 func (c *Report) AfterFind() error {
 	b := []byte(c.ReportContentJSON)
 	err := json.Unmarshal(b, &c.Report)
+	return err
+}
+
+// AfterSave is called on saving Products, updates the variable
+func (c *Product) AfterSave(tx *gorm.DB) error {
+	err := tx.Find(&Products).Error
 	return err
 }
