@@ -36,6 +36,7 @@ type Version struct {
 	Slug string
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Product   Product
 }
 
 // User defines the structure of a user
@@ -290,6 +291,12 @@ func (c *Report) AfterFind() error {
 
 // AfterSave is called on saving Products, updates the variable
 func (c *Product) AfterSave(tx *gorm.DB) error {
+	err := tx.Find(&Products).Error
+	return err
+}
+
+// AfterDelete is called on deleting Products, updates the variable
+func (c *Product) AfterDelete(tx *gorm.DB) error {
 	err := tx.Find(&Products).Error
 	return err
 }

@@ -1,0 +1,25 @@
+{{ template "head.html" . }}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>{{ .title }}</h1>
+            <form action="{{ .form }}" method="post">
+                <div class="form-group">
+                    <label for="id">ID</label>
+                    <input type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
+                </div>
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Name" {{ if .item.Name }}value="{{ .item.Name }}"{{ end }}>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="admin" {{ if .item.IsAdmin }}checked="checked"{{ end }}> Admin
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-default">Save</button>
+            </form>
+        </div>
+    </div>
+</div>
+{{ template "foot.html" . }}

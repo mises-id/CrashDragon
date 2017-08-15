@@ -7,7 +7,11 @@
     </div>
     <div class="row">
         <div class="col-md-9">
-            Fooba
+            <ul class="nav nav-pills nav-stacked">
+                <li role="presentation"><a href="/admin/products">Products</a></li>
+                <li role="presentation"><a href="/admin/versions">Versions</a></li>
+                <li role="presentation"><a href="/admin/users">Users</a></li>
+            </ul>
         </div>
         <div class="col-md-3">
             <h2>Stats</h2>
@@ -16,27 +20,27 @@
                     <span class="badge">{{ .countReports }}</span>
                     Reports
                 </a>
-        		<a class="list-group-item" href="#">
+                <a class="list-group-item" href="#">
                     <span class="badge">{{ .countCrashes }}</span>
                     Crashes
                 </a>
-        		<a class="list-group-item" href="#">
+                <a class="list-group-item" href="#">
                     <span class="badge">{{ .countSymfiles }}</span>
                     Symfiles
                 </a>
-        		<a class="list-group-item" href="#">
+                <a class="list-group-item" href="#">
                     <span class="badge">{{ .countProducts }}</span>
                     Products
                 </a>
-        		<a class="list-group-item" href="#">
+                <a class="list-group-item" href="#">
                     <span class="badge">{{ .countVersions }}</span>
                     Versions
                 </a>
-        		<a class="list-group-item" href="#">
+                <a class="list-group-item" href="#">
                     <span class="badge">{{ .countUsers }}</span>
                     Users
                 </a>
-        		<a class="list-group-item" href="#">
+                <a class="list-group-item" href="#">
                     <span class="badge">{{ .countComments }}</span>
                     Comments
                 </a>

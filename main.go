@@ -24,6 +24,27 @@ func initRouter() *gin.Engine {
 	admin.GET("/", GetAdminIndex)
 	admin.POST("/symfiles", PostSymfiles)
 
+	admin.GET("/products", GetAdminProducts)
+	admin.GET("/products/new", GetAdminNewProduct)
+	admin.GET("/products/edit/:id", GetAdminEditProduct)
+	admin.GET("/products/delete/:id", GetAdminDeleteProduct)
+	admin.POST("/products/new", PostAdminNewProduct)
+	admin.POST("/products/edit/:id", PostAdminEditProduct)
+
+	admin.GET("/versions", GetAdminVersions)
+	admin.GET("/versions/new", GetAdminNewVersion)
+	admin.GET("/versions/edit/:id", GetAdminEditVersion)
+	admin.GET("/versions/delete/:id", GetAdminDeleteVersion)
+	admin.POST("/versions/new", PostAdminNewVersion)
+	admin.POST("/versions/edit/:id", PostAdminEditVersion)
+
+	admin.GET("/users", GetAdminUsers)
+	admin.GET("/users/new", GetAdminNewUser)
+	admin.GET("/users/edit/:id", GetAdminEditUser)
+	admin.GET("/users/delete/:id", GetAdminDeleteUser)
+	admin.POST("/users/new", PostAdminNewUser)
+	admin.POST("/users/edit/:id", PostAdminEditUser)
+
 	// Endpoints
 	router.GET("/", GetIndex)
 	router.GET("/crashes", GetCrashes)
