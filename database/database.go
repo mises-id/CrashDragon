@@ -18,8 +18,9 @@ type Product struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name string
-	Slug string
+	Name    string
+	Slug    string
+	GitRepo string
 }
 
 // Products contains all currently available products and is used for the switcher in the header
@@ -114,6 +115,8 @@ type Report struct {
 	Arch          string
 	Signature     string
 	CrashLocation string
+	CrashPath     string
+	CrashLine     int
 
 	Comments []Comment
 

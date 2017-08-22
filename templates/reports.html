@@ -17,16 +17,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{ range .items }}
+                    {{ range $v := .items }}
                     <tr>
                         <td><a href="/reports/{{ .ID }}">{{ .ID }}</a></td>
-                        <td>{{ .Signature }}</td>
-                        <td>{{ .Date.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
-                        <td>{{ .Product }}</td>
-                        <td>{{ .Version }}</td>
-                        <td>{{ .Platform }}</td>
-                        <td>{{ .Reason }}</td>
-                        <td>{{ .Location }}</td>
+                        <td>{{ $v.Signature }}</td>
+                        <td>{{ $v.Date.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
+                        <td>{{ $v.Product }}</td>
+                        <td>{{ $v.Version }}</td>
+                        <td>{{ $v.Platform }}</td>
+                        <td>{{ $v.Reason }}</td>
+                        <td>{{ if $v.Location }}<a href="{{ printf $v.GitRepo $v.File $v.Line}}">{{ $v.Location }}</a>{{ end }}</td>
                     </tr>
                     {{ end }}
                 </tbody>

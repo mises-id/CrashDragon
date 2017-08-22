@@ -127,7 +127,9 @@ func processReport(Report database.Report, reprocess bool) {
 		if Frame.File == "" {
 			continue
 		}
-		Report.CrashLocation = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
+		Report.CrashLocation = Frame.File + ":" + strconv.Itoa(Frame.Line)
+		Report.CrashPath = Frame.File
+		Report.CrashLine = Frame.Line
 		break
 	}
 	/*if err = database.Db.Save(&Report).Error; err != nil {

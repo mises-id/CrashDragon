@@ -37,7 +37,7 @@
                     </tr>
                     <tr>
                         <th scope="row">Location</th>
-                        <td>{{ if .item.Line }}<a href="http://git.videolan.org/?p=vlc.git;a=blob;f={{ .item.File }}#l{{ .item.Line }}">{{ .item.Location }}</a>{{ end }}</td>
+                        <td>{{ if .item.Line }}<a href="{{ printf .item.GitRepo .item.File .item.Line}}">{{ .item.Location }}</a>{{ end }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Date</th>
@@ -126,12 +126,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{ range .report.CrashingThread.Frames }}
+                    {{ range $v := .report.CrashingThread.Frames }}
                     <tr>
-                        <td>{{ .Frame }}</td>
-                        <td>{{ .Module }}</td>
-                        <td>{{ .Function }}</td>
-                        <td>{{ if .Line }}<a href="http://git.videolan.org/?p=vlc.git;a=blob;f={{ .File }}#l{{ .Line }}">{{ .File }}:{{ .Line }}</a>{{ end }}</td>
+                        <td>{{ $v.Frame }}</td>
+                        <td>{{ $v.Module }}</td>
+                        <td>{{ $v.Function }}</td>
+                        <td>{{ if $v.Line }}<a href="{{ printf $.item.GitRepo $v.File $v.Line}}">{{ $v.Location }}</a>{{ end }}</td>
                     </tr>
                     {{ end }}
                 </tbody>
@@ -150,12 +150,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{ range $v.Frames }}
+                        {{ range $vv := $v.Frames }}
                         <tr>
-                            <td>{{ .Frame }}</td>
-                            <td>{{ .Module }}</td>
-                            <td>{{ .Function }}</td>
-                            <td>{{ if .Line }}<a href="http://git.videolan.org/?p=vlc.git;a=blob;f={{ .File }}#l{{ .Line }}">{{ .File }}:{{ .Line }}</a>{{ end }}</td>
+                            <td>{{ $vv.Frame }}</td>
+                            <td>{{ $vv.Module }}</td>
+                            <td>{{ $vv.Function }}</td>
+                            <td>{{ if $vv.Line }}<a href="{{ printf $.item.GitRepo $vv.File $vv.Line}}">{{ $vv.Location }}</a>{{ end }}</td>
                         </tr>
                         {{ end }}
                     </tbody>

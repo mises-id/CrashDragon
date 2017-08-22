@@ -70,6 +70,9 @@ func GetReports(c *gin.Context) {
 		Platform  string
 		Reason    string
 		Location  string
+		GitRepo   string
+		File      string
+		Line      int
 	}
 	query := database.Db
 	all, prod := GetProductCookie(c)
@@ -128,6 +131,9 @@ func GetReports(c *gin.Context) {
 			Platform  string
 			Reason    string
 			Location  string
+			GitRepo   string
+			File      string
+			Line      int
 		}
 		Item.ID = Report.ID.String()
 		Item.Date = Report.CreatedAt
@@ -137,6 +143,9 @@ func GetReports(c *gin.Context) {
 		Item.Reason = Report.Report.CrashInfo.Type
 		Item.Signature = Report.Signature
 		Item.Location = Report.CrashLocation
+		Item.GitRepo = Report.Product.GitRepo
+		Item.File = Report.CrashPath
+		Item.Line = Report.CrashLine
 		List = append(List, Item)
 	}
 	c.HTML(http.StatusOK, "reports.html", gin.H{
@@ -151,7 +160,7 @@ func GetReports(c *gin.Context) {
 // GetReport returns details of crashreport
 func GetReport(c *gin.Context) {
 	var Report database.Report
-	database.Db.First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
+	database.Db.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
 	database.Db.Model(&Report).Preload("User").Order("created_at ASC").Related(&Report.Comments)
 	var Item struct {
 		ID        string
@@ -164,20 +173,18 @@ func GetReport(c *gin.Context) {
 		Arch      string
 		Processor string
 		Reason    string
-		Location  string
 		Comment   string
 		Uptime    string
 		File      string
 		Line      int
+		GitRepo   string
+		Location  string
 	}
-	var Product database.Product
-	var Version database.Version
-	database.Db.Model(&Report).Related(&Product).Related(&Version)
 	Item.ID = Report.ID.String()
 	Item.CrashID = Report.CrashID.String()
 	Item.Date = Report.CreatedAt
-	Item.Product = Product.Name
-	Item.Version = Version.Name
+	Item.Product = Report.Product.Name
+	Item.Version = Report.Version.Name
 	Item.Platform = Report.Os + " " + Report.OsVersion
 	Item.Arch = Report.Arch
 	Item.Processor = Report.Report.SystemInfo.CPUInfo + " (" + strconv.Itoa(Report.Report.SystemInfo.CPUCount) + " cores)"
@@ -187,19 +194,10 @@ func GetReport(c *gin.Context) {
 	m := (Report.ProcessUptime / 60000) % 60
 	s := (Report.ProcessUptime / 1000) % 60
 	Item.Uptime = fmt.Sprintf("%02d:%02d:%02d", h, m, s)
-	for _, Frame := range Report.Report.CrashingThread.Frames {
-		if Frame.File == "" && Item.Signature != "" {
-			continue
-		}
-		Item.Signature = Frame.Function
-		if Frame.File == "" {
-			continue
-		}
-		Item.Location = path.Base(Frame.File) + ":" + strconv.Itoa(Frame.Line)
-		Item.File = Frame.File
-		Item.Line = Frame.Line
-		break
-	}
+	Item.GitRepo = Report.Product.GitRepo
+	Item.File = Report.CrashPath
+	Item.Line = Report.CrashLine
+	Item.Location = Report.CrashLocation
 	result, _ := c.Cookie("result")
 	if result != "" {
 		c.SetCookie("result", "", 1, "/", "", false, false)

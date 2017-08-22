@@ -75,6 +75,7 @@ func PostAdminNewProduct(c *gin.Context) {
 	Product.ID = id
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
+	Product.GitRepo = c.PostForm("gitrepo")
 	database.Db.Create(&Product)
 	c.Redirect(http.StatusMovedPermanently, "/admin/products")
 }
@@ -98,6 +99,7 @@ func PostAdminEditProduct(c *gin.Context) {
 	database.Db.First(&Product, "ID = ?", c.Param("id"))
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
+	Product.GitRepo = c.PostForm("gitrepo")
 	database.Db.Save(&Product)
 	c.Redirect(http.StatusMovedPermanently, "/admin/products")
 }
