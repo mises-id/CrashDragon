@@ -26,6 +26,7 @@ func GetAdminIndex(c *gin.Context) {
 	database.Db.Model(database.User{}).Count(&countUsers)
 	database.Db.Model(database.Comment{}).Count(&countComments)
 	c.HTML(http.StatusOK, "admin_index.html", gin.H{
+		"admin":         true,
 		"prods":         database.Products,
 		"title":         "Admin Index",
 		"countReports":  countReports,
@@ -43,6 +44,7 @@ func GetAdminProducts(c *gin.Context) {
 	var Products []database.Product
 	database.Db.Order("name ASC").Find(&Products)
 	c.HTML(http.StatusOK, "admin_products.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — Products",
 		"items": Products,
@@ -54,6 +56,7 @@ func GetAdminNewProduct(c *gin.Context) {
 	var Product database.Product
 	Product.ID = uuid.NewV4()
 	c.HTML(http.StatusOK, "admin_product.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — New Product",
 		"item":  Product,
@@ -81,6 +84,7 @@ func GetAdminEditProduct(c *gin.Context) {
 	var Product database.Product
 	database.Db.First(&Product, "ID = ?", c.Param("id"))
 	c.HTML(http.StatusOK, "admin_product.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — Edit Product",
 		"item":  Product,
@@ -109,6 +113,7 @@ func GetAdminVersions(c *gin.Context) {
 	var Versions []database.Version
 	database.Db.Preload("Product").Find(&Versions)
 	c.HTML(http.StatusOK, "admin_versions.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — Versions",
 		"items": Versions,
@@ -122,6 +127,7 @@ func GetAdminNewVersion(c *gin.Context) {
 	var Products []database.Product
 	database.Db.Order("name ASC").Find(&Products)
 	c.HTML(http.StatusOK, "admin_version.html", gin.H{
+		"admin":    true,
 		"prods":    database.Products,
 		"title":    "Admin — New Version",
 		"item":     Version,
@@ -158,6 +164,7 @@ func GetAdminEditVersion(c *gin.Context) {
 	var Products []database.Product
 	database.Db.Order("name ASC").Find(&Products)
 	c.HTML(http.StatusOK, "admin_version.html", gin.H{
+		"admin":    true,
 		"prods":    database.Products,
 		"title":    "Admin — Edit Version",
 		"item":     Version,
@@ -193,6 +200,7 @@ func GetAdminUsers(c *gin.Context) {
 	var Users []database.User
 	database.Db.Find(&Users)
 	c.HTML(http.StatusOK, "admin_users.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — Users",
 		"items": Users,
@@ -204,6 +212,7 @@ func GetAdminNewUser(c *gin.Context) {
 	var User database.User
 	User.ID = uuid.NewV4()
 	c.HTML(http.StatusOK, "admin_user.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — New User",
 		"item":  User,
@@ -235,6 +244,7 @@ func GetAdminEditUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "ID = ?", c.Param("id"))
 	c.HTML(http.StatusOK, "admin_user.html", gin.H{
+		"admin": true,
 		"prods": database.Products,
 		"title": "Admin — Edit User",
 		"item":  User,

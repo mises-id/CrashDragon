@@ -27,9 +27,15 @@
                     <li><a href="/reports">Reports</a></li>
                     <li><a href="/symfiles">Symfiles</a></li>
                 </ul>
-                {{/* <ul class="nav navbar-nav navbar-right">
+                <ul class="nav navbar-nav navbar-right">
+                    {{ if .admin }}
+                    <li><a href="/admin/products">Products</a></li>
+                    <li><a href="/admin/versions">Versions</a></li>
+                    <li><a href="/admin/users">Users</a></li>
+                    {{ else }}
                     <li><a href="/admin">Admin</a></li>
-                </ul> */}}
+                    {{ end }}
+                </ul>
                 <form class="nav navbar-form navbar-right">
                     <div class="form-group">
                         <select class="form-control" id="product-filter" {{ if .detailView }}disabled="disabled"{{ end }}>
