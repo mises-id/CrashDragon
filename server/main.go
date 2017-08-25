@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.1750studios.com/GSoC/CrashDragon/config"
-	"git.1750studios.com/GSoC/CrashDragon/database"
+	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/config"
+	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/database"
 
 	"github.com/gin-gonic/gin"
 )
@@ -65,12 +65,7 @@ func initRouter() *gin.Engine {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(os.Stderr)
-	var err error
-	if os.Getenv("GIN_MODE") == "release" {
-		err = config.GetConfig("/etc/crashdragon/config.toml")
-	} else {
-		err = config.GetConfig(filepath.Join(os.Getenv("HOME"), "CrashDragon/config.toml"))
-	}
+	err := config.GetConfig(filepath.Join(os.Getenv("HOME"), "CrashDragon/config.toml"))
 	if err != nil {
 		log.Fatalf("FAT Config error: %+v", err)
 		return

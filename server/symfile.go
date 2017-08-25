@@ -7,8 +7,8 @@ import (
 	"path"
 	"strconv"
 
-	"git.1750studios.com/GSoC/CrashDragon/config"
-	"git.1750studios.com/GSoC/CrashDragon/database"
+	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/config"
+	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/database"
 	"github.com/gin-gonic/gin"
 )
 

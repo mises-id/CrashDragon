@@ -1,4 +1,4 @@
-SRC=$(wildcard *.go)
+SRC=./server/$(wildcard *.go)
 .PHONY: clean all
 
 all: CrashDragon upload_syms minidump-stackwalk/stackwalker
