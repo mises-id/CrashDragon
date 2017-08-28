@@ -8,7 +8,8 @@ either use Google's [Breakpad client][bp] or its successor, [Crashpad][].
 
 CrashDragon was part of the 2017 GSoC program, where the software got
 implemented from ground up. This includes all commits from
-e97412632ed6a7261330015c052fda29e7d867da. The goal was to have an server
+e97412632ed6a7261330015c052fda29e7d867da to
+46d5d442923a75feb9e93d8c664c734cb20d00a4. The goal was to have an server
 which is performing very well under heavy load and is still easy to use.
 Not all milestones could be achieved during the GSoC time, but I will keep
 working on the project after GSoC has finished to implement those missing
