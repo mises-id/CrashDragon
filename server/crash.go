@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/database"
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/database"
 
 	"github.com/gin-gonic/gin"
 	colorful "github.com/lucasb-eyer/go-colorful"

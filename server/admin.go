@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"code.videolan.org/GSoC2017/ToddShepard/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/database"
 
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"

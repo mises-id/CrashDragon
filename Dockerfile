@@ -4,8 +4,8 @@ ENV GOPATH /go
 ENV PATH $PATH:$GOPATH/bin
 ENV GIN_MODE release
 
-ADD . $GOPATH/src/code.videolan.org/GSoC2017/ToddShepard/CrashDragon
-WORKDIR $GOPATH/src/code.videolan.org/GSoC2017/ToddShepard/CrashDragon
+ADD . $GOPATH/src/code.videolan.org/videolan/CrashDragon
+WORKDIR $GOPATH/src/code.videolan.org/videolan/CrashDragon
 
 RUN apt-get update && apt-get -y install libcurl4-gnutls-dev rsync postgresql sassc autotools-dev autoconf
 
