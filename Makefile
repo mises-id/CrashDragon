@@ -17,13 +17,13 @@ assets/stylesheets/app.css:
 	$(SASSC) $(SASSCFLAGS) $(@D)/app.scss > $@.tmp && mv $@.tmp $@
 
 minidump-stackwalk/stackwalker:
-	cd minidump-stackwalk && make
+	cd minidump-stackwalk && $(MAKE)
 
 clean:
 	rm -f bin/crashdragon
 	rm -f bin/upload_syms
 	rm -f assets/stylesheets/app.css.tmp
 	rm -f assets/stylesheets/app.css
-	cd minidump-stackwalk && make distclean
+	cd minidump-stackwalk && $(MAKE) distclean
 
 .PHONY: clean all
