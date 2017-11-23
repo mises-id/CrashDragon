@@ -21,6 +21,7 @@ minidump-stackwalk/stackwalker:
 
 clean:
 	rm -rf bin/
+	rm -f assets/stylesheets/app.css.tmp
 	rm -f assets/stylesheets/app.css
 	cd minidump-stackwalk && make distclean
 
