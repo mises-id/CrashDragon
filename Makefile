@@ -20,7 +20,8 @@ minidump-stackwalk/stackwalker:
 	cd minidump-stackwalk && make
 
 clean:
-	rm -rf bin/
+	rm -f bin/crashdragon
+	rm -f bin/upload_syms
 	rm -f assets/stylesheets/app.css.tmp
 	rm -f assets/stylesheets/app.css
 	cd minidump-stackwalk && make distclean
