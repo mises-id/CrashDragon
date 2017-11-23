@@ -5,10 +5,10 @@ GO_SRC   = server/$(wildcard *.go)
 
 override SASSCFLAGS += -t compressed
 
-all: CrashDragon upload_syms minidump-stackwalk/stackwalker
+all: crashdragon upload_syms minidump-stackwalk/stackwalker
 
-CrashDragon: $(GO_SRC) assets/stylesheets/app.css
-	$(GO) build -o bin/CrashDragon $(GO_SRC)
+crashdragon: $(GO_SRC) assets/stylesheets/app.css
+	$(GO) build -o bin/crashdragon $(GO_SRC)
 
 upload_syms: upload_syms/main.go
 	$(GO) build -o bin/upload_syms upload_syms/main.go
