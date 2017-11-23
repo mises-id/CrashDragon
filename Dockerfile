@@ -19,4 +19,4 @@ RUN echo "local all all trust" > /etc/postgresql/9.6/main/pg_hba.conf
 RUN echo "host all all all trust" >> /etc/postgresql/9.6/main/pg_hba.conf
 
 EXPOSE 8080
-CMD /etc/init.d/postgresql start && sleep 15 && ./bin/CrashDragon
+CMD /etc/init.d/postgresql start && sleep 15 && ./bin/crashdragon
