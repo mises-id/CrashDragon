@@ -3,7 +3,7 @@ GO      ?= go
 
 GO_SRC   = server/$(wildcard *.go)
 
-override SASSCFLAGS += -t compressed
+SASSCFLAGS ?= -t compressed
 
 all: crashdragon upload_syms minidump-stackwalk/stackwalker
 
