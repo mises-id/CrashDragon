@@ -1,7 +1,7 @@
 SASSC   ?= sassc
 GO      ?= go
 
-GO_SRC   = server/$(wildcard *.go)
+GO_SRC   = ./server/$(wildcard *.go)
 
 SASSCFLAGS ?= -t compressed
 
