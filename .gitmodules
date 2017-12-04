@@ -1,3 +1,3 @@
 [submodule "minidump-stackwalk"]
 	path = minidump-stackwalk
-	url = git@code.videolan.org:GSoC2017/ToddShepard/minidump-stackwalk.git
+	url = https://code.videolan.org/GSoC2017/ToddShepard/minidump-stackwalk.git
