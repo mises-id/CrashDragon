@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"time"
+	"os"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //Postgres functions
@@ -255,7 +256,9 @@ func InitDb(connection string) error {
 		log.Fatalf("FAT Database error: %+v", err)
 		return err
 	}
-	Db.LogMode(true)
+	if os.Getenv("GIN_MODE") != "release" {
+		Db.LogMode(true)	
+	}
 
 	Db.AutoMigrate(&Product{}, &Version{}, &User{}, &Comment{}, &Crash{}, &Report{}, &Symfile{})
 
