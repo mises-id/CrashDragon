@@ -131,7 +131,7 @@
                         <td>{{ $v.Frame }}</td>
                         <td>{{ $v.Module }}</td>
                         <td>{{ $v.Function }}</td>
-                        <td>{{ if $v.Line }}<a href="{{ printf $.item.GitRepo $v.File $v.Line}}">{{ $v.Location }}</a>{{ end }}</td>
+                        <td>{{ if $v.Line }}<a href="{{ printf $.item.GitRepo $v.File $v.Line}}">{{ $v.File }}:{{ $v.Line }}</a>{{ end }}</td>
                     </tr>
                     {{ end }}
                 </tbody>
@@ -155,7 +155,7 @@
                             <td>{{ $vv.Frame }}</td>
                             <td>{{ $vv.Module }}</td>
                             <td>{{ $vv.Function }}</td>
-                            <td>{{ if $vv.Line }}<a href="{{ printf $.item.GitRepo $vv.File $vv.Line}}">{{ $vv.Location }}</a>{{ end }}</td>
+                            <td>{{ if $vv.Line }}<a href="{{ printf $.item.GitRepo $vv.File $vv.Line}}">{{ $vv.File }}:{{ $vv.Line }}</a>{{ end }}</td>
                         </tr>
                         {{ end }}
                     </tbody>
