@@ -9,7 +9,7 @@ sudo apt-get update && apt-get upgrade
 
 After that, install the actual dependencies:
 ```
-sudo apt-get install golang git libcurl4-gnutls-dev rsync sassc autotools-dev autoconf make
+sudo apt-get install golang git libcurl4-gnutls-dev rsync sassc autotools-dev autoconf make libjsoncpp-dev
 ```
 
 _Note:_ You require a PostgreSQL database to run CrashDragon!

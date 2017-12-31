@@ -7,7 +7,7 @@ ENV GIN_MODE release
 ADD . $GOPATH/src/code.videolan.org/videolan/CrashDragon
 WORKDIR $GOPATH/src/code.videolan.org/videolan/CrashDragon
 
-RUN apt-get update && apt-get -y install libcurl4-gnutls-dev rsync postgresql sassc autotools-dev autoconf
+RUN apt-get update && apt-get -y install libcurl4-gnutls-dev rsync postgresql sassc autotools-dev autoconf libjsoncpp-dev
 
 RUN go get -u github.com/kardianos/govendor
 RUN govendor sync

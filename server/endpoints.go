@@ -85,7 +85,7 @@ func ReprocessReport(c *gin.Context) {
 
 func processReport(Report database.Report, reprocess bool) {
 	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	cmdJSON := exec.Command("./minidump-stackwalk/stackwalker", file, path.Join(config.C.ContentDirectory, "Symfiles"))
+	cmdJSON := exec.Command("./build/bin/minidump_stackwalk", "-f", "json", file, path.Join(config.C.ContentDirectory, "Symfiles"))
 	var out bytes.Buffer
 	cmdJSON.Stdout = &out
 	err := cmdJSON.Run()
@@ -105,7 +105,7 @@ func processReport(Report database.Report, reprocess bool) {
 		database.Db.Delete(&Report)
 		return
 	}
-	cmdTXT := exec.Command("./minidump-stackwalk/stackwalk/bin/minidump_stackwalk", file, path.Join(config.C.ContentDirectory, "Symfiles"))
+	cmdTXT := exec.Command("./build/bin/minidump_stackwalk", "-f", "txt", file, path.Join(config.C.ContentDirectory, "Symfiles"))
 	out.Reset()
 	cmdTXT.Stdout = &out
 	err = cmdTXT.Run()
