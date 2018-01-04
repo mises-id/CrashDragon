@@ -45,6 +45,9 @@ func initRouter() *gin.Engine {
 	admin.POST("/users/new", PostAdminNewUser)
 	admin.POST("/users/edit/:id", PostAdminEditUser)
 
+	admin.GET("/symfiles", GetAdminSymfiles)
+	admin.GET("/symfiles/delete/:id", GetAdminDeleteSymfile)
+
 	// Endpoints
 	router.GET("/", GetIndex)
 	router.GET("/crashes", GetCrashes)
