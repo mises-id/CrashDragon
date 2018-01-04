@@ -226,6 +226,16 @@ func PostSymfiles(c *gin.Context) {
 	if err = database.Db.Where("code = ?", parts[3]).First(&Symfile).Error; err != nil {
 		Symfile.ID = uuid.NewV4()
 		updated = false
+	} else {
+		filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
+		if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
+			err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+		}
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			database.Db.Delete(&Symfile)
+			return
+		}
 	}
 	Symfile.Os = parts[1]
 	Symfile.Arch = parts[2]
@@ -233,14 +243,6 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.Name = parts[4]
 	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
 	err = os.MkdirAll(filepath, 0755)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		database.Db.Delete(&Symfile)
-		return
-	}
-	if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
-		err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
-	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		database.Db.Delete(&Symfile)
