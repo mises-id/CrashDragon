@@ -222,6 +222,10 @@ func PostSymfiles(c *gin.Context) {
 		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file does not start with 'MODULE'"))
 		return
 	}
+	if parts[3] == "000000000000000000000000000000000" {
+		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file has invalid code"))
+		return
+	}
 	updated := true
 	if err = database.Db.Where("code = ?", parts[3]).First(&Symfile).Error; err != nil {
 		Symfile.ID = uuid.NewV4()
