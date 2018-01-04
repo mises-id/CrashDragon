@@ -94,6 +94,7 @@ func processReport(Report database.Report, reprocess bool) {
 		database.Db.Delete(&Report)
 		return
 	}
+	Report.Report = database.ReportContent{}
 	err = json.Unmarshal(out.Bytes(), &Report.Report)
 	if err != nil {
 		os.Remove(file)
