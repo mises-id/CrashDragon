@@ -180,7 +180,7 @@ func processReport(Report database.Report, reprocess bool) {
 	if !reprocess || Report.CrashID == uuid.Nil {
 		Crash.LastReported = Report.CreatedAt
 		Crash.AllCrashCount++
-		if Report.Os == "Windows" {
+		if Report.Os == "Windows NT" {
 			Crash.WinCrashCount++
 		} else if Report.Os == "Linux" {
 			Crash.LinCrashCount++
