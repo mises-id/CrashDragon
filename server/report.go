@@ -242,7 +242,6 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".txt\"")
 		c.Data(http.StatusOK, "text/plain", []byte(Report.ReportContentTXT))
 		return
 	default:
