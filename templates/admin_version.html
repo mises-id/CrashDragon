@@ -6,11 +6,11 @@
             <form action="{{ .form }}" method="post">
                 <div class="form-group">
                     <label for="id">ID</label>
-                    <input type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
+                    <input disabled="disabled" type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
                 </div>
                 <div class="form-group">
-                    <label for="slug">Slug</label>
-                    <input type="text" class="form-control" id="slug" name="slug" placeholder="Slug" {{ if .item.Slug }}value="{{ .item.Slug }}"{{ end }}>
+                    <label for="slug">Slug</label> <a href="#" id="change-slug">(Change)</a>
+                    <input disabled="disabled" type="text" class="form-control" id="slug" name="slug" placeholder="Slug" {{ if .item.Slug }}value="{{ .item.Slug }}"{{ end }}>
                 </div>
                 <div class="form-group">
                     <label for="name">Name</label>
