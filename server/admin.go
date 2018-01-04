@@ -75,7 +75,6 @@ func PostAdminNewProduct(c *gin.Context) {
 	Product.ID = id
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
-	Product.GitRepo = c.PostForm("gitrepo")
 	database.Db.Create(&Product)
 	c.Redirect(http.StatusMovedPermanently, "/admin/products")
 }
@@ -99,7 +98,6 @@ func PostAdminEditProduct(c *gin.Context) {
 	database.Db.First(&Product, "ID = ?", c.Param("id"))
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
-	Product.GitRepo = c.PostForm("gitrepo")
 	database.Db.Save(&Product)
 	c.Redirect(http.StatusMovedPermanently, "/admin/products")
 }
@@ -155,6 +153,7 @@ func PostAdminNewVersion(c *gin.Context) {
 	Version.ProductID = id
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
+	Version.GitRepo = c.PostForm("gitrepo")
 	database.Db.Create(&Version)
 	c.Redirect(http.StatusMovedPermanently, "/admin/versions")
 }
@@ -181,6 +180,7 @@ func PostAdminEditVersion(c *gin.Context) {
 	database.Db.First(&Version, "ID = ?", c.Param("id"))
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
+	Version.GitRepo = c.PostForm("gitrepo")
 	id, err := uuid.FromString(c.PostForm("product"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)

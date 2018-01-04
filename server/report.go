@@ -143,7 +143,7 @@ func GetReports(c *gin.Context) {
 		Item.Reason = Report.Report.CrashInfo.Type
 		Item.Signature = Report.Signature
 		Item.Location = Report.CrashLocation
-		Item.GitRepo = Report.Product.GitRepo
+		Item.GitRepo = Report.Version.GitRepo
 		Item.File = Report.CrashPath
 		Item.Line = Report.CrashLine
 		List = append(List, Item)
@@ -194,7 +194,7 @@ func GetReport(c *gin.Context) {
 	m := (Report.ProcessUptime / 60000) % 60
 	s := (Report.ProcessUptime / 1000) % 60
 	Item.Uptime = fmt.Sprintf("%02d:%02d:%02d", h, m, s)
-	Item.GitRepo = Report.Product.GitRepo
+	Item.GitRepo = Report.Version.GitRepo
 	Item.File = Report.CrashPath
 	Item.Line = Report.CrashLine
 	Item.Location = Report.CrashLocation
