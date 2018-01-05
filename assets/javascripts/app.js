@@ -8,3 +8,13 @@ $("#product-filter").on("change", function () {
     document.cookie = "product=" + slug + ";path=/";
     location.reload();
 });
+
+$('#change-slug').on("click", function() {
+    alert("This can have some unintended side-effects! Be sure to know what you do!");
+    $('#slug').each(function() {
+        if ($(this).attr('disabled')) {
+            $(this).removeAttr('disabled');
+            $('#change-slug').hide();
+        }
+    });
+});

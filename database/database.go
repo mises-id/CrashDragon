@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"html/template"
 	"log"
-	"time"
 	"os"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //Postgres functions
@@ -19,9 +19,8 @@ type Product struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name    string
-	Slug    string
-	GitRepo string
+	Name string
+	Slug string
 }
 
 // Products contains all currently available products and is used for the switcher in the header
@@ -34,8 +33,9 @@ type Version struct {
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name string
-	Slug string
+	Name    string
+	Slug    string
+	GitRepo string
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	Product   Product
@@ -257,7 +257,7 @@ func InitDb(connection string) error {
 		return err
 	}
 	if os.Getenv("GIN_MODE") != "release" {
-		Db.LogMode(true)	
+		Db.LogMode(true)
 	}
 
 	Db.AutoMigrate(&Product{}, &Version{}, &User{}, &Comment{}, &Crash{}, &Report{}, &Symfile{})

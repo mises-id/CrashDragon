@@ -29,9 +29,11 @@ func Auth(c *gin.Context) {
 		base := strings.Split(auth, " ")[1]
 		userpass, _ := base64.StdEncoding.DecodeString(base)
 		user = strings.Split(string(userpass), ":")[0]
-	} else {
+	}
+	if user == "" {
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
 		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 	var User database.User
 	database.Db.FirstOrInit(&User, "name = ?", user)

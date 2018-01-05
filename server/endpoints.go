@@ -94,6 +94,7 @@ func processReport(Report database.Report, reprocess bool) {
 		database.Db.Delete(&Report)
 		return
 	}
+	Report.Report = database.ReportContent{}
 	err = json.Unmarshal(out.Bytes(), &Report.Report)
 	if err != nil {
 		os.Remove(file)
@@ -101,9 +102,9 @@ func processReport(Report database.Report, reprocess bool) {
 		return
 	}
 	if Report.Report.Status != "OK" {
-		os.Remove(file)
-		database.Db.Delete(&Report)
-		return
+		Report.Processed = false
+	} else {
+		Report.Processed = true
 	}
 	cmdTXT := exec.Command("./build/bin/minidump_stackwalk", "-f", "txt", file, path.Join(config.C.ContentDirectory, "Symfiles"))
 	out.Reset()
@@ -115,10 +116,16 @@ func processReport(Report database.Report, reprocess bool) {
 		return
 	}
 	Report.ReportContentTXT = out.String()
-	Report.Processed = true
 	Report.Os = Report.Report.SystemInfo.Os
 	Report.OsVersion = Report.Report.SystemInfo.OsVer
 	Report.Arch = Report.Report.SystemInfo.CPUArch
+
+	if reprocess {
+		Report.Signature = ""
+		Report.CrashLocation = ""
+		Report.CrashPath = ""
+		Report.CrashLine = 0
+	}
 	for _, Frame := range Report.Report.CrashingThread.Frames {
 		if Frame.File == "" && Report.Signature != "" {
 			continue
@@ -132,38 +139,24 @@ func processReport(Report database.Report, reprocess bool) {
 		Report.CrashLine = Frame.Line
 		break
 	}
-	/*if err = database.Db.Save(&Report).Error; err != nil {
-		os.Remove(file)
-		database.Db.Delete(&Report)
-		return
-	}*/
-	Report.CreatedAt = time.Now()
-	var signature string
-	for _, frame := range Report.Report.CrashingThread.Frames {
-		if frame.Function == "" {
-			continue
-		} else {
-			signature = frame.Function
-			break
-		}
+
+	if !reprocess {
+		Report.CreatedAt = time.Now()
 	}
-	/*if signature == "" {
-		return
-	}*/
 
 	var Crash database.Crash
 	if reprocess && Report.CrashID != uuid.Nil {
 		database.Db.First(&Crash, "id = ?", Report.CrashID)
-		Crash.Signature = signature
+		Crash.Signature = Report.Signature
 		database.Db.Save(&Crash)
 	} else {
-		database.Db.FirstOrInit(&Crash, "signature = ?", signature)
+		database.Db.FirstOrInit(&Crash, "signature = ?", Report.Signature)
 	}
 	if Crash.ID == uuid.Nil {
 		Crash.ID = uuid.NewV4()
 
 		Crash.FirstReported = Report.CreatedAt
-		Crash.Signature = signature
+		Crash.Signature = Report.Signature
 
 		Crash.AllCrashCount = 0
 		Crash.WinCrashCount = 0
@@ -176,10 +169,11 @@ func processReport(Report database.Report, reprocess bool) {
 		database.Db.Create(&Crash)
 		reprocess = false
 	}
+
 	if !reprocess || Report.CrashID == uuid.Nil {
 		Crash.LastReported = Report.CreatedAt
 		Crash.AllCrashCount++
-		if Report.Os == "Windows" {
+		if Report.Os == "Windows NT" {
 			Crash.WinCrashCount++
 		} else if Report.Os == "Linux" {
 			Crash.LinCrashCount++
@@ -228,10 +222,24 @@ func PostSymfiles(c *gin.Context) {
 		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file does not start with 'MODULE'"))
 		return
 	}
+	if parts[3] == "000000000000000000000000000000000" {
+		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file has invalid code"))
+		return
+	}
 	updated := true
 	if err = database.Db.Where("code = ?", parts[3]).First(&Symfile).Error; err != nil {
 		Symfile.ID = uuid.NewV4()
 		updated = false
+	} else {
+		filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
+		if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
+			err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+		}
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			database.Db.Delete(&Symfile)
+			return
+		}
 	}
 	Symfile.Os = parts[1]
 	Symfile.Arch = parts[2]
@@ -239,14 +247,6 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.Name = parts[4]
 	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
 	err = os.MkdirAll(filepath, 0755)
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		database.Db.Delete(&Symfile)
-		return
-	}
-	if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
-		err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
-	}
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		database.Db.Delete(&Symfile)

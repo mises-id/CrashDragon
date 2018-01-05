@@ -2,7 +2,10 @@ package main
 
 import (
 	"net/http"
+	"os"
+	"path"
 
+	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
 
 	"github.com/gin-gonic/gin"
@@ -75,9 +78,8 @@ func PostAdminNewProduct(c *gin.Context) {
 	Product.ID = id
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
-	Product.GitRepo = c.PostForm("gitrepo")
 	database.Db.Create(&Product)
-	c.Redirect(http.StatusMovedPermanently, "/admin/products")
+	c.Redirect(http.StatusFound, "/admin/products")
 }
 
 //GetAdminEditProduct returns the edit product form
@@ -99,15 +101,14 @@ func PostAdminEditProduct(c *gin.Context) {
 	database.Db.First(&Product, "ID = ?", c.Param("id"))
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
-	Product.GitRepo = c.PostForm("gitrepo")
 	database.Db.Save(&Product)
-	c.Redirect(http.StatusMovedPermanently, "/admin/products")
+	c.Redirect(http.StatusFound, "/admin/products")
 }
 
 //GetAdminDeleteProduct deletes a product from the database
 func GetAdminDeleteProduct(c *gin.Context) {
 	database.Db.Delete(database.Product{}, "ID = ?", c.Param("id"))
-	c.Redirect(http.StatusMovedPermanently, "/admin/products")
+	c.Redirect(http.StatusFound, "/admin/products")
 }
 
 //GetAdminVersions returns a list of all versions
@@ -155,8 +156,9 @@ func PostAdminNewVersion(c *gin.Context) {
 	Version.ProductID = id
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
+	Version.GitRepo = c.PostForm("gitrepo")
 	database.Db.Create(&Version)
-	c.Redirect(http.StatusMovedPermanently, "/admin/versions")
+	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
 //GetAdminEditVersion returns the edit product form
@@ -181,6 +183,7 @@ func PostAdminEditVersion(c *gin.Context) {
 	database.Db.First(&Version, "ID = ?", c.Param("id"))
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
+	Version.GitRepo = c.PostForm("gitrepo")
 	id, err := uuid.FromString(c.PostForm("product"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -188,13 +191,13 @@ func PostAdminEditVersion(c *gin.Context) {
 	}
 	Version.ProductID = id
 	database.Db.Save(&Version)
-	c.Redirect(http.StatusMovedPermanently, "/admin/versions")
+	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
 //GetAdminDeleteVersion deletes a product from the database
 func GetAdminDeleteVersion(c *gin.Context) {
 	database.Db.Delete(database.Version{}, "ID = ?", c.Param("id"))
-	c.Redirect(http.StatusMovedPermanently, "/admin/versions")
+	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
 //GetAdminUsers returns a list of all users
@@ -238,7 +241,7 @@ func PostAdminNewUser(c *gin.Context) {
 		User.IsAdmin = true
 	}
 	database.Db.Create(&User)
-	c.Redirect(http.StatusMovedPermanently, "/admin/users")
+	c.Redirect(http.StatusFound, "/admin/users")
 }
 
 //GetAdminEditUser returns the edit product form
@@ -265,11 +268,35 @@ func PostAdminEditUser(c *gin.Context) {
 		User.IsAdmin = true
 	}
 	database.Db.Save(&User)
-	c.Redirect(http.StatusMovedPermanently, "/admin/users")
+	c.Redirect(http.StatusFound, "/admin/users")
 }
 
 //GetAdminDeleteUser deletes a product from the database
 func GetAdminDeleteUser(c *gin.Context) {
 	database.Db.Delete(database.User{}, "ID = ?", c.Param("id"))
-	c.Redirect(http.StatusMovedPermanently, "/admin/users")
+	c.Redirect(http.StatusFound, "/admin/users")
+}
+
+//GetAdminSymfiles gets a list of currently uploaded symfiles
+func GetAdminSymfiles(c *gin.Context) {
+	var Symfiles []database.Symfile
+	database.Db.Preload("Product").Preload("Version").Find(&Symfiles)
+	c.HTML(http.StatusOK, "admin_symfiles.html", gin.H{
+		"admin": true,
+		"prods": database.Products,
+		"title": "Admin — Symfiles",
+		"items": Symfiles,
+	})
+}
+
+//GetAdminDeleteSymfile deletes the given symfile
+func GetAdminDeleteSymfile(c *gin.Context) {
+	var Symfile database.Symfile
+	database.Db.First(&Symfile, "ID = ?", c.Param("id"))
+	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
+	if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
+		os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+	}
+	database.Db.Delete(&Symfile)
+	c.Redirect(http.StatusFound, "/admin/symfiles")
 }

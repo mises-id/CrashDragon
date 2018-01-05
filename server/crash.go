@@ -34,7 +34,7 @@ func PostCrashComment(c *gin.Context) {
 	}
 	Comment.ReportID = uuid.Nil
 	Comment.CrashID = Crash.ID
-	database.Db.Save(&Comment)
+	database.Db.Create(&Comment)
 	c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String()+"#comment-"+Comment.ID.String())
 }
 
