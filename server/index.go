@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"code.videolan.org/videolan/CrashDragon/database"
 
@@ -141,11 +142,19 @@ func GetIndex(c *gin.Context) {
 			}
 		}
 	}
-	c.HTML(http.StatusOK, "index.html", gin.H{
-		"prods":     database.Products,
-		"title":     "Stats",
-		"versions":  VersionData,
-		"products":  ProductData,
-		"platforms": PlatformData,
-	})
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"prods":     database.Products,
+			"title":     "Stats",
+			"versions":  VersionData,
+			"products":  ProductData,
+			"platforms": PlatformData,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"Versions":  VersionData,
+			"Products":  ProductData,
+			"Platforms": PlatformData,
+		})
+	}
 }

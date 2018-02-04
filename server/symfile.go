@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
@@ -35,19 +36,27 @@ func GetSymfiles(c *gin.Context) {
 		next = offset + 50
 	}
 	prev = offset - 50
-	c.HTML(http.StatusOK, "symfiles.html", gin.H{
-		"prods":      database.Products,
-		"title":      "Symfiles",
-		"items":      Symfiles,
-		"nextOffset": next,
-		"prevOffset": prev,
-	})
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.HTML(http.StatusOK, "symfiles.html", gin.H{
+			"prods":      database.Products,
+			"title":      "Symfiles",
+			"items":      Symfiles,
+			"nextOffset": next,
+			"prevOffset": prev,
+		})
+	} else {
+		c.JSON(http.StatusOK, Symfiles)
+	}
 }
 
 // GetSymfile returns content of symfile
 func GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
-	database.Db.Where("id = ?", c.Param("id")).First(&Symfile)
+	database.Db.Where("id = ?", c.Param("id")).Preload("Product").Preload("Version").First(&Symfile)
+	if !strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.JSON(http.StatusOK, Symfile)
+		return
+	}
 	f, err := os.Open(path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)

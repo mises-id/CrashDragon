@@ -148,13 +148,17 @@ func GetReports(c *gin.Context) {
 		Item.Line = Report.CrashLine
 		List = append(List, Item)
 	}
-	c.HTML(http.StatusOK, "reports.html", gin.H{
-		"prods":      database.Products,
-		"title":      "Reports",
-		"items":      List,
-		"nextOffset": next,
-		"prevOffset": prev,
-	})
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.HTML(http.StatusOK, "reports.html", gin.H{
+			"prods":      database.Products,
+			"title":      "Reports",
+			"items":      List,
+			"nextOffset": next,
+			"prevOffset": prev,
+		})
+	} else {
+		c.JSON(http.StatusOK, List)
+	}
 }
 
 // GetReport returns details of crashreport
@@ -202,15 +206,19 @@ func GetReport(c *gin.Context) {
 	if result != "" {
 		c.SetCookie("result", "", 1, "/", "", false, false)
 	}
-	c.HTML(http.StatusOK, "report.html", gin.H{
-		"prods":      database.Products,
-		"detailView": true,
-		"title":      "Report",
-		"item":       Item,
-		"report":     Report.Report,
-		"result":     result,
-		"comments":   Report.Comments,
-	})
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.HTML(http.StatusOK, "report.html", gin.H{
+			"prods":      database.Products,
+			"detailView": true,
+			"title":      "Report",
+			"item":       Item,
+			"report":     Report.Report,
+			"result":     result,
+			"comments":   Report.Comments,
+		})
+	} else {
+		c.JSON(http.StatusOK, Report)
+	}
 }
 
 // GetReportFile returns minidump file of crashreport

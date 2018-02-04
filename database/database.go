@@ -9,18 +9,18 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" //Postgres functions
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 // Product defines the structure of a product
 type Product struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name string
+	Slug string
 }
 
 // Products contains all currently available products and is used for the switcher in the header
@@ -28,46 +28,46 @@ var Products []Product
 
 // Version defines the structure of a product
 type Version struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name    string `json:"name"`
-	Slug    string `json:"slug"`
-	GitRepo string `json:"git_repo"`
+	Name    string
+	Slug    string
+	GitRepo string
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"product_id"`
-	Product   Product   `json:"-"`
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	Product   Product
 }
 
 // User defines the structure of a user
 type User struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name    string `json:"name"`
-	IsAdmin bool   `json:"admin"`
+	Name    string
+	IsAdmin bool
 
-	Comments []Comment `json:"-"`
+	Comments []Comment
 }
 
 // Comment defines the structure of a comment
 type Comment struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL" json:"creash_id"`
-	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:"report_id"`
+	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
 
-	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"user_id"`
-	User   User      `json:"-"`
+	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	User   User
 
-	Content template.HTML `json:"content"`
+	Content template.HTML
 }
 
 // Crash database model
@@ -121,8 +121,8 @@ type Report struct {
 
 	Comments []Comment
 
-	ReportContentJSON string `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB"`
-	ReportContentTXT  string
+	ReportContentJSON string        `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB" json:"-"`
+	ReportContentTXT  string        `json:"-"`
 	Report            ReportContent `gorm:"-"`
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`

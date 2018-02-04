@@ -52,7 +52,7 @@ func GetCrashes(c *gin.Context) {
 	}
 	var count int
 	query.Model(database.Crash{}).Count(&count)
-	query.Order("created_at DESC").Offset(offset).Limit(50).Find(&Crashes)
+	query.Order("created_at DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Crashes)
 	var next int
 	var prev int
 	if (offset + 50) >= count {
@@ -61,13 +61,17 @@ func GetCrashes(c *gin.Context) {
 		next = offset + 50
 	}
 	prev = offset - 50
-	c.HTML(http.StatusOK, "crashes.html", gin.H{
-		"prods":      database.Products,
-		"title":      "Crashes",
-		"items":      Crashes,
-		"nextOffset": next,
-		"prevOffset": prev,
-	})
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.HTML(http.StatusOK, "crashes.html", gin.H{
+			"prods":      database.Products,
+			"title":      "Crashes",
+			"items":      Crashes,
+			"nextOffset": next,
+			"prevOffset": prev,
+		})
+	} else {
+		c.JSON(http.StatusOK, Crashes)
+	}
 }
 
 // GetCrash returns details of a crash
@@ -76,12 +80,16 @@ func GetCrash(c *gin.Context) {
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
 	database.Db.Model(&Crash).Preload("Product").Preload("Version").Related(&Crash.Reports)
 	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
-	c.HTML(http.StatusOK, "crash.html", gin.H{
-		"prods":      database.Products,
-		"detailView": true,
-		"title":      "Crash",
-		"items":      Crash.Reports,
-		"comments":   Crash.Comments,
-		"ID":         Crash.ID.String(),
-	})
+	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
+		c.HTML(http.StatusOK, "crash.html", gin.H{
+			"prods":      database.Products,
+			"detailView": true,
+			"title":      "Crash",
+			"items":      Crash.Reports,
+			"comments":   Crash.Comments,
+			"ID":         Crash.ID.String(),
+		})
+	} else {
+		c.JSON(http.StatusOK, Crash)
+	}
 }

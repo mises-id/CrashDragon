@@ -49,20 +49,32 @@ func initRouter() *gin.Engine {
 	admin.GET("/symfiles/delete/:id", GetAdminDeleteSymfile)
 
 	// Admin JSON endpoints
-	api := admin.Group("/api")
+	api := auth.Group("/api")
 	api.GET("/products", APIGetProducts)
 	api.GET("/products/:id", APIGetProduct)
 	api.POST("/products", APINewProduct)
-	api.PUT("/products", APIUpdateProduct)
+	api.PUT("/products/:id", APIUpdateProduct)
 	api.DELETE("/products/:id", APIDeleteProduct)
 
 	api.GET("/versions", APIGetVersions)
 	api.GET("/versions/:id", APIGetVersion)
 	api.POST("/versions", APINewVersion)
-	api.PUT("/versions", APIUpdateVersion)
+	api.PUT("/versions/:id", APIUpdateVersion)
+	api.DELETE("/versions/:id", APIDeleteVersion)
 
+	api.GET("/users", APIGetUsers)
+	api.GET("/users/:id", APIGetUser)
 	api.POST("/users", APINewUser)
-	api.PUT("/users", APIUpdateUser)
+	api.PUT("/users/:id", APIUpdateUser)
+	api.DELETE("/users/:id", APIDeleteUser)
+
+	api.GET("/stats", GetIndex)
+	api.GET("/crashes", GetCrashes)
+	api.GET("/crashes/:id", GetCrash)
+	api.GET("/reports", GetReports)
+	api.GET("/reports/:id", GetReport)
+	api.GET("/symfiles", GetSymfiles)
+	api.GET("/symfiles/:id", GetSymfile)
 
 	// simple-breakpad endpoints
 	router.GET("/", GetIndex)
