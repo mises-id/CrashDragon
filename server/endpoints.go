@@ -166,10 +166,18 @@ func processReport(Report database.Report, reprocess bool) {
 		Crash.ProductID = Report.ProductID
 		Crash.VersionID = Report.VersionID
 
+		Crash.Fixed = false
+
 		database.Db.Create(&Crash)
 		reprocess = false
 	}
-
+	database.Db.Model(&Crash).Related(&Crash.Reports)
+	for _, CReport := range Crash.Reports {
+		if CReport.VersionID == Report.VersionID {
+			break
+		}
+		Crash.Fixed = false
+	}
 	if !reprocess || Report.CrashID == uuid.Nil {
 		Crash.LastReported = Report.CreatedAt
 		Crash.AllCrashCount++

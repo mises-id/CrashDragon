@@ -80,6 +80,7 @@ func initRouter() *gin.Engine {
 	router.GET("/", GetIndex)
 	router.GET("/crashes", GetCrashes)
 	router.GET("/crashes/:id", GetCrash)
+	router.POST("/crashes/:id/fixed", MarkCrashFixed)
 	router.GET("/reports", GetReports)
 	router.GET("/reports/:id", GetReport)
 	router.GET("/reports/:id/files/:name", GetReportFile)

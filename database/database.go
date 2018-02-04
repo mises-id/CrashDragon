@@ -94,6 +94,8 @@ type Crash struct {
 
 	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	Version   Version
+
+	Fixed bool `sql:"DEFAULT false"`
 }
 
 // Report database model

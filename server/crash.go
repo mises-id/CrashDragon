@@ -52,7 +52,7 @@ func GetCrashes(c *gin.Context) {
 	}
 	var count int
 	query.Model(database.Crash{}).Count(&count)
-	query.Order("created_at DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Crashes)
+	query.Where("fixed = false").Order("created_at DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Crashes)
 	var next int
 	var prev int
 	if (offset + 50) >= count {
@@ -88,8 +88,18 @@ func GetCrash(c *gin.Context) {
 			"items":      Crash.Reports,
 			"comments":   Crash.Comments,
 			"ID":         Crash.ID.String(),
+			"fixed":      Crash.Fixed,
 		})
 	} else {
 		c.JSON(http.StatusOK, Crash)
 	}
+}
+
+// MarkCrashFixed marks a given crash as fixed for the current version
+func MarkCrashFixed(c *gin.Context) {
+	var Crash database.Crash
+	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	Crash.Fixed = !Crash.Fixed
+	database.Db.Save(&Crash)
+	c.Redirect(http.StatusFound, "/crashes/"+c.Param("id"))
 }
