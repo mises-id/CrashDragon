@@ -48,12 +48,23 @@ func initRouter() *gin.Engine {
 	admin.GET("/symfiles", GetAdminSymfiles)
 	admin.GET("/symfiles/delete/:id", GetAdminDeleteSymfile)
 
+	// Admin JSON endpoints
 	api := admin.Group("/api")
-	api.POST("/products/new", PostAdminNewProductJSON)
-	api.POST("/versions/new", PostAdminNewVersionJSON)
-	api.POST("/users/new", PostAdminNewUserJSON)
+	api.GET("/products", APIGetProducts)
+	api.GET("/products/:id", APIGetProduct)
+	api.POST("/products", APINewProduct)
+	api.PUT("/products", APIUpdateProduct)
+	api.DELETE("/products/:id", APIDeleteProduct)
 
-	// Endpoints
+	api.GET("/versions", APIGetVersions)
+	api.GET("/versions/:id", APIGetVersion)
+	api.POST("/versions", APINewVersion)
+	api.PUT("/versions", APIUpdateVersion)
+
+	api.POST("/users", APINewUser)
+	api.PUT("/users", APIUpdateUser)
+
+	// simple-breakpad endpoints
 	router.GET("/", GetIndex)
 	router.GET("/crashes", GetCrashes)
 	router.GET("/crashes/:id", GetCrash)

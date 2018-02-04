@@ -14,13 +14,13 @@ import (
 
 // Product defines the structure of a product
 type Product struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name string
-	Slug string
+	Name string `json:"name"`
+	Slug string `json:"slug"`
 }
 
 // Products contains all currently available products and is used for the switcher in the header
@@ -28,46 +28,46 @@ var Products []Product
 
 // Version defines the structure of a product
 type Version struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name    string
-	Slug    string
-	GitRepo string
+	Name    string `json:"name"`
+	Slug    string `json:"slug"`
+	GitRepo string `json:"git_repo"`
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Product   Product
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"product_id"`
+	Product   Product   `json:"-"`
 }
 
 // User defines the structure of a user
 type User struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	Name    string
-	IsAdmin bool
+	Name    string `json:"name"`
+	IsAdmin bool   `json:"admin"`
 
-	Comments []Comment
+	Comments []Comment `json:"-"`
 }
 
 // Comment defines the structure of a comment
 type Comment struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"id"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
 
-	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL"`
-	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL" json:"creash_id"`
+	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:"report_id"`
 
-	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	User   User
+	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:"user_id"`
+	User   User      `json:"-"`
 
-	Content template.HTML
+	Content template.HTML `json:"content"`
 }
 
 // Crash database model

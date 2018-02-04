@@ -82,19 +82,6 @@ func PostAdminNewProduct(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
-//PostAdminNewProductJSON processes the new product endpoint
-func PostAdminNewProductJSON(c *gin.Context) {
-	var Product database.Product
-	Product.ID = uuid.NewV4()
-	Product.Slug = c.PostForm("slug")
-	Product.Name = c.PostForm("name")
-	if err := database.Db.Create(&Product).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else {
-		c.JSON(http.StatusCreated, Product)
-	}
-}
-
 //GetAdminEditProduct returns the edit product form
 func GetAdminEditProduct(c *gin.Context) {
 	var Product database.Product
@@ -172,26 +159,6 @@ func PostAdminNewVersion(c *gin.Context) {
 	Version.GitRepo = c.PostForm("gitrepo")
 	database.Db.Create(&Version)
 	c.Redirect(http.StatusFound, "/admin/versions")
-}
-
-//PostAdminNewVersionJSON processes the new product form
-func PostAdminNewVersionJSON(c *gin.Context) {
-	var Version database.Version
-	Version.ID = uuid.NewV4()
-	id, err := uuid.FromString(c.PostForm("product"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	Version.ProductID = id
-	Version.Slug = c.PostForm("slug")
-	Version.Name = c.PostForm("name")
-	Version.GitRepo = c.PostForm("gitrepo")
-	if err := database.Db.Create(&Version).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else {
-		c.JSON(http.StatusCreated, Version)
-	}
 }
 
 //GetAdminEditVersion returns the edit product form
@@ -275,23 +242,6 @@ func PostAdminNewUser(c *gin.Context) {
 	}
 	database.Db.Create(&User)
 	c.Redirect(http.StatusFound, "/admin/users")
-}
-
-//PostAdminNewUserJSON processes the new product form
-func PostAdminNewUserJSON(c *gin.Context) {
-	var User database.User
-	User.ID = uuid.NewV4()
-	User.Name = c.PostForm("name")
-	if adm := c.DefaultPostForm("admin", "off"); adm == "off" {
-		User.IsAdmin = false
-	} else {
-		User.IsAdmin = true
-	}
-	if err := database.Db.Create(&User).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	} else {
-		c.JSON(http.StatusCreated, User)
-	}
 }
 
 //GetAdminEditUser returns the edit product form
