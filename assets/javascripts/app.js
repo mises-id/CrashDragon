@@ -11,10 +11,9 @@ $("#product-filter").on("change", function () {
 
 $('#change-slug').on("click", function() {
     alert("This can have some unintended side-effects! Be sure to know what you do!");
-    $('#slug').each(function() {
-        if ($(this).attr('disabled')) {
-            $(this).removeAttr('disabled');
-            $('#change-slug').hide();
-        }
-    });
+    var slugField = document.getElementById('slug');
+    if (slugField.hasAttribute('readonly')) {
+        slugField.removeAttribute('readonly');
+        $('#change-slug').hide();
+    }
 });

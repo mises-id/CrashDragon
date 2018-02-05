@@ -36,6 +36,7 @@ type Version struct {
 	Name    string
 	Slug    string
 	GitRepo string
+	Ignore  bool
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	Product   Product

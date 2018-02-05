@@ -6,19 +6,24 @@
             <form action="{{ .form }}" method="post">
                 <div class="form-group">
                     <label for="id">ID</label>
-                    <input disabled="disabled" type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
+                    <input readonly type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
                 </div>
                 <div class="form-group">
                     <label for="slug">Slug</label> <a href="#" id="change-slug">(Change)</a>
-                    <input disabled="disabled" type="text" class="form-control" id="slug" name="slug" placeholder="Slug" {{ if .item.Slug }}value="{{ .item.Slug }}"{{ end }}>
+                    <input readonly type="text" class="form-control" id="slug" name="slug" placeholder="Slug" {{ if .item.Slug }}value="{{ .item.Slug }}"{{ end }}>
                 </div>
                 <div class="form-group">
                     <label for="name">Name</label>
-                    <input type="name" class="form-control" id="name" name="name" placeholder="Name" {{ if .item.Name }}value="{{ .item.Name }}"{{ end }}>
+                    <input type="text" class="form-control" id="name" name="name" placeholder="Name" {{ if .item.Name }}value="{{ .item.Name }}"{{ end }}>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input type="checkbox" name="ignore" {{ if .item.Ignore }}checked="checked"{{ end }}> Ignore this Version
+                    </label>
                 </div>
                 <div class="form-group">
                     <label for="gitrepo">Git Repo URL</label>
-                    <input type="name" class="form-control" id="gitrepo" name="gitrepo" placeholder="Git Repo URL" {{ if .item.GitRepo }}value="{{ .item.GitRepo }}"{{ end }}>
+                    <input type="text" class="form-control" id="gitrepo" name="gitrepo" placeholder="Git Repo URL" {{ if .item.GitRepo }}value="{{ .item.GitRepo }}"{{ end }}>
                     Please use <strong>%[1]s</strong> as placeholder for the filename and <strong>%[2]d</strong> for the line number.
                 </div>
                 <div class="form-group">

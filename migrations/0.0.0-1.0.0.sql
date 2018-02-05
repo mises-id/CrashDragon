@@ -8,5 +8,8 @@ UPDATE versions
     );
 ALTER TABLE products DROP COLUMN git_repo;
 
--- Add flag to indicate a Crash is fixed
+-- Add flag to indicate if a Crash is fixed (issue #19)
 ALTER TABLE "crashes" ADD "fixed" boolean;
+
+-- Add flag to indicate if a Version is ignored (issue #21)
+ALTER TABLE "versions" ADD "ignore" boolean;

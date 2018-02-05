@@ -6,7 +6,7 @@
             <form action="{{ .form }}" method="post">
                 <div class="form-group">
                     <label for="id">ID</label>
-                    <input type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
+                    <input readonly type="text" class="form-control" id="id" name="id" placeholder="ID" {{ if .item.ID }}value="{{ .item.ID }}"{{ end }}>
                 </div>
                 <div class="form-group">
                     <label for="name">Name</label>

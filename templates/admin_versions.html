@@ -9,6 +9,7 @@
                         <th scope="col">ID</th>
                         <th scope="col">Slug</th>
                         <th scope="col">Name</th>
+                        <th scope="col">Ignored</th>
                         <th scope="col">Product</th>
                         <th scope="col">Action</th>
                     </tr>
@@ -19,6 +20,7 @@
                         <td>{{ .ID }}</td>
                         <td>{{ .Slug }}</td>
                         <td>{{ .Name }}</td>
+                        <td>{{ if .Ignore }}<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>{{ else }}<span class="glyphicon glyphicon-remove" aria-hidden="true"></span>{{ end }}</td>
                         <td><a href="/admin/products/edit/{{ .Product.ID }}">{{ .Product.Name }}</a></td>
                         <td><a href="/admin/versions/edit/{{ .ID }}">Edit</a> | <a style="color:red;" href="/admin/versions/delete/{{ .ID }}">Delete</a></td>
                     </tr>

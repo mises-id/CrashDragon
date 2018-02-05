@@ -42,8 +42,8 @@ func PostReports(c *gin.Context) {
 	}
 	Report.ProductID = Product.ID
 	var Version database.Version
-	if err = database.Db.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist"))
+	if err = database.Db.First(&Version, "slug = ? AND product_id = ? AND ignore = false", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
+		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist or is ignored"))
 		return
 	}
 	Report.VersionID = Version.ID

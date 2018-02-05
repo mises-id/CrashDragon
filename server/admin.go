@@ -157,6 +157,11 @@ func PostAdminNewVersion(c *gin.Context) {
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
 	Version.GitRepo = c.PostForm("gitrepo")
+	if ign := c.DefaultPostForm("ignore", "off"); ign == "off" {
+		Version.Ignore = false
+	} else {
+		Version.Ignore = true
+	}
 	database.Db.Create(&Version)
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
@@ -184,6 +189,11 @@ func PostAdminEditVersion(c *gin.Context) {
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
 	Version.GitRepo = c.PostForm("gitrepo")
+	if ign := c.DefaultPostForm("ignore", "off"); ign == "off" {
+		Version.Ignore = false
+	} else {
+		Version.Ignore = true
+	}
 	id, err := uuid.FromString(c.PostForm("product"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -212,7 +222,7 @@ func GetAdminUsers(c *gin.Context) {
 	})
 }
 
-//GetAdminNewUser returns the new product form
+//GetAdminNewUser returns the new user form
 func GetAdminNewUser(c *gin.Context) {
 	var User database.User
 	User.ID = uuid.NewV4()
@@ -225,7 +235,7 @@ func GetAdminNewUser(c *gin.Context) {
 	})
 }
 
-//PostAdminNewUser processes the new product form
+//PostAdminNewUser processes the new user form
 func PostAdminNewUser(c *gin.Context) {
 	var User database.User
 	id, err := uuid.FromString(c.PostForm("id"))
@@ -244,7 +254,7 @@ func PostAdminNewUser(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
-//GetAdminEditUser returns the edit product form
+//GetAdminEditUser returns the edit user form
 func GetAdminEditUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "ID = ?", c.Param("id"))
@@ -257,7 +267,7 @@ func GetAdminEditUser(c *gin.Context) {
 	})
 }
 
-//PostAdminEditUser processes the edit product form
+//PostAdminEditUser processes the edit user form
 func PostAdminEditUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "ID = ?", c.Param("id"))
@@ -271,7 +281,7 @@ func PostAdminEditUser(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
-//GetAdminDeleteUser deletes a product from the database
+//GetAdminDeleteUser deletes a user from the database
 func GetAdminDeleteUser(c *gin.Context) {
 	database.Db.Delete(database.User{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/users")
