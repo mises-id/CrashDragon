@@ -33,6 +33,12 @@
 			"revisionTime": "2017-06-13T22:42:24Z"
 		},
 		{
+			"checksumSHA1": "j6XafsL9j74n4p3Nx1FDNetQ2PU=",
+			"path": "github.com/jinzhu/copier",
+			"revision": "db4671f3a9b8df855e993f7c94ec5ef1ffb0a23b",
+			"revisionTime": "2017-09-22T08:27:39Z"
+		},
+		{
 			"checksumSHA1": "uvWzKxIhqD5JzlQ7pxYlbV4kBbY=",
 			"path": "github.com/jinzhu/gorm",
 			"revision": "eae7f6be603af3190e032fe3c4d465ddaf6ea3d4",
@@ -129,5 +135,5 @@
 			"revisionTime": "2017-04-07T17:21:22Z"
 		}
 	],
-	"rootPath": "code.videolan.org/VideoLAN/CrashDragon"
+	"rootPath": "code.videolan.org/videolan/CrashDragon"
 }
