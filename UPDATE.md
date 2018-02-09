@@ -1,8 +1,26 @@
 # Updating
 
-To update the project run `git fetch` followed by `git checkout vx.x.x`
-(enter the most current version). After that you have to run the database
-migrations. This can be done by running
+To update the project run 
+
+```
+git fetch
+``` 
+
+followed by
+
+```
+git checkout vx.x.x
+```
+
+(enter the most current version)
+
+Then the submodule and breakpads submodules need to be updated:
+
+```
+git submodule update --init --recursive
+```
+
+After that you have to run the database migrations. This can be done by running
 
 ```
 psql -U username -d dataBase -a -f migrations/file.sql
