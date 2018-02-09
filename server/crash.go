@@ -52,7 +52,7 @@ func GetCrashes(c *gin.Context) {
 	}
 	var count int
 	query.Model(database.Crash{}).Count(&count)
-	query.Where("fixed = false").Order("created_at DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Crashes)
+	query.Where("fixed = false").Order("all_crash_count DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Crashes)
 	var next int
 	var prev int
 	if (offset + 50) >= count {
@@ -78,7 +78,7 @@ func GetCrashes(c *gin.Context) {
 func GetCrash(c *gin.Context) {
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
-	database.Db.Model(&Crash).Preload("Product").Preload("Version").Related(&Crash.Reports)
+	database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("updated_at DESC").Related(&Crash.Reports)
 	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "crash.html", gin.H{
