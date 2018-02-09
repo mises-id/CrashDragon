@@ -186,6 +186,7 @@ func GetReport(c *gin.Context) {
 	}
 	Item.ID = Report.ID.String()
 	Item.CrashID = Report.CrashID.String()
+	Item.Signature = Report.Signature
 	Item.Date = Report.CreatedAt
 	Item.Product = Report.Product.Name
 	Item.Version = Report.Version.Name
