@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -83,19 +83,40 @@ func ReprocessReport(c *gin.Context) {
 	return
 }
 
+func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byte, error) {
+	cmd := exec.Command("./build/bin/minidump_stackwalk", "-f", format, minidumpFile, symbolsPath)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+	if err = cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	data, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cmd.Wait(); err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
 func processReport(Report database.Report, reprocess bool) {
 	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	cmdJSON := exec.Command("./build/bin/minidump_stackwalk", "-f", "json", file, path.Join(config.C.ContentDirectory, "Symfiles"))
-	var out bytes.Buffer
-	cmdJSON.Stdout = &out
-	err := cmdJSON.Run()
+	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
+
+	dataJSON, err := runProcessor(file, symbolsPath, "json")
 	if err != nil {
 		os.Remove(file)
 		database.Db.Delete(&Report)
 		return
 	}
+
 	Report.Report = database.ReportContent{}
-	err = json.Unmarshal(out.Bytes(), &Report.Report)
+	err = json.Unmarshal(dataJSON, &Report.Report)
 	if err != nil {
 		os.Remove(file)
 		database.Db.Delete(&Report)
@@ -106,16 +127,7 @@ func processReport(Report database.Report, reprocess bool) {
 	} else {
 		Report.Processed = true
 	}
-	cmdTXT := exec.Command("./build/bin/minidump_stackwalk", "-f", "txt", file, path.Join(config.C.ContentDirectory, "Symfiles"))
-	out.Reset()
-	cmdTXT.Stdout = &out
-	err = cmdTXT.Run()
-	if err != nil {
-		os.Remove(file)
-		database.Db.Delete(&Report)
-		return
-	}
-	Report.ReportContentTXT = out.String()
+
 	Report.Os = Report.Report.SystemInfo.Os
 	Report.OsVersion = Report.Report.SystemInfo.OsVer
 	Report.Arch = Report.Report.SystemInfo.CPUArch
