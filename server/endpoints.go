@@ -2,20 +2,17 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/processor"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 )
@@ -31,22 +28,21 @@ func PostReports(c *gin.Context) {
 	var Report database.Report
 	Report.Processed = false
 	Report.ID = uuid.NewV4()
-	if err = database.Db.FirstOrInit(&Report).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
+
 	var Product database.Product
 	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
 		c.AbortWithError(http.StatusBadRequest, errors.New("the specified prod does not exist"))
 		return
 	}
 	Report.ProductID = Product.ID
+
 	var Version database.Version
 	if err = database.Db.First(&Version, "slug = ? AND product_id = ? AND ignore = false", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
 		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist or is ignored"))
 		return
 	}
 	Report.VersionID = Version.ID
+
 	Report.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
@@ -54,18 +50,16 @@ func PostReports(c *gin.Context) {
 	err = os.MkdirAll(filepath, 0755)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
-		database.Db.Delete(&Report)
 		return
 	}
 	f, err := os.Create(path.Join(filepath, Report.ID.String()+".dmp"))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
-		database.Db.Delete(&Report)
 		return
 	}
 	io.Copy(f, file)
 	f.Close()
-	go processReport(Report, false)
+	processor.AddToQueue(Report)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
 		"object": Report,
@@ -77,137 +71,10 @@ func PostReports(c *gin.Context) {
 func ReprocessReport(c *gin.Context) {
 	var Report database.Report
 	database.Db.Where("id = ?", c.Param("id")).First(&Report)
-	processReport(Report, true)
+	processor.Reprocess(Report)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
 	return
-}
-
-func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byte, error) {
-	cmd := exec.Command("./build/bin/minidump_stackwalk", "-f", format, minidumpFile, symbolsPath)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	if err = cmd.Start(); err != nil {
-		return nil, err
-	}
-
-	data, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return nil, err
-	}
-	return data, nil
-}
-
-func processReport(Report database.Report, reprocess bool) {
-	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
-
-	dataJSON, err := runProcessor(file, symbolsPath, "json")
-	if err != nil {
-		os.Remove(file)
-		database.Db.Delete(&Report)
-		return
-	}
-
-	Report.Report = database.ReportContent{}
-	err = json.Unmarshal(dataJSON, &Report.Report)
-	if err != nil {
-		os.Remove(file)
-		database.Db.Delete(&Report)
-		return
-	}
-	if Report.Report.Status != "OK" {
-		Report.Processed = false
-	} else {
-		Report.Processed = true
-	}
-
-	Report.Os = Report.Report.SystemInfo.Os
-	Report.OsVersion = Report.Report.SystemInfo.OsVer
-	Report.Arch = Report.Report.SystemInfo.CPUArch
-
-	if reprocess {
-		Report.Signature = ""
-		Report.CrashLocation = ""
-		Report.CrashPath = ""
-		Report.CrashLine = 0
-	}
-	for _, Frame := range Report.Report.CrashingThread.Frames {
-		if Frame.File == "" && Report.Signature != "" {
-			continue
-		}
-		Report.Signature = Frame.Function
-		if Frame.File == "" {
-			continue
-		}
-		Report.CrashLocation = Frame.File + ":" + strconv.Itoa(Frame.Line)
-		Report.CrashPath = Frame.File
-		Report.CrashLine = Frame.Line
-		break
-	}
-
-	if !reprocess {
-		Report.CreatedAt = time.Now()
-	}
-
-	var Crash database.Crash
-	if reprocess && Report.CrashID != uuid.Nil {
-		database.Db.First(&Crash, "id = ?", Report.CrashID)
-		Crash.Signature = Report.Signature
-		database.Db.Save(&Crash)
-	} else {
-		database.Db.FirstOrInit(&Crash, "signature = ?", Report.Signature)
-	}
-	if Crash.ID == uuid.Nil {
-		Crash.ID = uuid.NewV4()
-
-		Crash.FirstReported = Report.CreatedAt
-		Crash.Signature = Report.Signature
-
-		Crash.AllCrashCount = 0
-		Crash.WinCrashCount = 0
-		Crash.MacCrashCount = 0
-		Crash.LinCrashCount = 0
-
-		Crash.ProductID = Report.ProductID
-		Crash.VersionID = Report.VersionID
-
-		Crash.Fixed = false
-
-		database.Db.Create(&Crash)
-		reprocess = false
-	}
-	database.Db.Model(&Crash).Related(&Crash.Reports)
-	for _, CReport := range Crash.Reports {
-		if CReport.VersionID == Report.VersionID {
-			break
-		}
-		Crash.Fixed = false
-	}
-	if !reprocess || Report.CrashID == uuid.Nil {
-		Crash.LastReported = Report.CreatedAt
-		Crash.AllCrashCount++
-		if Report.Os == "Windows NT" {
-			Crash.WinCrashCount++
-		} else if Report.Os == "Linux" {
-			Crash.LinCrashCount++
-		} else if Report.Os == "Mac OS X" {
-			Crash.MacCrashCount++
-		}
-		database.Db.Save(&Crash)
-	}
-	Report.CrashID = Crash.ID
-	if reprocess {
-		database.Db.Save(&Report)
-	} else {
-		database.Db.Create(&Report)
-	}
 }
 
 // PostSymfiles processes symfile

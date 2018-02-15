@@ -133,6 +133,8 @@ type Report struct {
 
 	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	Version   Version
+
+	ProcessingTime float64
 }
 
 // Symfile database model

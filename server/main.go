@@ -7,6 +7,7 @@ import (
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/processor"
 
 	"github.com/gin-gonic/gin"
 )
@@ -107,6 +108,7 @@ func main() {
 		log.Fatalf("FAT Database error: %+v", err)
 		return
 	}
+	processor.StartQueue()
 
 	router := initRouter()
 

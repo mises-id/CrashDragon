@@ -14,6 +14,7 @@ import (
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/processor"
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
@@ -167,22 +168,23 @@ func GetReport(c *gin.Context) {
 	database.Db.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
 	database.Db.Model(&Report).Preload("User").Order("created_at ASC").Related(&Report.Comments)
 	var Item struct {
-		ID        string
-		CrashID   string
-		Signature string
-		Date      time.Time
-		Product   string
-		Version   string
-		Platform  string
-		Arch      string
-		Processor string
-		Reason    string
-		Comment   string
-		Uptime    string
-		File      string
-		Line      int
-		GitRepo   string
-		Location  string
+		ID             string
+		CrashID        string
+		Signature      string
+		Date           time.Time
+		Product        string
+		Version        string
+		Platform       string
+		Arch           string
+		Processor      string
+		Reason         string
+		Comment        string
+		Uptime         string
+		File           string
+		Line           int
+		GitRepo        string
+		Location       string
+		ProcessingTime float64
 	}
 	Item.ID = Report.ID.String()
 	Item.CrashID = Report.CrashID.String()
@@ -203,6 +205,7 @@ func GetReport(c *gin.Context) {
 	Item.File = Report.CrashPath
 	Item.Line = Report.CrashLine
 	Item.Location = Report.CrashLocation
+	Item.ProcessingTime = Report.ProcessingTime
 	result, _ := c.Cookie("result")
 	if result != "" {
 		c.SetCookie("result", "", 1, "/", "", false, false)
@@ -251,6 +254,9 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
+		if Report.ReportContentTXT == "" {
+			processor.ProcessText(&Report)
+		}
 		c.Data(http.StatusOK, "text/plain", []byte(Report.ReportContentTXT))
 		return
 	default:
