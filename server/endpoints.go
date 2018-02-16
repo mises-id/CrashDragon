@@ -57,8 +57,12 @@ func PostReports(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	io.Copy(f, file)
-	f.Close()
+	defer f.Close()
+	_, err = io.Copy(f, file)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
 	processor.AddToQueue(Report)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
@@ -147,7 +151,12 @@ func PostSymfiles(c *gin.Context) {
 	}
 	defer f.Close()
 	file.Seek(0, 0)
-	io.Copy(f, file)
+	_, err = io.Copy(f, file)
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		database.Db.Delete(&Symfile)
+		return
+	}
 	if updated {
 		if err = database.Db.Save(&Symfile).Error; err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
