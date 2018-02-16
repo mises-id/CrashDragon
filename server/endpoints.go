@@ -62,7 +62,7 @@ func PostReports(c *gin.Context) {
 	processor.AddToQueue(Report)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
-		"object": Report,
+		"object": Report.ID,
 	})
 	return
 }
