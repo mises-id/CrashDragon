@@ -42,19 +42,29 @@ func Reprocess(Report database.Report) {
 
 // ProcessText adds the text version of the report to the database, which is only used when the text button is clicked
 func ProcessText(Report *database.Report) {
+	filepath := path.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4])
+	err := os.MkdirAll(filepath, 0755)
+	if err != nil {
+		return
+	}
+	f, err := os.Create(path.Join(filepath, Report.ID.String()+".txt"))
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
 	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
 
 	dataTXT, err := runProcessor(file, symbolsPath, "txt")
-	tx := database.Db.Begin()
 	if err != nil {
-		tx.Rollback()
 		return
 	}
 
-	Report.ReportContentTXT = string(dataTXT)
-	tx.Save(&Report)
-	tx.Commit()
+	_, err = f.Write(dataTXT)
+	if err != nil {
+		return
+	}
 }
 
 func processHandler() {

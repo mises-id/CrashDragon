@@ -4,6 +4,6 @@ BEGIN TRANSACTION;
 ALTER TABLE "reports" ADD "processing_time" numeric;
 
 -- Remove Report TXT content from database
-UPDATE "reports" SET "report_content_txt" = '';
+ALTER TABLE "reports" DROP "report_content_txt";
 
 END TRANSACTION;

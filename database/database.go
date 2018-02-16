@@ -125,7 +125,6 @@ type Report struct {
 	Comments []Comment
 
 	ReportContentJSON string        `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB" json:"-"`
-	ReportContentTXT  string        `json:"-"`
 	Report            ReportContent `gorm:"-"`
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`

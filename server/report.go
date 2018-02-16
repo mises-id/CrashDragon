@@ -241,6 +241,7 @@ func GetReportFile(c *gin.Context) {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+		defer f.Close()
 		data, err := ioutil.ReadAll(f)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -254,10 +255,23 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		if Report.ReportContentTXT == "" {
+		file := path.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt")
+		f, err := os.Open(file)
+		if os.IsNotExist(err) {
 			processor.ProcessText(&Report)
+			f, err = os.Open(file)
 		}
-		c.Data(http.StatusOK, "text/plain", []byte(Report.ReportContentTXT))
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		defer f.Close()
+		data, err := ioutil.ReadAll(f)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.Data(http.StatusOK, "text/plain", data)
 		return
 	default:
 		c.AbortWithError(http.StatusBadRequest, errors.New(name+" is a unknwon file"))
