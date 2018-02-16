@@ -39,6 +39,24 @@
                     {{ end }}
                 </tbody>
             </table>
+            <nav>
+                <ul class="pagination">
+                    <li class="page-item {{ if lt .prevOffset 0 }}disabled{{ end }}">
+                        {{ if lt .prevOffset 0 }}
+                        <span class="page-link">Previous</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .prevOffset }}" rel="prev">Previous</a>
+                        {{ end }}
+                    </li>
+                    <li class="page-item {{ if lt .nextOffset 0 }}disabled{{ end }}">
+                        {{ if lt .nextOffset 0 }}
+                        <span class="page-link">Next</span>
+                        {{ else }}
+                        <a class="page-link" href="?offset={{ .nextOffset }}" rel="next">Next</a>
+                        {{ end }}
+                    </li>
+                </ul>
+            </nav>
             <h2 id="comments">Comments</h2>
             {{ range .comments }}
             <div class="well" id="comment-{{ .ID }}">
