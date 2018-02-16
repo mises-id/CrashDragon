@@ -42,12 +42,11 @@ func Reprocess(Report database.Report) {
 
 // ProcessText adds the text version of the report to the database, which is only used when the text button is clicked
 func ProcessText(Report *database.Report) {
-	tx := database.Db.Begin()
-
 	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
 
 	dataTXT, err := runProcessor(file, symbolsPath, "txt")
+	tx := database.Db.Begin()
 	if err != nil {
 		tx.Rollback()
 		return
@@ -89,12 +88,12 @@ func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byt
 
 func processReport(Report database.Report, reprocess bool) {
 	start := time.Now()
-	tx := database.Db.Begin()
 
 	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
 
 	dataJSON, err := runProcessor(file, symbolsPath, "json")
+	tx := database.Db.Begin()
 	if err != nil {
 		os.Remove(file)
 		tx.Unscoped().Delete(&Report)
@@ -200,11 +199,16 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 		}
 		tx.Save(&Crash)
 	}
-	database.Db.Model(&Crash).Related(&Crash.Reports)
-	for _, CReport := range Crash.Reports {
-		if CReport.VersionID == Report.VersionID {
-			break
+	var id uuid.UUID
+	rows, err := database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID).Select("version_id AS vid").Group("version_id").Rows()
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			rows.Scan(&id)
+			if id == Report.VersionID {
+				break
+			}
+			tx.Model(&Crash).Set("fixed", false)
 		}
-		tx.Model(&Crash).Set("fixed", false)
 	}
 }

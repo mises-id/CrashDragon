@@ -272,6 +272,10 @@ func InitDb(connection string) error {
 	Db.Model(&Crash{}).AddUniqueIndex("idx_crash_signature", "signature")
 	Db.Model(&Symfile{}).AddUniqueIndex("idx_symfile_code", "code")
 
+	Db.Model(&Report{}).AddIndex("idx_crash_id", "crash_id")
+	Db.Model(&Report{}).AddIndex("idx_product_id", "product_id")
+	Db.Model(&Report{}).AddIndex("idx_version_id", "version_id")
+
 	Db.Find(&Products)
 	return err
 }
