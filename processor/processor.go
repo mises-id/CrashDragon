@@ -128,7 +128,7 @@ func processReport(Report database.Report, reprocess bool) {
 		Report.CrashLine = 0
 	}
 
-	for _, Frame := range Report.Report.CrashingThread.Frames {
+	for _, Frame := range Report.Report.Threads[Report.Report.CrashInfo.CrashingThread].Frames {
 		if Frame.File == "" && Report.Signature != "" {
 			continue
 		}

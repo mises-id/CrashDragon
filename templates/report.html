@@ -130,7 +130,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{ range $v := .report.CrashingThread.Frames }}
+                    {{ range $v := (index .report.Threads .report.CrashInfo.CrashingThread).Frames }}
                     <tr>
                         <td>{{ $v.Frame }}</td>
                         <td>{{ $v.Module }}</td>
