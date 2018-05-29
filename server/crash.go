@@ -46,6 +46,10 @@ func GetCrashes(c *gin.Context) {
 	if !all {
 		query = query.Where("product_id = ?", prod.ID)
 	}
+	all, ver := GetVersionCookie(c)
+	if !all {
+		query = query.Where("version_id = ?", ver.ID)
+	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
 		offset = 0
@@ -64,6 +68,7 @@ func GetCrashes(c *gin.Context) {
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "crashes.html", gin.H{
 			"prods":      database.Products,
+			"vers":       database.Versions,
 			"title":      "Crashes",
 			"items":      Crashes,
 			"nextOffset": next,
@@ -97,6 +102,7 @@ func GetCrash(c *gin.Context) {
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "crash.html", gin.H{
 			"prods":      database.Products,
+			"vers":       database.Versions,
 			"detailView": true,
 			"title":      "Crash",
 			"items":      Crash.Reports,

@@ -31,6 +31,7 @@ func GetAdminIndex(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_index.html", gin.H{
 		"admin":         true,
 		"prods":         database.Products,
+		"vers":          database.Versions,
 		"title":         "Admin Index",
 		"countReports":  countReports,
 		"countCrashes":  countCrashes,
@@ -49,6 +50,7 @@ func GetAdminProducts(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_products.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — Products",
 		"items": Products,
 	})
@@ -61,6 +63,7 @@ func GetAdminNewProduct(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_product.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — New Product",
 		"item":  Product,
 		"form":  "/admin/products/new",
@@ -89,6 +92,7 @@ func GetAdminEditProduct(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_product.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — Edit Product",
 		"item":  Product,
 		"form":  "/admin/products/edit/" + Product.ID.String(),
@@ -118,6 +122,7 @@ func GetAdminVersions(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_versions.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — Versions",
 		"items": Versions,
 	})
@@ -132,6 +137,7 @@ func GetAdminNewVersion(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_version.html", gin.H{
 		"admin":    true,
 		"prods":    database.Products,
+		"vers":     database.Versions,
 		"title":    "Admin — New Version",
 		"item":     Version,
 		"products": Products,
@@ -175,6 +181,7 @@ func GetAdminEditVersion(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_version.html", gin.H{
 		"admin":    true,
 		"prods":    database.Products,
+		"vers":     database.Versions,
 		"title":    "Admin — Edit Version",
 		"item":     Version,
 		"products": Products,
@@ -217,6 +224,7 @@ func GetAdminUsers(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_users.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — Users",
 		"items": Users,
 	})
@@ -229,6 +237,7 @@ func GetAdminNewUser(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_user.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — New User",
 		"item":  User,
 		"form":  "/admin/users/new",
@@ -261,6 +270,7 @@ func GetAdminEditUser(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_user.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — Edit User",
 		"item":  User,
 		"form":  "/admin/users/edit/" + User.ID.String(),
@@ -294,6 +304,7 @@ func GetAdminSymfiles(c *gin.Context) {
 	c.HTML(http.StatusOK, "admin_symfiles.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
+		"vers":  database.Versions,
 		"title": "Admin — Symfiles",
 		"items": Symfiles,
 	})

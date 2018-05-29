@@ -42,6 +42,9 @@ type Version struct {
 	Product   Product
 }
 
+// Versions contains all currently available versions and is used for the switcher in the header
+var Versions []Version
+
 // User defines the structure of a user
 type User struct {
 	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
@@ -276,6 +279,7 @@ func InitDb(connection string) error {
 	Db.Model(&Report{}).AddIndex("idx_version_id", "version_id")
 
 	Db.Find(&Products)
+	Db.Find(&Versions)
 	return err
 }
 
@@ -303,5 +307,17 @@ func (c *Product) AfterSave(tx *gorm.DB) error {
 // AfterDelete is called on deleting Products, updates the variable
 func (c *Product) AfterDelete(tx *gorm.DB) error {
 	err := tx.Find(&Products).Error
+	return err
+}
+
+// AfterSave is called on saving Versions, updates the variable
+func (c *Version) AfterSave(tx *gorm.DB) error {
+	err := tx.Find(&Versions).Error
+	return err
+}
+
+// AfterDelete is called on deleting Versions, updates the variable
+func (c *Version) AfterDelete(tx *gorm.DB) error {
+	err := tx.Find(&Versions).Error
 	return err
 }

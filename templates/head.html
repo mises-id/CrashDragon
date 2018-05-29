@@ -45,6 +45,13 @@
                             <option value="{{ .Slug }}">{{ .Name }}</option>
                             {{ end }}
                         </select>
+                        <select class="form-control" id="version-filter" {{ if .detailView }}disabled="disabled"{{ end }}>
+                            <option value="all" selected="selected">All Versions</option>
+                            <option value="" disabled="disabled">──────────</option>
+                            {{ range .vers }}
+                            <option value="{{ .Slug }}">{{ .Name }}</option>
+                            {{ end }}
+                        </select>
                     </div>
                 </form>
             </div>

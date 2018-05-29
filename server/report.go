@@ -80,6 +80,10 @@ func GetReports(c *gin.Context) {
 	if !all {
 		query = query.Where("product_id = ?", prod.ID)
 	}
+	all, ver := GetVersionCookie(c)
+	if !all {
+		query = query.Where("version_id = ?", ver.ID)
+	}
 	if sig := c.Query("signature"); sig != "" {
 		query = query.Where("signature = ?", sig)
 	}
@@ -152,6 +156,7 @@ func GetReports(c *gin.Context) {
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "reports.html", gin.H{
 			"prods":      database.Products,
+			"vers":       database.Versions,
 			"title":      "Reports",
 			"items":      List,
 			"nextOffset": next,
@@ -213,6 +218,7 @@ func GetReport(c *gin.Context) {
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "report.html", gin.H{
 			"prods":      database.Products,
+			"vers":       database.Versions,
 			"detailView": true,
 			"title":      "Report",
 			"item":       Item,
