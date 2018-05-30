@@ -10,6 +10,12 @@
                          Reprocess
                     </button>
                 </form>
+                <form action="/reports/{{ .item.ID }}/delete" method="post" style="display: inline">
+                    <button type="submit" class="btn btn-danger pull-right" href="/reports/{{ .item.ID }}/delete" id="reprocess" role="button">
+                        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                         Delete
+                    </button>
+                </form>
             </h1>
             {{ if eq .result "OK" }}
             <div class="alert alert-success" role="alert">Reprocessing successful</div>

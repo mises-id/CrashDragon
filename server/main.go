@@ -20,6 +20,7 @@ func initRouter() *gin.Engine {
 	auth.POST("/reports/:id/comments", PostReportComment)
 	auth.POST("/reports/:id/crashid", PostReportCrashID)
 	auth.POST("/reports/:id/reprocess", ReprocessReport)
+	auth.POST("/reports/:id/delete", DeleteReport)
 
 	admin := auth.Group("/admin", IsAdmin)
 	admin.GET("/", GetAdminIndex)
