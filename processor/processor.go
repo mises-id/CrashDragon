@@ -76,7 +76,7 @@ func processHandler() {
 }
 
 func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byte, error) {
-	cmd := exec.Command("./build/bin/minidump_stackwalk", "-f", format, minidumpFile, symbolsPath)
+	cmd := exec.Command(config.C.SymbolicatorPath, "-f", format, minidumpFile, symbolsPath)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err

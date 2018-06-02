@@ -21,6 +21,7 @@ type Config struct {
 	ContentDirectory   string
 	TemplatesDirectory string
 	AssetsDirectory    string
+	SymbolicatorPath   string
 }
 
 //C is the actual configuration read from the file
@@ -57,6 +58,7 @@ func GetConfig(path string) error {
 	C.ContentDirectory = filepath.Join(os.Getenv("HOME"), "/CrashDragon/Files")
 	C.TemplatesDirectory = "./templates"
 	C.AssetsDirectory = "./assets"
+	C.SymbolicatorPath = "./build/bin/minidump_stackwalk"
 
 	var cerr error
 	if _, err := os.Stat(path); err == nil {
