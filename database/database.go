@@ -278,8 +278,8 @@ func InitDb(connection string) error {
 	Db.Model(&Report{}).AddIndex("idx_product_id", "product_id")
 	Db.Model(&Report{}).AddIndex("idx_version_id", "version_id")
 
-	Db.Find(&Products)
-	Db.Find(&Versions)
+	Db.Order("name ASC").Find(&Products)
+	Db.Order("name ASC").Find(&Versions)
 	return err
 }
 

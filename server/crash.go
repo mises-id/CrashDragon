@@ -13,6 +13,17 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+type oscrashes struct {
+	Os        string
+	OsVersion string
+	Count     int
+}
+
+type commentcrashes struct {
+	ReportID uuid.UUID
+	Comment  string
+}
+
 // PostCrashComment allows you to post a comment to a crash
 func PostCrashComment(c *gin.Context) {
 	User := c.MustGet("user").(database.User)
@@ -89,7 +100,7 @@ func GetCrash(c *gin.Context) {
 	}
 	var count int
 	database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID).Count(&count)
-	database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("updated_at DESC").Offset(offset).Limit(50).Related(&Crash.Reports)
+	database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC").Offset(offset).Limit(50).Related(&Crash.Reports)
 	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
 	var next int
 	var prev int
@@ -99,16 +110,36 @@ func GetCrash(c *gin.Context) {
 		next = offset + 50
 	}
 	prev = offset - 50
+	versions := make(map[string]int)
+	vercnt := 0
+	for _, Version := range database.Versions {
+		database.Db.Model(&database.Report{}).Where("version_id = ? AND crash_id = ?", Version.ID, Crash.ID).Count(&vercnt)
+		if vercnt != 0 {
+			versions[Version.Name] = vercnt
+		}
+	}
+	var osStats []oscrashes
+	database.Db.Raw("SELECT count(*) AS count, os, os_version FROM reports WHERE crash_id = ? GROUP BY os, os_version ORDER BY os ASC, os_version ASC", Crash.ID).Scan(&osStats)
+	osVersions := make(map[string]map[string]int)
+	for _, Stat := range osStats {
+		addHit(osVersions, Stat.Os, Stat.OsVersion, Stat.Count)
+	}
+	var crashComments []commentcrashes
+	database.Db.Raw("SELECT id AS report_id, comment FROM reports WHERE crash_id = ? AND comment != '' ORDER BY id ASC", Crash.ID).Scan(&crashComments)
+	comment := make(map[string]string)
+	for _, Comment := range crashComments {
+		comment[Comment.ReportID.String()] = Comment.Comment
+	}
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "crash.html", gin.H{
 			"prods":      database.Products,
 			"vers":       database.Versions,
 			"detailView": true,
 			"title":      "Crash",
-			"items":      Crash.Reports,
-			"comments":   Crash.Comments,
-			"ID":         Crash.ID.String(),
-			"fixed":      Crash.Fixed,
+			"Crash":      Crash,
+			"Versions":   versions,
+			"Comments":   comment,
+			"OsVersions": osVersions,
 			"nextOffset": next,
 			"prevOffset": prev,
 		})
@@ -124,4 +155,13 @@ func MarkCrashFixed(c *gin.Context) {
 	Crash.Fixed = !Crash.Fixed
 	database.Db.Save(&Crash)
 	c.Redirect(http.StatusFound, "/crashes/"+c.Param("id"))
+}
+
+func addHit(m map[string]map[string]int, Os, Version string, Count int) {
+	mm, ok := m[Os]
+	if !ok {
+		mm = make(map[string]int)
+		m[Os] = mm
+	}
+	mm[Version] = Count
 }

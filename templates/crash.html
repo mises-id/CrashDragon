@@ -5,13 +5,103 @@
             <h1>{{ .title }}</h1>
         </div>
         <div class="col-md-2">
-            <form method="post" action="/crashes/{{ .ID }}/fixed">
-                {{ if .fixed }}
+            <form method="post" action="/crashes/{{ .Crash.ID }}/fixed">
+                {{ if .Crash.Fixed }}
                 <button class="btn btn-danger" type="submit">Mark as unfixed</button>
                 {{ else }}
                 <button class="btn btn-success" type="submit">Mark as fixed</button>
                 {{ end }}
             </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-7">
+            <h2 id="overview">Overview</h2>
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th scope="row">ID</th>
+                        <td>{{ .Crash.ID }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Signature</th>
+                        <td>{{ .Crash.Signature }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Location</th>
+                        <td>{{ if (index .Crash.Reports 0).CrashLine }}<a href="{{ printf (index .Crash.Reports 0).Version.GitRepo (index .Crash.Reports 0).CrashPath (index .Crash.Reports 0).CrashLine}}">{{ (index .Crash.Reports 0).CrashLocation }}</a>{{ end }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">First Occurence</th>
+                        <td>{{ .Crash.FirstReported.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Last Occurence</th>
+                        <td>{{ .Crash.LastReported.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Versions</th>
+                        <td>
+                            <table class="table">
+                                <thead>
+                                    <th>Version</th>
+                                    <th>Count</th>
+                                </thead>
+                                <tbody>
+                                    {{ range $key, $value := .Versions }}
+                                    <tr>
+                                        <td>{{ $key }}</td>
+                                        <td>{{ $value }}</td>
+                                    </tr>
+                                    {{ end }}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Operating Systems</th>
+                        <td>
+                            <table class="table">
+                                <thead>
+                                    <th>Name</th>
+                                    <th>Versions</th>
+                                </thead>
+                                <tbody>
+                                    {{ range $oskey, $vers := .OsVersions }}
+                                    <tr>
+                                        <td>{{ $oskey }}</td>
+                                        <td>
+                                            <table class="table">
+                                                <thead>
+                                                    <th>Version</th>
+                                                    <th>Count</th>
+                                                </thead>
+                                                <tbody>
+                                                    {{ range $verkey, $vervalue := $vers }}
+                                                    <tr>
+                                                        <td>{{ $verkey }}</td>
+                                                        <td>{{ $vervalue }}</td>
+                                                    </tr>
+                                                    {{ end }}
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    {{ end }}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Comments</th>
+                        <td>
+                            {{ range $key, $value := .Comments }}
+                                <p>{{ $value }} — <a href="/reports/{{ $key }}">Report</a></p>
+                            {{ end }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
     <div class="row">
@@ -28,7 +118,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{ range .items }}
+                    {{ range .Crash.Reports }}
                     <tr>
                         <td><a href="/reports/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .CreatedAt.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
@@ -58,7 +148,7 @@
                 </ul>
             </nav>
             <h2 id="comments">Comments</h2>
-            {{ range .comments }}
+            {{ range .Crash.Comments }}
             <div class="well" id="comment-{{ .ID }}">
                 {{ .Content }}
                 <footer>— by {{ .User.Name }} on {{ .CreatedAt.Format "02. Jan. 2006 15:04:05 UTC" }}</footer>
