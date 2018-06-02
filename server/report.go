@@ -236,6 +236,9 @@ func DeleteReport(c *gin.Context) {
 	filepath := path.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
 	os.Remove(path.Join(filepath, c.Param("id")+".dmp"))
 
+	filepath = path.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
+	os.Remove(path.Join(filepath, c.Param("id")+".txt"))
+
 	database.Db.Unscoped().Delete(&database.Comment{}, "report_id = ?", c.Param("id"))
 	database.Db.Unscoped().Delete(&database.Report{}, "id = ?", c.Param("id"))
 
