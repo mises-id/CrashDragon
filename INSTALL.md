@@ -52,6 +52,7 @@ BindSocket = "/var/run/crashdragon/crashdragon.sock"
 ContentDirectory = "/root/CrashDragon/Files"
 TemplatesDirectory = "./templates"
 AssetsDirectory = "./assets"
+SymbolicatorPath = "./build/bin/minidump_stackwalk"
 ```
 
 The configuration file can be found in `$HOME/CrashDragon/config.toml` and can be edited with whatever editor you like.

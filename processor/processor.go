@@ -137,18 +137,22 @@ func processReport(Report database.Report, reprocess bool) {
 		Report.CrashLine = 0
 	}
 
-	for _, Frame := range Report.Report.Threads[Report.Report.CrashInfo.CrashingThread].Frames {
-		if Frame.File == "" && Report.Signature != "" {
-			continue
+	if len(Report.Report.Threads) > Report.Report.CrashInfo.CrashingThread {
+		for _, Frame := range Report.Report.Threads[Report.Report.CrashInfo.CrashingThread].Frames {
+			if Frame.File == "" && Report.Signature != "" {
+				continue
+			}
+			Report.Signature = Frame.Function
+			if Frame.File == "" {
+				continue
+			}
+			Report.CrashLocation = Frame.File + ":" + strconv.Itoa(Frame.Line)
+			Report.CrashPath = Frame.File
+			Report.CrashLine = Frame.Line
+			break
 		}
-		Report.Signature = Frame.Function
-		if Frame.File == "" {
-			continue
-		}
-		Report.CrashLocation = Frame.File + ":" + strconv.Itoa(Frame.Line)
-		Report.CrashPath = Frame.File
-		Report.CrashLine = Frame.Line
-		break
+	} else {
+		log.Printf("Crashing thread %d is out of index in Threads!", Report.Report.CrashInfo.CrashingThread)
 	}
 
 	if !reprocess {
