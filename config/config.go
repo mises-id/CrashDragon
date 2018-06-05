@@ -55,10 +55,10 @@ func GetConfig(path string) error {
 	C.UseSocket = false
 	C.BindAddress = "0.0.0.0:8080"
 	C.BindSocket = "/var/run/crashdragon/crashdragon.sock"
-	C.ContentDirectory = filepath.Join(os.Getenv("HOME"), "/CrashDragon/Files")
-	C.TemplatesDirectory = "./templates"
-	C.AssetsDirectory = "./assets"
-	C.SymbolicatorPath = "./build/bin/minidump_stackwalk"
+	C.ContentDirectory = "../share/crashdragon/files"
+	C.TemplatesDirectory = "../share/crashdragon/templates"
+	C.AssetsDirectory = "../share/crashdragon/assets"
+	C.SymbolicatorPath = "./minidump_stackwalk"
 
 	var cerr error
 	if _, err := os.Stat(path); err == nil {

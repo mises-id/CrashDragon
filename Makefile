@@ -70,13 +70,32 @@ clean:
 	rm -rf build/
 	cd breakpad && $(MAKE) distclean
 
-install:
+install: all
+	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) bin/crashdragon $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) build/bin/minidump_stackwalk $(DESTDIR)$(bindir)
-	$(INSTALL_DATA) -d assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets
-	$(INSTALL_DATA) -d $(ASSETS_JS) $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
-	$(INSTALL_DATA) -d $(ASSETS_FONTS) $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap
-	$(INSTALL_DATA) -d $(HTML_TEMPLATES) $(DESTDIR)$(datadir)/crashdragon/templates
+	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets
+	$(INSTALL_DATA) assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets
+	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
+	$(INSTALL_DATA) $(ASSETS_JS) $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
+	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap
+	$(INSTALL_DATA) $(ASSETS_FONTS) $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap
+	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/templates
+	$(INSTALL_DATA) $(HTML_TEMPLATES) $(DESTDIR)$(datadir)/crashdragon/templates
+	$(INSTALL) -d $(DESTDIR)$(sysconfdir)
 
+uninstall:
+	rm $(DESTDIR)$(bindir)/crashdragon
+	rm $(DESTDIR)$(bindir)/minidump_stackwalk
+	rm $(DESTDIR)$(datadir)/crashdragon/assets/app.css
+	rm $(addprefix $(DESTDIR)$(datadir)/crashdragon/assets/javascripts/,$(notdir $(ASSETS_JS)))
+	rm $(addprefix $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap/,$(notdir $(ASSETS_FONTS)))
+	rm $(addprefix $(DESTDIR)$(datadir)/crashdragon/templates/,$(notdir $(HTML_TEMPLATES)))
+	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap/
+	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/fonts/
+	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/javascripts/
+	rmdir $(DESTDIR)$(datadir)/crashdragon/assets
+	rmdir $(DESTDIR)$(datadir)/crashdragon/templates/
+	rmdir $(DESTDIR)$(datadir)/crashdragon
 
-.PHONY: install clean all
+.PHONY: uninstall install clean all

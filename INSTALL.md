@@ -40,6 +40,7 @@ govendor sync
 Run make to build the executable:
 ```
 make
+make prefix=PREFIX install
 ```
 
 ## Configuration
@@ -49,13 +50,13 @@ DatabaseConnection = "host=localhost user=crashdragon password=crashdragon dbnam
 UseSocket = false
 BindAddress = "0.0.0.0:8080"
 BindSocket = "/var/run/crashdragon/crashdragon.sock"
-ContentDirectory = "/root/CrashDragon/Files"
-TemplatesDirectory = "./templates"
-AssetsDirectory = "./assets"
-SymbolicatorPath = "./build/bin/minidump_stackwalk"
+ContentDirectory = "../share/crashdragon/files"
+TemplatesDirectory = "../share/crashdragon/templates"
+AssetsDirectory = "../share/crashdragon/assets"
+SymbolicatorPath = "./minidump_stackwalk"
 ```
 
-The configuration file can be found in `$HOME/CrashDragon/config.toml` and can be edited with whatever editor you like.
+The configuration file can be found in `PREFIX/etc/crashdragon.toml` and can be edited with whatever editor you like.
 
 ## Running
-The server can be started by running `./bin/crashdragon`, this will keep the server process in the foreground. You can write init.d or systemctl scripts based on this command.
+The server can be started by running `PREFIX/bin/crashdragon`, this will keep the server process in the foreground. You can write init.d or systemctl scripts based on this command.
