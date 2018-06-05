@@ -20,6 +20,7 @@ func initRouter() *gin.Engine {
 	auth.POST("/reports/:id/comments", PostReportComment)
 	auth.POST("/reports/:id/crashid", PostReportCrashID)
 	auth.POST("/reports/:id/reprocess", ReprocessReport)
+	auth.POST("/reports/:id/delete", DeleteReport)
 
 	admin := auth.Group("/admin", IsAdmin)
 	admin.GET("/", GetAdminIndex)
@@ -91,14 +92,26 @@ func initRouter() *gin.Engine {
 	router.POST("/reports", PostReports)
 
 	router.Static("/static", config.C.AssetsDirectory)
-	router.LoadHTMLGlob("templates/*.html")
+	router.LoadHTMLGlob(filepath.Join(config.C.TemplatesDirectory, "*.html"))
 	return router
 }
 
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(os.Stderr)
-	err := config.GetConfig(filepath.Join(os.Getenv("HOME"), "CrashDragon/config.toml"))
+	// TODO: Remove in next version
+	legacy := filepath.Join(os.Getenv("HOME"), "CrashDragon/config.toml")
+	current := "../etc/crashdragon.toml"
+	if _, err := os.Stat(legacy); err == nil {
+		// Legacy config exists
+		err := os.Rename(legacy, current)
+		if err != nil {
+			log.Panicf("Can not move config from %s to %s!", legacy, current)
+		}
+		log.Printf("Config moved from %s to %s to reflect new install method!", legacy, current)
+	}
+	// TODO: Allow user-specified config path
+	err := config.GetConfig(current)
 	if err != nil {
 		log.Fatalf("FAT Config error: %+v", err)
 		return

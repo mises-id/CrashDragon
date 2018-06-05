@@ -71,3 +71,18 @@ func GetProductCookie(c *gin.Context) (bool, *database.Product) {
 	}
 	return false, &Product
 }
+
+//GetVersionCookie returns the content of the currently selected version cookie
+func GetVersionCookie(c *gin.Context) (bool, *database.Version) {
+	slug, err := c.Cookie("version")
+	if err != nil || slug == "" || slug == "all" {
+		c.SetCookie("version", "all", 0, "/", "", false, false)
+		return true, nil
+	}
+	var Version database.Version
+	if err := database.Db.First(&Version, "slug = ?", slug).Error; err != nil {
+		c.SetCookie("version", "all", 0, "/", "", false, false)
+		return true, nil
+	}
+	return false, &Version
+}

@@ -98,8 +98,13 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.ProductID = Product.ID
 	var Version database.Version
 	if err = database.Db.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Symfile.ProductID).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist"))
-		return
+		Version.ID = uuid.NewV4()
+		Version.Name = c.Request.FormValue("ver")
+		Version.Slug = c.Request.FormValue("ver")
+		Version.Ignore = false
+		Version.Product = Product
+		Version.ProductID = Product.ID
+		database.Db.Create(&Version)
 	}
 	Symfile.VersionID = Version.ID
 	scanner := bufio.NewScanner(file)

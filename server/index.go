@@ -145,6 +145,7 @@ func GetIndex(c *gin.Context) {
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"prods":     database.Products,
+			"vers":      database.Versions,
 			"title":     "Stats",
 			"versions":  VersionData,
 			"products":  ProductData,
