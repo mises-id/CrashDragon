@@ -16,21 +16,21 @@ INSTALL_DATA = $(INSTALL) -c -m 644
 INSTALL_SCRIPT = $(INSTALL) -c
 
 HTML_TEMPLATES = \
-	templates/admin_index.html
-	templates/admin_product.html
-	templates/admin_products.html
-	templates/admin_symfiles.html
-	templates/admin_user.html
-	templates/admin_users.html
-	templates/admin_version.html
-	templates/admin_versions.html
-	templates/crashes.html
-	templates/crash.html
-	templates/foot.html
-	templates/head.html
-	templates/index.html
-	templates/report.html
-	templates/reports.html
+	templates/admin_index.html \
+	templates/admin_product.html \
+	templates/admin_products.html \
+	templates/admin_symfiles.html \
+	templates/admin_user.html \
+	templates/admin_users.html \
+	templates/admin_version.html \
+	templates/admin_versions.html \
+	templates/crashes.html \
+	templates/crash.html \
+	templates/foot.html \
+	templates/head.html \
+	templates/index.html \
+	templates/report.html \
+	templates/reports.html \
 	templates/symfiles.html
 
 ASSETS_FONTS = \
