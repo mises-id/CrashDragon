@@ -33,6 +33,12 @@ Then the submodule and breakpads submodules need to be updated:
 git submodule update --init --recursive
 ```
 
+Now check with govendor for updated dependencies, run:
+
+```
+govendor sync
+```
+
 After that you have to run the database migrations. This can be done by running
 
 ```

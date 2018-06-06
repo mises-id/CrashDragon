@@ -35,6 +35,7 @@ func PostReports(c *gin.Context) {
 		return
 	}
 	Report.ProductID = Product.ID
+	Report.Product = Product
 
 	var Version database.Version
 	if err = database.Db.First(&Version, "slug = ? AND product_id = ? AND ignore = false", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
@@ -42,6 +43,7 @@ func PostReports(c *gin.Context) {
 		return
 	}
 	Report.VersionID = Version.ID
+	Report.Version = Version
 
 	Report.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
 	Report.EMail = c.Request.FormValue("email")
