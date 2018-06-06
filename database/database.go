@@ -40,6 +40,8 @@ type Version struct {
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	Product   Product
+
+	Crashes []*Crash `gorm:"many2many:crash_versions;"`
 }
 
 // Versions contains all currently available versions and is used for the switcher in the header
@@ -96,8 +98,7 @@ type Crash struct {
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
 	Product   Product
 
-	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Version   Version
+	Versions []*Version `gorm:"many2many:crash_versions;"`
 
 	Fixed bool `sql:"DEFAULT false"`
 }
@@ -267,6 +268,8 @@ func InitDb(connection string) error {
 	Db.Model(&Report{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
 	Db.Model(&Symfile{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
 	Db.Model(&Symfile{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
+	Db.Table("crash_versions").AddForeignKey("crash_id", "crashes(id)", "RESTRICT", "RESTRICT")
+	Db.Table("crash_versions").AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
 
 	Db.Model(&Product{}).AddUniqueIndex("idx_product_slug", "slug")
 	Db.Model(&Version{}).AddUniqueIndex("idx_version_slug_product", "slug", "product_id")

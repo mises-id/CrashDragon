@@ -75,7 +75,7 @@ install: all
 	$(INSTALL_PROGRAM) bin/crashdragon $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) build/bin/minidump_stackwalk $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets
-	$(INSTALL_DATA) assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets
+	$(INSTALL_DATA) assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
 	$(INSTALL_DATA) $(ASSETS_JS) $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap

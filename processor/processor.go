@@ -171,6 +171,7 @@ func processReport(Report database.Report, reprocess bool) {
 		tx.Create(&Report)
 	}
 
+	tx.Save(&Crash)
 	tx.Commit()
 }
 
@@ -194,7 +195,6 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 		Crash.LinCrashCount = 0
 
 		Crash.ProductID = Report.ProductID
-		Crash.VersionID = Report.VersionID
 
 		Crash.Fixed = false
 
@@ -213,16 +213,14 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 		}
 		tx.Save(&Crash)
 	}
-	var id uuid.UUID
-	rows, err := database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID).Select("version_id AS vid").Group("version_id").Rows()
-	if err == nil {
-		defer rows.Close()
-		for rows.Next() {
-			rows.Scan(&id)
-			if id == Report.VersionID {
-				break
-			}
-			tx.Model(&Crash).Set("fixed", false)
+
+	tx.Model(&Crash).Related(&Crash.Versions, "Versions")
+	for _, Version := range Crash.Versions {
+		if Version.ID == Report.Version.ID {
+			break
 		}
+		Crash.Fixed = false
 	}
+
+	tx.Model(&Crash).Association("Versions").Append(&Report.Version)
 }

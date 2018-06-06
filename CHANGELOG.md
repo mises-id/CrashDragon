@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 1.1.1
+* Add: `govendor sync` step to update guide
+* Change: Updated GROM to current master
+* Fix: Crash-Version-Association
+* Fix: Correctly install stylesheet
+
 ## Version 1.1.0
 
 * Add: Version dropdown next to product dropdown

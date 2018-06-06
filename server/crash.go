@@ -59,7 +59,8 @@ func GetCrashes(c *gin.Context) {
 	}
 	all, ver := GetVersionCookie(c)
 	if !all {
-		query = query.Where("version_id = ?", ver.ID)
+		query = query.Where("id in (?)", database.Db.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
+		//query = query.Model(&ver).Association("Versions")
 	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
@@ -67,7 +68,7 @@ func GetCrashes(c *gin.Context) {
 	}
 	var count int
 	query.Model(database.Crash{}).Count(&count)
-	query.Where("fixed = false").Order("all_crash_count DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Crashes)
+	query.Where("fixed = false").Order("all_crash_count DESC").Offset(offset).Limit(50).Find(&Crashes)
 	var next int
 	var prev int
 	if (offset + 50) >= count {

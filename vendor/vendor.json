@@ -39,10 +39,10 @@
 			"revisionTime": "2017-09-22T08:27:39Z"
 		},
 		{
-			"checksumSHA1": "uvWzKxIhqD5JzlQ7pxYlbV4kBbY=",
+			"checksumSHA1": "nlEiwqdbwY1eclAGG1xcC+XPV9M=",
 			"path": "github.com/jinzhu/gorm",
-			"revision": "eae7f6be603af3190e032fe3c4d465ddaf6ea3d4",
-			"revisionTime": "2017-06-14T08:49:39Z"
+			"revision": "82eb9f8a5bbb5e6b929d2f0ae5b934e6a253f94e",
+			"revisionTime": "2018-05-12T06:29:00Z"
 		},
 		{
 			"checksumSHA1": "VIp1lZm6joWhlNdwhady8u//qRw=",
