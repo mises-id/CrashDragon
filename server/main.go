@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"path/filepath"
@@ -99,19 +100,9 @@ func initRouter() *gin.Engine {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(os.Stderr)
-	// TODO: Remove in next version
-	legacy := filepath.Join(os.Getenv("HOME"), "CrashDragon/config.toml")
-	current := "../etc/crashdragon.toml"
-	if _, err := os.Stat(legacy); err == nil {
-		// Legacy config exists
-		err := os.Rename(legacy, current)
-		if err != nil {
-			log.Panicf("Can not move config from %s to %s!", legacy, current)
-		}
-		log.Printf("Config moved from %s to %s to reflect new install method!", legacy, current)
-	}
-	// TODO: Allow user-specified config path
-	err := config.GetConfig(current)
+	cf := flag.String("config", "../etc/crashdragon.toml", "specifies the config file to use")
+	flag.Parse()
+	err := config.GetConfig(*cf)
 	if err != nil {
 		log.Fatalf("FAT Config error: %+v", err)
 		return

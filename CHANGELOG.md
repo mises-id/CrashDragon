@@ -1,5 +1,8 @@
 # Changelog
 
+## Version x.x.x
+* Add: `-config`-flag to specify config file when running CrashDragon
+
 ## Version 1.1.1
 * Add: `govendor sync` step to update guide
 * Change: Updated GROM to current master
