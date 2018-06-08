@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"time"
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
@@ -116,9 +121,54 @@ func main() {
 
 	router := initRouter()
 
-	if config.C.UseSocket {
-		router.RunUnix(config.C.BindSocket)
-	} else {
-		router.Run(config.C.BindAddress)
+	srv := &http.Server{
+		Handler: router,
 	}
+
+	// See: https://github.com/gin-gonic/gin/blob/master/examples/graceful-shutdown/graceful-shutdown/server.go
+	if config.C.UseSocket {
+		os.Remove(config.C.BindSocket)
+		listener, err := net.Listen("unix", config.C.BindSocket)
+		if err != nil {
+			log.Fatalf("FAT Socket error: %+v", err)
+			return
+		}
+		defer listener.Close()
+		go func() {
+			// service connections
+			if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
+			}
+		}()
+	} else {
+		srv.Addr = config.C.BindAddress
+		go func() {
+			// service connections
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
+			}
+		}()
+	}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	log.Println("Closing Server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+
+	log.Println("Server stopped, waiting for processor queue to empty...")
+	for processor.QueueSize() > 0 {
+	}
+
+	log.Println("Queue empty, closing database...")
+	database.Db.Close()
+
+	log.Println("Closed database, good bye!")
+	os.Exit(0)
+	return
 }

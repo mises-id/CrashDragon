@@ -2,6 +2,7 @@
 
 ## Version x.x.x
 * Add: `-config`-flag to specify config file when running CrashDragon
+* Change: Now gracefully shutting down on `SIGINT` (See #25)
 
 ## Version 1.1.1
 * Add: `govendor sync` step to update guide

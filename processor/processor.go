@@ -18,6 +18,11 @@ import (
 
 var rchan = make(chan database.Report, 5000)
 
+// QueueSize returns the number of reports in the queue
+func QueueSize() int {
+	return len(rchan)
+}
+
 // StartQueue runs the processor queue
 func StartQueue() {
 	// Spawn 4 processors
