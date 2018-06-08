@@ -194,11 +194,6 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 		Crash.FirstReported = Report.CreatedAt
 		Crash.Signature = Report.Signature
 
-		Crash.AllCrashCount = 0
-		Crash.WinCrashCount = 0
-		Crash.MacCrashCount = 0
-		Crash.LinCrashCount = 0
-
 		Crash.ProductID = Report.ProductID
 
 		Crash.Fixed = false
@@ -208,15 +203,6 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 	}
 	if !reprocess || Report.CrashID == uuid.Nil {
 		Crash.LastReported = Report.CreatedAt
-		Crash.AllCrashCount++
-		if Report.Os == "Windows NT" {
-			Crash.WinCrashCount++
-		} else if Report.Os == "Linux" {
-			Crash.LinCrashCount++
-		} else if Report.Os == "Mac OS X" {
-			Crash.MacCrashCount++
-		}
-		tx.Save(&Crash)
 	}
 
 	tx.Model(&Crash).Related(&Crash.Versions, "Versions")

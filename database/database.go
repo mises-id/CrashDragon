@@ -84,10 +84,9 @@ type Crash struct {
 	DeletedAt *time.Time
 
 	Signature     string
-	AllCrashCount uint
-	WinCrashCount uint
-	MacCrashCount uint
-	LinCrashCount uint
+	AllCrashCount uint `gorm:"-"`
+	WinCrashCount uint `gorm:"-"`
+	MacCrashCount uint `gorm:"-"`
 
 	Reports  []Report
 	Comments []Comment

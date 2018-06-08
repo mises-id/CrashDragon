@@ -1,12 +1,15 @@
 # Changelog
 
 ## Version x.x.x
+
 * Add: `-config`-flag to specify config file when running CrashDragon
 * Change: Now gracefully shutting down on `SIGINT` (See #25)
+* Fix: Show correct crash counts when filtered by version (See #40)
 
 ## Version 1.1.1
+
 * Add: `govendor sync` step to update guide
-* Change: Updated GROM to current master
+* Change: Updated GORM to current master
 * Fix: Crash-Version-Association
 * Fix: Correctly install stylesheet
 

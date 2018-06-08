@@ -10,8 +10,7 @@
                         <th scope="col">Signature</th>
                         <th scope="col">All</th>
                         <th scope="col">Windows</th>
-                        <th scope="col">Mac OS X</th>
-                        <th scope="col">Linux</th>
+                        <th scope="col">macOS</th>
                         <th scope="col">First reported</th>
                         <th scope="col">Last reported</th>
                     </tr>
@@ -24,7 +23,6 @@
                         <td>{{ .AllCrashCount }}</td>
                         <td>{{ .WinCrashCount }}</td>
                         <td>{{ .MacCrashCount }}</td>
-                        <td>{{ .LinCrashCount }}</td>
                         <td>{{ .FirstReported.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                         <td>{{ .LastReported.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                     </tr>

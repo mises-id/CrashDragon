@@ -59,8 +59,10 @@ func GetCrashes(c *gin.Context) {
 	}
 	all, ver := GetVersionCookie(c)
 	if !all {
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ?", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID).QueryExpr())
 		query = query.Where("id in (?)", database.Db.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
-		//query = query.Model(&ver).Association("Versions")
+	} else {
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id").QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Windows NT'").QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Mac OS X'").QueryExpr())
 	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
