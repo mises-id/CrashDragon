@@ -38,14 +38,14 @@
                 </ul>
                 <form class="nav navbar-form navbar-right">
                     <div class="form-group">
-                        <select class="form-control" id="product-filter" {{ if .detailView }}disabled="disabled"{{ end }}>
+                        <select class="form-control" id="product-filter">
                             <option value="all" selected="selected">All Products</option>
                             <option value="" disabled="disabled">──────────</option>
                             {{ range .prods }}
                             <option value="{{ .Slug }}">{{ .Name }}</option>
                             {{ end }}
                         </select>
-                        <select class="form-control" id="version-filter" {{ if .detailView }}disabled="disabled"{{ end }}>
+                        <select class="form-control" id="version-filter">
                             <option value="all" selected="selected">All Versions</option>
                             <option value="" disabled="disabled">──────────</option>
                             {{ range .vers }}

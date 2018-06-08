@@ -217,14 +217,13 @@ func GetReport(c *gin.Context) {
 	}
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "report.html", gin.H{
-			"prods":      database.Products,
-			"vers":       database.Versions,
-			"detailView": true,
-			"title":      "Report",
-			"item":       Item,
-			"report":     Report.Report,
-			"result":     result,
-			"comments":   Report.Comments,
+			"prods":    database.Products,
+			"vers":     database.Versions,
+			"title":    "Report",
+			"item":     Item,
+			"report":   Report.Report,
+			"result":   result,
+			"comments": Report.Comments,
 		})
 	} else {
 		c.JSON(http.StatusOK, Report)

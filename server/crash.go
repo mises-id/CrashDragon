@@ -95,6 +95,7 @@ func GetCrashes(c *gin.Context) {
 
 // GetCrash returns details of a crash
 func GetCrash(c *gin.Context) {
+	all, ver := GetVersionCookie(c)
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -102,8 +103,16 @@ func GetCrash(c *gin.Context) {
 		offset = 0
 	}
 	var count int
-	database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID).Count(&count)
-	database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC").Offset(offset).Limit(50).Related(&Crash.Reports)
+	query := database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID)
+	if !all {
+		query = query.Where("version_id = ?", ver.ID)
+	}
+	query.Count(&count)
+	query = database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC")
+	if !all {
+		query = query.Where("version_id = ?", ver.ID)
+	}
+	query.Offset(offset).Limit(50).Related(&Crash.Reports)
 	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
 	var next int
 	var prev int
@@ -137,7 +146,6 @@ func GetCrash(c *gin.Context) {
 		c.HTML(http.StatusOK, "crash.html", gin.H{
 			"prods":      database.Products,
 			"vers":       database.Versions,
-			"detailView": true,
 			"title":      "Crash",
 			"Crash":      Crash,
 			"Versions":   versions,

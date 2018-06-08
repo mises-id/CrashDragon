@@ -4,6 +4,8 @@
 
 * Add: `-config`-flag to specify config file when running CrashDragon
 * Change: Now gracefully shutting down on `SIGINT` (See #25)
+* Change: Only show reports matching the filtered version when in Crash-view
+* Change: Allow changing Product and Version filters in detail views
 * Fix: Show correct crash counts when filtered by version (See #40)
 
 ## Version 1.1.1
