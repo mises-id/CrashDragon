@@ -3,6 +3,7 @@
 ## Version x.x.x
 
 * Add: `-config`-flag to specify config file when running CrashDragon
+* Add: Module database field for Reports and Crashes
 * Change: Now gracefully shutting down on `SIGINT` (See #25)
 * Change: Only show reports matching the filtered version when in Crash-view
 * Change: Allow changing Product and Version filters in detail views

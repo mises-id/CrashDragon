@@ -3,7 +3,7 @@
     <div class="row">
         <div class="col-md-12">
             <h1>
-                {{ .title }}{{ if .item.Signature }} <small>({{ .item.Signature}})</small>{{ end }}
+                {{ .title }}{{ if .item.Signature }} <small>({{ .item.Signature }} in {{ .item.Module }})</small>{{ end }}
                 <form action="/reports/{{ .item.ID }}/reprocess" method="post" style="display: inline">
                     <button type="submit" class="btn btn-default pull-right" href="/reports/{{ .item.ID }}/reprocess" id="reprocess" role="button">
                         <span class="glyphicon glyphicon-repeat" aria-hidden="true"></span>
@@ -40,6 +40,10 @@
                     <tr>
                         <th scope="row">Signature</th>
                         <td>{{ .item.Signature }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Module</th>
+                        <td>{{ .item.Module }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Location</th>

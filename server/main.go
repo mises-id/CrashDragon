@@ -13,6 +13,7 @@ import (
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/migrations"
 	"code.videolan.org/videolan/CrashDragon/processor"
 
 	"github.com/gin-gonic/gin"
@@ -117,6 +118,7 @@ func main() {
 		log.Fatalf("FAT Database error: %+v", err)
 		return
 	}
+	migrations.RunMigrations()
 	processor.StartQueue()
 
 	router := initRouter()
@@ -140,6 +142,7 @@ func main() {
 				log.Fatalf("listen: %s\n", err)
 			}
 		}()
+		log.Print("Listening on socket ", config.C.BindSocket)
 	} else {
 		srv.Addr = config.C.BindAddress
 		go func() {
@@ -148,6 +151,7 @@ func main() {
 				log.Fatalf("listen: %s\n", err)
 			}
 		}()
+		log.Print("Listening on address ", config.C.BindAddress)
 	}
 
 	quit := make(chan os.Signal)

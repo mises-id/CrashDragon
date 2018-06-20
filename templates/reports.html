@@ -8,6 +8,7 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
+                        <th scope="col">Module</th>
                         <th scope="col">Date</th>
                         <th scope="col">Product</th>
                         <th scope="col">Version</th>
@@ -21,6 +22,7 @@
                     <tr>
                         <td><a href="/reports/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ $v.Signature }}</td>
+                        <td>{{ $v.Module }}</td>
                         <td>{{ $v.Date.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
                         <td>{{ $v.Product }}</td>
                         <td>{{ $v.Version }}</td>

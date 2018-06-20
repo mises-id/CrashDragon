@@ -65,6 +65,7 @@ func GetReports(c *gin.Context) {
 	var List []struct {
 		ID        string
 		Signature string
+		Module    string
 		Date      time.Time
 		Product   string
 		Version   string
@@ -130,6 +131,7 @@ func GetReports(c *gin.Context) {
 		var Item struct {
 			ID        string
 			Signature string
+			Module    string
 			Date      time.Time
 			Product   string
 			Version   string
@@ -147,6 +149,7 @@ func GetReports(c *gin.Context) {
 		Item.Platform = Report.Os
 		Item.Reason = Report.Report.CrashInfo.Type
 		Item.Signature = Report.Signature
+		Item.Module = Report.Module
 		Item.Location = Report.CrashLocation
 		Item.GitRepo = Report.Version.GitRepo
 		Item.File = Report.CrashPath
@@ -176,6 +179,7 @@ func GetReport(c *gin.Context) {
 		ID             string
 		CrashID        string
 		Signature      string
+		Module         string
 		Date           time.Time
 		Product        string
 		Version        string
@@ -194,6 +198,7 @@ func GetReport(c *gin.Context) {
 	Item.ID = Report.ID.String()
 	Item.CrashID = Report.CrashID.String()
 	Item.Signature = Report.Signature
+	Item.Module = Report.Module
 	Item.Date = Report.CreatedAt
 	Item.Product = Report.Product.Name
 	Item.Version = Report.Version.Name

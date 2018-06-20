@@ -137,6 +137,7 @@ func processReport(Report database.Report, reprocess bool) {
 
 	if reprocess {
 		Report.Signature = ""
+		Report.Module = ""
 		Report.CrashLocation = ""
 		Report.CrashPath = ""
 		Report.CrashLine = 0
@@ -148,6 +149,7 @@ func processReport(Report database.Report, reprocess bool) {
 				continue
 			}
 			Report.Signature = Frame.Function
+			Report.Module = Frame.Module
 			if Frame.File == "" {
 				continue
 			}
@@ -184,8 +186,9 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 	if reprocess && Report.CrashID != uuid.Nil {
 		database.Db.First(&Crash, "id = ?", Report.CrashID)
 		Crash.Signature = Report.Signature
+		Crash.Module = Report.Module
 	} else {
-		database.Db.FirstOrInit(&Crash, "signature = ?", Report.Signature)
+		database.Db.FirstOrInit(&Crash, "signature = ? AND module = ?", Report.Signature, Report.Module)
 	}
 
 	if Crash.ID == uuid.Nil {
@@ -193,6 +196,7 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 
 		Crash.FirstReported = Report.CreatedAt
 		Crash.Signature = Report.Signature
+		Crash.Module = Report.Module
 
 		Crash.ProductID = Report.ProductID
 

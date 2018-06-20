@@ -8,6 +8,7 @@
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Signature</th>
+                        <th scope="col">Module</th>
                         <th scope="col">All</th>
                         <th scope="col">Windows</th>
                         <th scope="col">macOS</th>
@@ -20,6 +21,7 @@
                     <tr>
                         <td><a href="/crashes/{{ .ID }}">{{ .ID }}</a></td>
                         <td>{{ .Signature }}</td>
+                        <td>{{ .Module }}</td>
                         <td>{{ .AllCrashCount }}</td>
                         <td>{{ .WinCrashCount }}</td>
                         <td>{{ .MacCrashCount }}</td>

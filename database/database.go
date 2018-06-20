@@ -84,6 +84,7 @@ type Crash struct {
 	DeletedAt *time.Time
 
 	Signature     string
+	Module        string
 	AllCrashCount uint `gorm:"-"`
 	WinCrashCount uint `gorm:"-"`
 	MacCrashCount uint `gorm:"-"`
@@ -121,6 +122,7 @@ type Report struct {
 	OsVersion     string
 	Arch          string
 	Signature     string
+	Module        string
 	CrashLocation string
 	CrashPath     string
 	CrashLine     int
@@ -243,6 +245,16 @@ type ReportContent struct {
 	} `json:"threads"`
 }
 
+// Migration is a table for the component versions
+type Migration struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	Component string `gorm:"unique,index"`
+	Version   string
+}
+
 // Db is the database handler
 var Db *gorm.DB
 
@@ -257,28 +269,6 @@ func InitDb(connection string) error {
 	if os.Getenv("GIN_MODE") != "release" {
 		Db.LogMode(true)
 	}
-
-	Db.AutoMigrate(&Product{}, &Version{}, &User{}, &Comment{}, &Crash{}, &Report{}, &Symfile{})
-
-	Db.Model(&Version{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
-	Db.Model(&Comment{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	Db.Model(&Report{}).AddForeignKey("crash_id", "crashes(id)", "RESTRICT", "RESTRICT")
-	Db.Model(&Report{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
-	Db.Model(&Report{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
-	Db.Model(&Symfile{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
-	Db.Model(&Symfile{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
-	Db.Table("crash_versions").AddForeignKey("crash_id", "crashes(id)", "RESTRICT", "RESTRICT")
-	Db.Table("crash_versions").AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
-
-	Db.Model(&Product{}).AddUniqueIndex("idx_product_slug", "slug")
-	Db.Model(&Version{}).AddUniqueIndex("idx_version_slug_product", "slug", "product_id")
-	Db.Model(&User{}).AddUniqueIndex("idx_user_name", "name")
-	Db.Model(&Crash{}).AddUniqueIndex("idx_crash_signature", "signature")
-	Db.Model(&Symfile{}).AddUniqueIndex("idx_symfile_code", "code")
-
-	Db.Model(&Report{}).AddIndex("idx_crash_id", "crash_id")
-	Db.Model(&Report{}).AddIndex("idx_product_id", "product_id")
-	Db.Model(&Report{}).AddIndex("idx_version_id", "version_id")
 
 	Db.Order("name ASC").Find(&Products)
 	Db.Order("name ASC").Find(&Versions)

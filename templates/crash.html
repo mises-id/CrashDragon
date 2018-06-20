@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-10">
-            <h1>{{ .title }}</h1>
+            <h1>{{ .title }}{{ if .Crash.Signature }} <small>({{ .Crash.Signature }} in {{ .Crash.Module }})</small>{{ end }}</h1>
         </div>
         <div class="col-md-2">
             <form method="post" action="/crashes/{{ .Crash.ID }}/fixed">
@@ -26,6 +26,10 @@
                     <tr>
                         <th scope="row">Signature</th>
                         <td>{{ .Crash.Signature }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Module</th>
+                        <td>{{ .Crash.Module }}</td>
                     </tr>
                     <tr>
                         <th scope="row">Location</th>
