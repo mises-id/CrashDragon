@@ -74,7 +74,7 @@ install: all
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) bin/crashdragon $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) build/bin/minidump_stackwalk $(DESTDIR)$(bindir)
-	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets
+	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets
 	$(INSTALL_DATA) assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
 	$(INSTALL_DATA) $(ASSETS_JS) $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
@@ -87,15 +87,16 @@ install: all
 uninstall:
 	rm $(DESTDIR)$(bindir)/crashdragon
 	rm $(DESTDIR)$(bindir)/minidump_stackwalk
-	rm $(DESTDIR)$(datadir)/crashdragon/assets/app.css
+	rm $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets/app.css
 	rm $(addprefix $(DESTDIR)$(datadir)/crashdragon/assets/javascripts/,$(notdir $(ASSETS_JS)))
 	rm $(addprefix $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap/,$(notdir $(ASSETS_FONTS)))
 	rm $(addprefix $(DESTDIR)$(datadir)/crashdragon/templates/,$(notdir $(HTML_TEMPLATES)))
 	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap/
 	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/fonts/
 	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/javascripts/
-	rmdir $(DESTDIR)$(datadir)/crashdragon/assets
+	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets/
+	rmdir $(DESTDIR)$(datadir)/crashdragon/assets/
 	rmdir $(DESTDIR)$(datadir)/crashdragon/templates/
-	rmdir $(DESTDIR)$(datadir)/crashdragon
+	rmdir $(DESTDIR)$(datadir)/crashdragon/
 
 .PHONY: uninstall install clean all
