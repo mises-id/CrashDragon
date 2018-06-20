@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -237,11 +237,11 @@ func GetReport(c *gin.Context) {
 
 // DeleteReport deletes a crashreport
 func DeleteReport(c *gin.Context) {
-	filepath := path.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
-	os.Remove(path.Join(filepath, c.Param("id")+".dmp"))
+	filepth := filepath.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
+	os.Remove(filepath.Join(filepth, c.Param("id")+".dmp"))
 
-	filepath = path.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
-	os.Remove(path.Join(filepath, c.Param("id")+".txt"))
+	filepth = filepath.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
+	os.Remove(filepath.Join(filepth, c.Param("id")+".txt"))
 
 	database.Db.Unscoped().Delete(&database.Comment{}, "report_id = ?", c.Param("id"))
 	database.Db.Unscoped().Delete(&database.Report{}, "id = ?", c.Param("id"))
@@ -259,7 +259,7 @@ func GetReportFile(c *gin.Context) {
 	name := c.Param("name")
 	switch name {
 	case "upload_file_minidump":
-		file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
+		file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 		f, err := os.Open(file)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -279,7 +279,7 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		file := path.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt")
+		file := filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt")
 		f, err := os.Open(file)
 		if os.IsNotExist(err) {
 			processor.ProcessText(&Report)

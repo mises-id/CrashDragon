@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -47,19 +47,19 @@ func Reprocess(Report database.Report) {
 
 // ProcessText adds the text version of the report to the database, which is only used when the text button is clicked
 func ProcessText(Report *database.Report) {
-	filepath := path.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4])
-	err := os.MkdirAll(filepath, 0755)
+	filepth := filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4])
+	err := os.MkdirAll(filepth, 0755)
 	if err != nil {
 		return
 	}
-	f, err := os.Create(path.Join(filepath, Report.ID.String()+".txt"))
+	f, err := os.Create(filepath.Join(filepth, Report.ID.String()+".txt"))
 	if err != nil {
 		return
 	}
 	defer f.Close()
 
-	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
+	file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
+	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", Report.Product.Slug, Report.Version.Slug)
 
 	dataTXT, err := runProcessor(file, symbolsPath, "txt")
 	if err != nil {
@@ -104,8 +104,8 @@ func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byt
 func processReport(Report database.Report, reprocess bool) {
 	start := time.Now()
 
-	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
+	file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
+	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", Report.Product.Slug, Report.Version.Slug)
 
 	dataJSON, err := runProcessor(file, symbolsPath, "json")
 	tx := database.Db.Begin()

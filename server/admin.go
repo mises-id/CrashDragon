@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
@@ -314,9 +314,9 @@ func GetAdminSymfiles(c *gin.Context) {
 func GetAdminDeleteSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.Db.First(&Symfile, "ID = ?", c.Param("id"))
-	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
-	if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
-		os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+	if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
+		os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
 	}
 	database.Db.Delete(&Symfile)
 	c.Redirect(http.StatusFound, "/admin/symfiles")

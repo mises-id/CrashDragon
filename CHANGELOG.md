@@ -8,6 +8,7 @@
 * Change: Only show reports matching the filtered version when in Crash-view
 * Change: Allow changing Product and Version filters in detail views
 * Change: Fixed now with date instead of boolean
+* Change: Symbol files now in seperate file lications based on product and version
 * Fix: Show correct crash counts when filtered by version (See #40)
 * Fix: Installation of stylesheets
 

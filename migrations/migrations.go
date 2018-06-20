@@ -2,10 +2,12 @@ package migrations
 
 import (
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
+	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
 	uuid "github.com/satori/go.uuid"
 )
@@ -32,6 +34,7 @@ func RunMigrations() {
 		if Migration2.Version != "1.2.0" {
 			log.Print("Running crash migration, please wait...")
 			//migrateCrashes() // Very slow
+			migrateSymfiles()
 			Migration2.Version = "1.2.0"
 			database.Db.Save(&Migration2)
 			log.Print("Crashes migrated!")
@@ -44,6 +47,24 @@ func RunMigrations() {
 		break
 	}
 
+}
+
+func migrateSymfiles() {
+	var Symfiles []database.Symfile
+	database.Db.Preload("Product").Preload("Version").Find(&Symfiles)
+	for i, Symfile := range Symfiles {
+		log.Printf("Moving symfile %d/%d", i+1, len(Symfiles))
+		filepthnew := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+		err := os.MkdirAll(filepthnew, 0755)
+		if err != nil {
+			log.Fatal("Can not create directory ", err)
+		}
+		filepthold := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
+		err = os.Rename(filepath.Join(filepthold, Symfile.Name+".sym"), filepath.Join(filepthnew, Symfile.Name+".sym"))
+		if err != nil {
+			log.Fatal("Could not move symfile", err)
+		}
+	}
 }
 
 func migrateCrashes() {
