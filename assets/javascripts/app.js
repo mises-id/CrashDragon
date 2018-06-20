@@ -28,3 +28,7 @@ $('#change-slug').on("click", function() {
         $('#change-slug').hide();
     }
 });
+
+$(function() {
+    $('[data-toggle="tooltip"]').tooltip()
+});

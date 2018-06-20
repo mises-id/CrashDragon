@@ -16,4 +16,11 @@ CREATE TABLE IF NOT EXISTS "migrations" ("id" uuid NOT NULL DEFAULT NULL,"create
 INSERT INTO "migrations" ("id","created_at","updated_at","component","version") VALUES ('8badb4c8-9b9e-47a7-b753-b21b9785254b',NOW(),NOW(),'database','1.2.0');
 INSERT INTO "migrations" ("id","created_at","updated_at","component","version") VALUES ('5f2bc875-4d09-4562-b5f8-29857c746153',NOW(),NOW(),'crashdragon','');
 
+-- Migrate fixed column from boolean to timestamp
+ALTER TABLE crashes RENAME fixed TO fixed_old;
+ALTER TABLE crashes ADD fixed timestamp with time zone;
+UPDATE crashes SET fixed = NOW() WHERE fixed_old = true;
+UPDATE crashes SET fixed = NULL WHERE fixed_old = false;
+ALTER TABLE crashes DROP fixed_old;
+
 END TRANSACTION;

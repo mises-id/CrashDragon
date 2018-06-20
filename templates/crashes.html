@@ -2,7 +2,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <h1>{{ .title }}</h1>
+            <h1>{{ .title }}</h1> <a href="?show_fixed=true">Show fixed</a>
             <table class="table table-striped table-hover table-condensed">
                 <thead>
                     <tr>
@@ -20,7 +20,7 @@
                     {{ range .items }}
                     <tr>
                         <td><a href="/crashes/{{ .ID }}">{{ .ID }}</a></td>
-                        <td>{{ .Signature }}</td>
+                        <td>{{ .Signature }}{{ if .Fixed }} <span class="glyphicon glyphicon-ok text-success" aria-hidden="true" data-toggle="tooltip" data-placement="top" title="Fixed on {{ .Fixed.Format "02. Jan. 2006 15:04:05 UTC" }}"></span>{{ end }}</td>
                         <td>{{ .Module }}</td>
                         <td>{{ .AllCrashCount }}</td>
                         <td>{{ .WinCrashCount }}</td>

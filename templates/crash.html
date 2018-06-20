@@ -19,6 +19,12 @@
             <h2 id="overview">Overview</h2>
             <table class="table">
                 <tbody>
+                    {{ if .Crash.Fixed }}
+                    <tr class="text-success">
+                        <th scope="row">Fixed on</th>
+                        <td>{{ .Crash.Fixed.Format "02. Jan. 2006 15:04:05 UTC" }}</td>
+                    </tr>
+                    {{ end }}
                     <tr>
                         <th scope="row">ID</th>
                         <td>{{ .Crash.ID }}</td>

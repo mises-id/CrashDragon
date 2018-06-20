@@ -200,7 +200,7 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 
 		Crash.ProductID = Report.ProductID
 
-		Crash.Fixed = false
+		Crash.Fixed = nil
 
 		tx.Create(&Crash)
 		reprocess = false
@@ -214,7 +214,7 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 		if Version.ID == Report.Version.ID {
 			break
 		}
-		Crash.Fixed = false
+		Crash.Fixed = nil
 	}
 
 	tx.Model(&Crash).Association("Versions").Append(&Report.Version)

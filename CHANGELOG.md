@@ -7,6 +7,7 @@
 * Change: Now gracefully shutting down on `SIGINT` (See #25)
 * Change: Only show reports matching the filtered version when in Crash-view
 * Change: Allow changing Product and Version filters in detail views
+* Change: Fixed now with date instead of boolean
 * Fix: Show correct crash counts when filtered by version (See #40)
 * Fix: Installation of stylesheets
 

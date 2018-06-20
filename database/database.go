@@ -100,7 +100,7 @@ type Crash struct {
 
 	Versions []*Version `gorm:"many2many:crash_versions;"`
 
-	Fixed bool `sql:"DEFAULT false"`
+	Fixed *time.Time `sql:"DEFAULT NULL"`
 }
 
 // Report database model

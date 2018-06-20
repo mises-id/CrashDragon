@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.videolan.org/videolan/CrashDragon/database"
 	"github.com/gin-gonic/gin"
@@ -70,7 +71,10 @@ func GetCrashes(c *gin.Context) {
 	}
 	var count int
 	query.Model(database.Crash{}).Count(&count)
-	query.Where("fixed = false").Order("all_crash_count DESC").Offset(offset).Limit(50).Find(&Crashes)
+	if c.Query("show_fixed") != "true" {
+		query = query.Where("fixed IS NULL")
+	}
+	query.Order("all_crash_count DESC").Offset(offset).Limit(50).Find(&Crashes)
 	var next int
 	var prev int
 	if (offset + 50) >= count {
@@ -163,7 +167,12 @@ func GetCrash(c *gin.Context) {
 func MarkCrashFixed(c *gin.Context) {
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
-	Crash.Fixed = !Crash.Fixed
+	if Crash.Fixed != nil {
+		Crash.Fixed = nil
+	} else {
+		Crash.Fixed = new(time.Time)
+		*Crash.Fixed = time.Now()
+	}
 	database.Db.Save(&Crash)
 	c.Redirect(http.StatusFound, "/crashes/"+c.Param("id"))
 }
