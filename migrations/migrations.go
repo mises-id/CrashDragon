@@ -12,6 +12,9 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const VER_1_2_0 = "1.2.0"
+const CUR_VER = VER_1_2_0
+
 var wg sync.WaitGroup
 
 type result struct {
@@ -27,15 +30,15 @@ func RunMigrations() {
 	var Migration database.Migration
 	database.Db.First(&Migration, "component = 'database'")
 	switch Migration.Version {
-	case "1.2.0":
+	case VER_1_2_0:
 		log.Print("Database migration is version 1.2.0")
 		var Migration2 database.Migration
 		database.Db.First(&Migration2, "component = 'crashdragon'")
-		if Migration2.Version != "1.2.0" {
+		if Migration2.Version != VER_1_2_0 {
 			log.Print("Running crash migration, please wait...")
 			//migrateCrashes() // Very slow
 			migrateSymfiles()
-			Migration2.Version = "1.2.0"
+			Migration2.Version = VER_1_2_0
 			database.Db.Save(&Migration2)
 			log.Print("Crashes migrated!")
 		} else {
@@ -151,4 +154,14 @@ func dbMigrations() {
 	database.Db.Model(&database.Report{}).AddIndex("idx_crash_id", "crash_id")
 	database.Db.Model(&database.Report{}).AddIndex("idx_product_id", "product_id")
 	database.Db.Model(&database.Report{}).AddIndex("idx_version_id", "version_id")
+
+	var Migrations []database.Migration
+	var cnt uint
+	database.Db.Find(&Migrations).Count(&cnt)
+	if cnt != 2 {
+		var cd = database.Migration{ID: uuid.NewV4(), Component: "crashdragon", Version: CUR_VER}
+		database.Db.Create(&cd)
+		var db = database.Migration{ID: uuid.NewV4(), Component: "database", Version: CUR_VER}
+		database.Db.Create(&db)
+	}
 }
