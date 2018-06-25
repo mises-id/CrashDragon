@@ -313,7 +313,7 @@ func GetAdminSymfiles(c *gin.Context) {
 //GetAdminDeleteSymfile deletes the given symfile
 func GetAdminDeleteSymfile(c *gin.Context) {
 	var Symfile database.Symfile
-	database.Db.First(&Symfile, "ID = ?", c.Param("id"))
+	database.Db.Preload("Product").Preload("Version").First(&Symfile, "ID = ?", c.Param("id"))
 	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 	if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
 		os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
