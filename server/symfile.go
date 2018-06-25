@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -62,7 +62,7 @@ func GetSymfile(c *gin.Context) {
 		c.JSON(http.StatusOK, Symfile)
 		return
 	}
-	f, err := os.Open(path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
+	f, err := os.Open(filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return

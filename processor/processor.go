@@ -6,8 +6,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.videolan.org/videolan/CrashDragon/config"
@@ -17,6 +18,11 @@ import (
 )
 
 var rchan = make(chan database.Report, 5000)
+
+// QueueSize returns the number of reports in the queue
+func QueueSize() int {
+	return len(rchan)
+}
 
 // StartQueue runs the processor queue
 func StartQueue() {
@@ -42,19 +48,19 @@ func Reprocess(Report database.Report) {
 
 // ProcessText adds the text version of the report to the database, which is only used when the text button is clicked
 func ProcessText(Report *database.Report) {
-	filepath := path.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4])
-	err := os.MkdirAll(filepath, 0755)
+	filepth := filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4])
+	err := os.MkdirAll(filepth, 0755)
 	if err != nil {
 		return
 	}
-	f, err := os.Create(path.Join(filepath, Report.ID.String()+".txt"))
+	f, err := os.Create(filepath.Join(filepth, Report.ID.String()+".txt"))
 	if err != nil {
 		return
 	}
 	defer f.Close()
 
-	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
+	file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
+	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", Report.Product.Slug, Report.Version.Slug)
 
 	dataTXT, err := runProcessor(file, symbolsPath, "txt")
 	if err != nil {
@@ -99,8 +105,8 @@ func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byt
 func processReport(Report database.Report, reprocess bool) {
 	start := time.Now()
 
-	file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-	symbolsPath := path.Join(config.C.ContentDirectory, "Symfiles")
+	file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
+	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", Report.Product.Slug, Report.Version.Slug)
 
 	dataJSON, err := runProcessor(file, symbolsPath, "json")
 	tx := database.Db.Begin()
@@ -132,6 +138,7 @@ func processReport(Report database.Report, reprocess bool) {
 
 	if reprocess {
 		Report.Signature = ""
+		Report.Module = ""
 		Report.CrashLocation = ""
 		Report.CrashPath = ""
 		Report.CrashLine = 0
@@ -143,6 +150,9 @@ func processReport(Report database.Report, reprocess bool) {
 				continue
 			}
 			Report.Signature = Frame.Function
+			if Report.Module == "" {
+				Report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
+			}
 			if Frame.File == "" {
 				continue
 			}
@@ -179,8 +189,9 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 	if reprocess && Report.CrashID != uuid.Nil {
 		database.Db.First(&Crash, "id = ?", Report.CrashID)
 		Crash.Signature = Report.Signature
+		Crash.Module = Report.Module
 	} else {
-		database.Db.FirstOrInit(&Crash, "signature = ?", Report.Signature)
+		database.Db.FirstOrInit(&Crash, "signature = ? AND module = ?", Report.Signature, Report.Module)
 	}
 
 	if Crash.ID == uuid.Nil {
@@ -188,30 +199,17 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 
 		Crash.FirstReported = Report.CreatedAt
 		Crash.Signature = Report.Signature
-
-		Crash.AllCrashCount = 0
-		Crash.WinCrashCount = 0
-		Crash.MacCrashCount = 0
-		Crash.LinCrashCount = 0
+		Crash.Module = Report.Module
 
 		Crash.ProductID = Report.ProductID
 
-		Crash.Fixed = false
+		Crash.Fixed = nil
 
 		tx.Create(&Crash)
 		reprocess = false
 	}
 	if !reprocess || Report.CrashID == uuid.Nil {
 		Crash.LastReported = Report.CreatedAt
-		Crash.AllCrashCount++
-		if Report.Os == "Windows NT" {
-			Crash.WinCrashCount++
-		} else if Report.Os == "Linux" {
-			Crash.LinCrashCount++
-		} else if Report.Os == "Mac OS X" {
-			Crash.MacCrashCount++
-		}
-		tx.Save(&Crash)
 	}
 
 	tx.Model(&Crash).Related(&Crash.Versions, "Versions")
@@ -219,7 +217,7 @@ func processCrash(tx *gorm.DB, Report database.Report, reprocess bool, Crash *da
 		if Version.ID == Report.Version.ID {
 			break
 		}
-		Crash.Fixed = false
+		Crash.Fixed = nil
 	}
 
 	tx.Model(&Crash).Association("Versions").Append(&Report.Version)

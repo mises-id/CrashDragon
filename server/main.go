@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"log"
+	"net"
+	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"time"
 
 	"code.videolan.org/videolan/CrashDragon/config"
 	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/migrations"
 	"code.videolan.org/videolan/CrashDragon/processor"
 
 	"github.com/gin-gonic/gin"
@@ -99,19 +106,9 @@ func initRouter() *gin.Engine {
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(os.Stderr)
-	// TODO: Remove in next version
-	legacy := filepath.Join(os.Getenv("HOME"), "CrashDragon/config.toml")
-	current := "../etc/crashdragon.toml"
-	if _, err := os.Stat(legacy); err == nil {
-		// Legacy config exists
-		err := os.Rename(legacy, current)
-		if err != nil {
-			log.Panicf("Can not move config from %s to %s!", legacy, current)
-		}
-		log.Printf("Config moved from %s to %s to reflect new install method!", legacy, current)
-	}
-	// TODO: Allow user-specified config path
-	err := config.GetConfig(current)
+	cf := flag.String("config", "../etc/crashdragon.toml", "specifies the config file to use")
+	flag.Parse()
+	err := config.GetConfig(*cf)
 	if err != nil {
 		log.Fatalf("FAT Config error: %+v", err)
 		return
@@ -121,13 +118,61 @@ func main() {
 		log.Fatalf("FAT Database error: %+v", err)
 		return
 	}
+	migrations.RunMigrations()
 	processor.StartQueue()
 
 	router := initRouter()
 
-	if config.C.UseSocket {
-		router.RunUnix(config.C.BindSocket)
-	} else {
-		router.Run(config.C.BindAddress)
+	srv := &http.Server{
+		Handler: router,
 	}
+
+	// See: https://github.com/gin-gonic/gin/blob/master/examples/graceful-shutdown/graceful-shutdown/server.go
+	if config.C.UseSocket {
+		os.Remove(config.C.BindSocket)
+		listener, err := net.Listen("unix", config.C.BindSocket)
+		if err != nil {
+			log.Fatalf("FAT Socket error: %+v", err)
+			return
+		}
+		defer listener.Close()
+		go func() {
+			// service connections
+			if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
+			}
+		}()
+		log.Print("Listening on socket ", config.C.BindSocket)
+	} else {
+		srv.Addr = config.C.BindAddress
+		go func() {
+			// service connections
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("listen: %s\n", err)
+			}
+		}()
+		log.Print("Listening on address ", config.C.BindAddress)
+	}
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	log.Println("Closing Server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+
+	log.Println("Server stopped, waiting for processor queue to empty...")
+	for processor.QueueSize() > 0 {
+	}
+
+	log.Println("Queue empty, closing database...")
+	database.Db.Close()
+
+	log.Println("Closed database, good bye!")
+	os.Exit(0)
+	return
 }

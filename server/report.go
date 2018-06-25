@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -65,6 +65,7 @@ func GetReports(c *gin.Context) {
 	var List []struct {
 		ID        string
 		Signature string
+		Module    string
 		Date      time.Time
 		Product   string
 		Version   string
@@ -130,6 +131,7 @@ func GetReports(c *gin.Context) {
 		var Item struct {
 			ID        string
 			Signature string
+			Module    string
 			Date      time.Time
 			Product   string
 			Version   string
@@ -147,6 +149,7 @@ func GetReports(c *gin.Context) {
 		Item.Platform = Report.Os
 		Item.Reason = Report.Report.CrashInfo.Type
 		Item.Signature = Report.Signature
+		Item.Module = Report.Module
 		Item.Location = Report.CrashLocation
 		Item.GitRepo = Report.Version.GitRepo
 		Item.File = Report.CrashPath
@@ -176,6 +179,7 @@ func GetReport(c *gin.Context) {
 		ID             string
 		CrashID        string
 		Signature      string
+		Module         string
 		Date           time.Time
 		Product        string
 		Version        string
@@ -194,6 +198,7 @@ func GetReport(c *gin.Context) {
 	Item.ID = Report.ID.String()
 	Item.CrashID = Report.CrashID.String()
 	Item.Signature = Report.Signature
+	Item.Module = Report.Module
 	Item.Date = Report.CreatedAt
 	Item.Product = Report.Product.Name
 	Item.Version = Report.Version.Name
@@ -217,14 +222,13 @@ func GetReport(c *gin.Context) {
 	}
 	if strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.HTML(http.StatusOK, "report.html", gin.H{
-			"prods":      database.Products,
-			"vers":       database.Versions,
-			"detailView": true,
-			"title":      "Report",
-			"item":       Item,
-			"report":     Report.Report,
-			"result":     result,
-			"comments":   Report.Comments,
+			"prods":    database.Products,
+			"vers":     database.Versions,
+			"title":    "Report",
+			"item":     Item,
+			"report":   Report.Report,
+			"result":   result,
+			"comments": Report.Comments,
 		})
 	} else {
 		c.JSON(http.StatusOK, Report)
@@ -233,11 +237,11 @@ func GetReport(c *gin.Context) {
 
 // DeleteReport deletes a crashreport
 func DeleteReport(c *gin.Context) {
-	filepath := path.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
-	os.Remove(path.Join(filepath, c.Param("id")+".dmp"))
+	filepth := filepath.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
+	os.Remove(filepath.Join(filepth, c.Param("id")+".dmp"))
 
-	filepath = path.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
-	os.Remove(path.Join(filepath, c.Param("id")+".txt"))
+	filepth = filepath.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
+	os.Remove(filepath.Join(filepth, c.Param("id")+".txt"))
 
 	database.Db.Unscoped().Delete(&database.Comment{}, "report_id = ?", c.Param("id"))
 	database.Db.Unscoped().Delete(&database.Report{}, "id = ?", c.Param("id"))
@@ -255,7 +259,7 @@ func GetReportFile(c *gin.Context) {
 	name := c.Param("name")
 	switch name {
 	case "upload_file_minidump":
-		file := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
+		file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
 		f, err := os.Open(file)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -275,7 +279,7 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		file := path.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt")
+		file := filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt")
 		f, err := os.Open(file)
 		if os.IsNotExist(err) {
 			processor.ProcessText(&Report)

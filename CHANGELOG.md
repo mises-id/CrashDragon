@@ -1,8 +1,21 @@
 # Changelog
 
+## Version 1.2.0
+
+* Add: `-config`-flag to specify config file when running CrashDragon
+* Add: Module database field for Reports and Crashes (See #39)
+* Change: Now gracefully shutting down on `SIGINT` (See #25)
+* Change: Only show reports matching the filtered version when in Crash-view
+* Change: Allow changing Product and Version filters in detail views
+* Change: Fixed now with date instead of boolean (See #36)
+* Change: Symbol files now in seperate file locations based on product and version (See #15)
+* Fix: Show correct crash counts when filtered by version (See #40)
+* Fix: Installation of stylesheets
+
 ## Version 1.1.1
+
 * Add: `govendor sync` step to update guide
-* Change: Updated GROM to current master
+* Change: Updated GORM to current master
 * Fix: Crash-Version-Association
 * Fix: Correctly install stylesheet
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.videolan.org/videolan/CrashDragon/database"
 	"github.com/gin-gonic/gin"
@@ -59,8 +60,10 @@ func GetCrashes(c *gin.Context) {
 	}
 	all, ver := GetVersionCookie(c)
 	if !all {
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ?", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID).QueryExpr())
 		query = query.Where("id in (?)", database.Db.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
-		//query = query.Model(&ver).Association("Versions")
+	} else {
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id").QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Windows NT'").QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Mac OS X'").QueryExpr())
 	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
@@ -68,7 +71,10 @@ func GetCrashes(c *gin.Context) {
 	}
 	var count int
 	query.Model(database.Crash{}).Count(&count)
-	query.Where("fixed = false").Order("all_crash_count DESC").Offset(offset).Limit(50).Find(&Crashes)
+	if c.Query("show_fixed") != "true" {
+		query = query.Where("fixed IS NULL")
+	}
+	query.Order("all_crash_count DESC").Offset(offset).Limit(50).Find(&Crashes)
 	var next int
 	var prev int
 	if (offset + 50) >= count {
@@ -93,6 +99,7 @@ func GetCrashes(c *gin.Context) {
 
 // GetCrash returns details of a crash
 func GetCrash(c *gin.Context) {
+	all, ver := GetVersionCookie(c)
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -100,8 +107,16 @@ func GetCrash(c *gin.Context) {
 		offset = 0
 	}
 	var count int
-	database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID).Count(&count)
-	database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC").Offset(offset).Limit(50).Related(&Crash.Reports)
+	query := database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID)
+	if !all {
+		query = query.Where("version_id = ?", ver.ID)
+	}
+	query.Count(&count)
+	query = database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC")
+	if !all {
+		query = query.Where("version_id = ?", ver.ID)
+	}
+	query.Offset(offset).Limit(50).Related(&Crash.Reports)
 	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
 	var next int
 	var prev int
@@ -135,7 +150,6 @@ func GetCrash(c *gin.Context) {
 		c.HTML(http.StatusOK, "crash.html", gin.H{
 			"prods":      database.Products,
 			"vers":       database.Versions,
-			"detailView": true,
 			"title":      "Crash",
 			"Crash":      Crash,
 			"Versions":   versions,
@@ -153,7 +167,12 @@ func GetCrash(c *gin.Context) {
 func MarkCrashFixed(c *gin.Context) {
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
-	Crash.Fixed = !Crash.Fixed
+	if Crash.Fixed != nil {
+		Crash.Fixed = nil
+	} else {
+		Crash.Fixed = new(time.Time)
+		*Crash.Fixed = time.Now()
+	}
 	database.Db.Save(&Crash)
 	c.Redirect(http.StatusFound, "/crashes/"+c.Param("id"))
 }

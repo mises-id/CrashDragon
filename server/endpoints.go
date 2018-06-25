@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -48,13 +48,13 @@ func PostReports(c *gin.Context) {
 	Report.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
-	filepath := path.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
-	err = os.MkdirAll(filepath, 0755)
+	filepth := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
+	err = os.MkdirAll(filepth, 0755)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	f, err := os.Create(path.Join(filepath, Report.ID.String()+".dmp"))
+	f, err := os.Create(filepath.Join(filepth, Report.ID.String()+".dmp"))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
@@ -98,6 +98,7 @@ func PostSymfiles(c *gin.Context) {
 		return
 	}
 	Symfile.ProductID = Product.ID
+	Symfile.Product = Product
 	var Version database.Version
 	if err = database.Db.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Symfile.ProductID).Error; err != nil {
 		Version.ID = uuid.NewV4()
@@ -109,6 +110,7 @@ func PostSymfiles(c *gin.Context) {
 		database.Db.Create(&Version)
 	}
 	Symfile.VersionID = Version.ID
+	Symfile.Version = Version
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err = scanner.Err(); err != nil {
@@ -129,9 +131,9 @@ func PostSymfiles(c *gin.Context) {
 		Symfile.ID = uuid.NewV4()
 		updated = false
 	} else {
-		filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
-		if _, existsErr := os.Stat(path.Join(filepath, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
-			err = os.Remove(path.Join(filepath, Symfile.Name+".sym"))
+		filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+		if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
+			err = os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
 		}
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -143,14 +145,14 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.Arch = parts[2]
 	Symfile.Code = parts[3]
 	Symfile.Name = parts[4]
-	filepath := path.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
-	err = os.MkdirAll(filepath, 0755)
+	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+	err = os.MkdirAll(filepth, 0755)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		database.Db.Delete(&Symfile)
 		return
 	}
-	f, err := os.Create(path.Join(filepath, Symfile.Name+".sym"))
+	f, err := os.Create(filepath.Join(filepth, Symfile.Name+".sym"))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		database.Db.Delete(&Symfile)
