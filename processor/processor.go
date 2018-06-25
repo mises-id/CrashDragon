@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"code.videolan.org/videolan/CrashDragon/config"
@@ -149,7 +150,9 @@ func processReport(Report database.Report, reprocess bool) {
 				continue
 			}
 			Report.Signature = Frame.Function
-			Report.Module = Frame.Module
+			if Report.Module == "" {
+				Report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
+			}
 			if Frame.File == "" {
 				continue
 			}
