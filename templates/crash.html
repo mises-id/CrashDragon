@@ -165,7 +165,7 @@
             </div>
             {{ end }}
             <h3>Add comment</h3>
-            <form method="post" action="/crashes/{{ .ID }}/comments">
+            <form method="post" action="/crashes/{{ .Crash.ID }}/comments">
                 <div class="form-group">
                     <textarea class="form-control" name="comment"></textarea>
                 </div>

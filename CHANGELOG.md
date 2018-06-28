@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 1.2.1
+
+* Fix: Commenting on crashes possible again
+* Fix: Module should match now correctly to signatures
+
 ## Version 1.2.0
 
 * Add: `-config`-flag to specify config file when running CrashDragon

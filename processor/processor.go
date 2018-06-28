@@ -149,9 +149,9 @@ func processReport(Report database.Report, reprocess bool) {
 			if Frame.File == "" && Report.Signature != "" {
 				continue
 			}
-			Report.Signature = Frame.Function
-			if Report.Module == "" {
+			if Report.Module == "" || (Report.Signature == "" && Frame.Function != "") {
 				Report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
+				Report.Signature = Frame.Function
 			}
 			if Frame.File == "" {
 				continue

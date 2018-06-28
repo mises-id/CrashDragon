@@ -13,7 +13,8 @@ import (
 )
 
 const VER_1_2_0 = "1.2.0"
-const CUR_VER = VER_1_2_0
+const VER_1_2_1 = "1.2.1"
+const CUR_VER = VER_1_2_1
 
 var wg sync.WaitGroup
 
@@ -30,6 +31,9 @@ func RunMigrations() {
 	var Migration database.Migration
 	database.Db.First(&Migration, "component = 'database'")
 	switch Migration.Version {
+	case VER_1_2_1:
+		log.Printf("Database migration is version 1.2.1")
+		break
 	case VER_1_2_0:
 		log.Print("Database migration is version 1.2.0")
 		var Migration2 database.Migration
@@ -44,6 +48,14 @@ func RunMigrations() {
 		} else {
 			log.Print("CrashDragon migration is version 1.2.0")
 		}
+		Migration2 = database.Migration{}
+		database.Db.First(&Migration2, "component = 'database'")
+		Migration2.Version = VER_1_2_1
+		database.Db.Save(&Migration2)
+		Migration2 = database.Migration{}
+		database.Db.First(&Migration2, "component = 'crashdragon'")
+		Migration2.Version = VER_1_2_1
+		database.Db.Save(&Migration2)
 		break
 	default:
 		log.Fatal("Database migration version unsupported...")
