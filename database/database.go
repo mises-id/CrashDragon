@@ -14,13 +14,13 @@ import (
 
 // Product defines the structure of a product
 type Product struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	Name string
-	Slug string
+	Name string `json:",omitempty"`
+	Slug string `json:",omitempty"`
 }
 
 // Products contains all currently available products and is used for the switcher in the header
@@ -28,20 +28,20 @@ var Products []Product
 
 // Version defines the structure of a product
 type Version struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	Name    string
-	Slug    string
-	GitRepo string
-	Ignore  bool
+	Name    string `json:",omitempty"`
+	Slug    string `json:",omitempty"`
+	GitRepo string `json:",omitempty"`
+	Ignore  bool   `json:",omitempty"`
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Product   Product
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Product   Product   `json:",omitempty"`
 
-	Crashes []*Crash `gorm:"many2many:crash_versions;"`
+	Crashes []*Crash `gorm:"many2many:crash_versions;" json:",omitempty"`
 }
 
 // Versions contains all currently available versions and is used for the switcher in the header
@@ -49,116 +49,116 @@ var Versions []Version
 
 // User defines the structure of a user
 type User struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	Name    string
-	IsAdmin bool
+	Name    string `json:",omitempty"`
+	IsAdmin bool   `json:",omitempty"`
 
-	Comments []Comment
+	Comments []Comment `json:",omitempty"`
 }
 
 // Comment defines the structure of a comment
 type Comment struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL"`
-	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
+	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
+	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
 
-	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	User   User
+	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	User   User      `json:",omitempty"`
 
-	Content template.HTML
+	Content template.HTML `json:",omitempty"`
 }
 
 // Crash database model
 type Crash struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	Signature     string
-	Module        string
-	AllCrashCount uint `gorm:"-"`
-	WinCrashCount uint `gorm:"-"`
-	MacCrashCount uint `gorm:"-"`
+	Signature     string `json:",omitempty"`
+	Module        string `json:",omitempty"`
+	AllCrashCount uint   `gorm:"-" json:",omitempty"`
+	WinCrashCount uint   `gorm:"-" json:",omitempty"`
+	MacCrashCount uint   `gorm:"-" json:",omitempty"`
 
-	Reports  []Report
-	Comments []Comment
+	Reports  []Report  `json:",omitempty"`
+	Comments []Comment `json:",omitempty"`
 
-	FirstReported time.Time
-	LastReported  time.Time
+	FirstReported time.Time `json:",omitempty"`
+	LastReported  time.Time `json:",omitempty"`
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Product   Product
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Product   Product   `json:"-"`
 
-	Versions []*Version `gorm:"many2many:crash_versions;"`
+	Versions []*Version `gorm:"many2many:crash_versions;" json:",omitempty"`
 
-	Fixed *time.Time `sql:"DEFAULT NULL"`
+	Fixed *time.Time `sql:"DEFAULT NULL" json:",omitempty"`
 }
 
 // Report database model
 type Report struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL"`
-	Crash   Crash
+	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
+	Crash   Crash     `json:"-"`
 
-	ProcessUptime int
-	EMail         string
-	Comment       string
-	Processed     bool
+	ProcessUptime int    `json:",omitempty"`
+	EMail         string `json:",omitempty"`
+	Comment       string `json:",omitempty"`
+	Processed     bool   `json:",omitempty"`
 
-	Os            string
-	OsVersion     string
-	Arch          string
-	Signature     string
-	Module        string
-	CrashLocation string
-	CrashPath     string
-	CrashLine     int
+	Os            string `json:",omitempty"`
+	OsVersion     string `json:",omitempty"`
+	Arch          string `json:",omitempty"`
+	Signature     string `json:",omitempty"`
+	Module        string `json:",omitempty"`
+	CrashLocation string `json:",omitempty"`
+	CrashPath     string `json:",omitempty"`
+	CrashLine     int    `json:",omitempty"`
 
-	Comments []Comment
+	Comments []Comment `json:"-"`
 
 	ReportContentJSON string        `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB" json:"-"`
-	Report            ReportContent `gorm:"-"`
+	Report            ReportContent `gorm:"-" json:",omitempty"`
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Product   Product
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Product   Product   `json:"-"`
 
-	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Version   Version
+	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Version   Version   `json:"-"`
 
-	ProcessingTime float64
+	ProcessingTime float64 `json:",omitempty"`
 }
 
 // Symfile database model
 type Symfile struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time  `json:",omitempty"`
+	UpdatedAt time.Time  `json:",omitempty"`
+	DeletedAt *time.Time `json:",omitempty"`
 
-	Os string
+	Os string `json:",omitempty"`
 
-	Arch string
-	Code string `gorm:"unique;index"`
-	Name string
+	Arch string `json:",omitempty"`
+	Code string `gorm:"unique;index" json:",omitempty"`
+	Name string `json:",omitempty"`
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Product   Product
+	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Product   Product   `json:"-"`
 
-	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
-	Version   Version
+	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Version   Version   `json:"-"`
 }
 
 // ReportContent of a crashreport

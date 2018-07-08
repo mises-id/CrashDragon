@@ -59,6 +59,13 @@ func initRouter() *gin.Engine {
 
 	// Admin JSON endpoints
 	apiv1 := auth.Group("/api/v1")
+	apiv1.GET("/crashes", APIv1GetCrashes)
+	apiv1.GET("/crashes/:id", APIv1GetCrash)
+	apiv1.GET("/reports", APIv1GetReports)
+	apiv1.GET("/reports/:id", APIv1GetReport)
+	apiv1.GET("/symfiles", APIv1GetSymfiles)
+	apiv1.GET("/symfiles/:id", APIv1GetSymfile)
+
 	apiv1.GET("/products", APIGetProducts)
 	apiv1.GET("/products/:id", APIGetProduct)
 	apiv1.POST("/products", APINewProduct)
@@ -78,12 +85,6 @@ func initRouter() *gin.Engine {
 	apiv1.DELETE("/users/:id", APIDeleteUser)
 
 	apiv1.GET("/stats", GetIndex)
-	apiv1.GET("/crashes", GetCrashes)
-	apiv1.GET("/crashes/:id", GetCrash)
-	apiv1.GET("/reports", GetReports)
-	apiv1.GET("/reports/:id", GetReport)
-	apiv1.GET("/symfiles", GetSymfiles)
-	apiv1.GET("/symfiles/:id", GetSymfile)
 
 	// simple-breakpad endpoints
 	router.GET("/", GetIndex)
