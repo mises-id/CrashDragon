@@ -89,6 +89,24 @@ func filters(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	if value, exists := c.GetQuery("name"); exists {
 		query = query.Where("name = ?", value)
 	}
+	if value, exists := c.GetQuery("slug"); exists {
+		query = query.Where("slug = ?", value)
+	}
+	if value, exists := c.GetQuery("git_repo"); exists {
+		query = query.Where("git_repo = ?", value)
+	}
+	if value, exists := c.GetQuery("ignore"); exists {
+		query = query.Where("ignore = ?", value)
+	}
+	if value, exists := c.GetQuery("is_admin"); exists {
+		query = query.Where("is_admin = ?", value)
+	}
+	if value, exists := c.GetQuery("user_id"); exists {
+		query = query.Where("user_id = ?", value)
+	}
+	if value, exists := c.GetQuery("content"); exists {
+		query = query.Where("content = ?", value)
+	}
 	return query
 }
 
@@ -272,6 +290,48 @@ func order(qry *gorm.DB, c *gin.Context) *gorm.DB {
 			query = query.Order("name ASC")
 		}
 	}
+	if value, exists := c.GetQuery("o_slug"); exists {
+		if value == DSC {
+			query = query.Order("slug DESC")
+		} else {
+			query = query.Order("slug ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_git_repo"); exists {
+		if value == DSC {
+			query = query.Order("git_repo DESC")
+		} else {
+			query = query.Order("git_repo ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_ignore"); exists {
+		if value == DSC {
+			query = query.Order("ignore DESC")
+		} else {
+			query = query.Order("ignore ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_is_admin"); exists {
+		if value == DSC {
+			query = query.Order("is_admin DESC")
+		} else {
+			query = query.Order("is_admin ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_user_id"); exists {
+		if value == DSC {
+			query = query.Order("user_id DESC")
+		} else {
+			query = query.Order("user_id ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_content"); exists {
+		if value == DSC {
+			query = query.Order("content DESC")
+		} else {
+			query = query.Order("content ASC")
+		}
+	}
 	return query
 }
 
@@ -309,7 +369,7 @@ func APIv1GetReports(c *gin.Context) {
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
 	query.Find(&Reports)
-	c.JSON(http.StatusOK, gin.H{"Items": &Reports, "ItemCount": total, "Limit": limit, "Offset": offset})
+	c.JSON(http.StatusOK, gin.H{"Items": Reports, "ItemCount": total, "Limit": limit, "Offset": offset})
 }
 
 // APIv1GetReport is the GET endpoint for a single report in API v1
@@ -327,7 +387,7 @@ func APIv1GetSymfiles(c *gin.Context) {
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
 	query.Find(&Symfiles)
-	c.JSON(http.StatusOK, gin.H{"Items": &Symfiles, "ItemCount": total, "Limit": limit, "Offset": offset})
+	c.JSON(http.StatusOK, gin.H{"Items": Symfiles, "ItemCount": total, "Limit": limit, "Offset": offset})
 }
 
 // APIv1GetSymfile is the GET endpoint for a single symfile in API v1
@@ -335,6 +395,78 @@ func APIv1GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.Db.First(&Symfile, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, Symfile)
+}
+
+// APIv1GetProducts is the GET endpoint for products in API v1
+func APIv1GetProducts(c *gin.Context) {
+	var Products []database.Product
+	query := database.Db.Model(&database.Product{})
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
+	query.Find(&Products)
+	c.JSON(http.StatusOK, gin.H{"Items": Products, "ItemCount": total, "Limit": limit, "Offset": offset})
+}
+
+// APIv1GetProduct is the GET endpoint for product in API v1
+func APIv1GetProduct(c *gin.Context) {
+	var Product database.Product
+	database.Db.First(&Product, "id = ?", c.Param("id"))
+	c.JSON(http.StatusOK, Product)
+}
+
+// APIv1GetVersions is the GET endpoint for versions in API v1
+func APIv1GetVersions(c *gin.Context) {
+	var Versions []database.Version
+	query := database.Db.Model(&database.Version{})
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
+	query.Find(&Versions)
+	c.JSON(http.StatusOK, gin.H{"Items": Versions, "ItemCount": total, "Limit": limit, "Offset": offset})
+}
+
+// APIv1GetVersion is the GET endpoint for version in API v1
+func APIv1GetVersion(c *gin.Context) {
+	var Version database.Version
+	database.Db.First(&Version, "id = ?", c.Param("id"))
+	c.JSON(http.StatusOK, Version)
+}
+
+// APIv1GetUsers is the GET endpoint for users in API v1
+func APIv1GetUsers(c *gin.Context) {
+	var Users []database.User
+	query := database.Db.Model(&database.User{})
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
+	query.Find(&Users)
+	c.JSON(http.StatusOK, gin.H{"Items": Users, "ItemCount": total, "Limit": limit, "Offset": offset})
+}
+
+// APIv1GetUser is the GET endpoint for user in API v1
+func APIv1GetUser(c *gin.Context) {
+	var User database.User
+	database.Db.First(&User, "id = ?", c.Param("id"))
+	c.JSON(http.StatusOK, User)
+}
+
+// APIv1GetComments is the GET endpoint for comments in API v1
+func APIv1GetComments(c *gin.Context) {
+	var Comments []database.Comment
+	query := database.Db.Model(&database.Comment{})
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
+	query.Find(&Comments)
+	c.JSON(http.StatusOK, gin.H{"Items": Comments, "ItemCount": total, "Limit": limit, "Offset": offset})
+}
+
+// APIv1GetComment is the GET endpoint for comment in API v1
+func APIv1GetComment(c *gin.Context) {
+	var Comment database.Comment
+	database.Db.First(&Comment, "id = ?", c.Param("id"))
+	c.JSON(http.StatusOK, Comment)
 }
 
 /// !!!-1-1-1   API OLD 1-1-1-!!! ///
@@ -375,26 +507,6 @@ func APIUpdateProduct(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"error": nil, "object": Product})
-	}
-}
-
-// APIGetProducts processes the get products endpoint
-func APIGetProducts(c *gin.Context) {
-	var Products []database.Product
-	if err := database.Db.Find(&Products).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": Products})
-	}
-}
-
-// APIGetProduct processes the get product endpoint
-func APIGetProduct(c *gin.Context) {
-	var Product database.Product
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Product).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": Product})
 	}
 }
 
@@ -449,26 +561,6 @@ func APIUpdateVersion(c *gin.Context) {
 	}
 }
 
-// APIGetVersions processes the get versions endpoint
-func APIGetVersions(c *gin.Context) {
-	var Versions []database.Version
-	if err := database.Db.Preload("Product").Find(&Versions).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": Versions})
-	}
-}
-
-// APIGetVersion processes the get version endpoint
-func APIGetVersion(c *gin.Context) {
-	var Version database.Version
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Preload("Product").Find(&Version).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": Version})
-	}
-}
-
 // APIDeleteVersion processes the delete version endpoint
 func APIDeleteVersion(c *gin.Context) {
 	if err := database.Db.Delete(database.Version{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
@@ -514,26 +606,6 @@ func APIUpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"error": nil, "object": User})
-	}
-}
-
-// APIGetUsers processes the get Users endpoint
-func APIGetUsers(c *gin.Context) {
-	var Users []database.User
-	if err := database.Db.Find(&Users).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": Users})
-	}
-}
-
-// APIGetUser processes the get user endpoint
-func APIGetUser(c *gin.Context) {
-	var User database.User
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&User).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": User})
 	}
 }
 
