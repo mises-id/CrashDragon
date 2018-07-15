@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"code.videolan.org/videolan/CrashDragon/database"
 
@@ -11,90 +12,82 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func filters(qry *gorm.DB, fields []string, values []string) *gorm.DB {
+func filters(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	query := qry
-	for i, field := range fields {
-		switch field {
-		// Common
-		case "id":
-			query = query.Where("id = ?", values[i])
-			break
-		case "created_at":
-			query = query.Where("created_at = ?", values[i])
-			break
-		case "updated_at":
-			query = query.Where("updated_at = ?", values[i])
-			break
-		case "deleted_at":
-			query = query.Where("deleted_at = ?", values[i])
-			break
-			// Crash
-		case "signature":
-			query = query.Where("signature = ?", values[i])
-			break
-		case "module":
-			query = query.Where("module = ?", values[i])
-			break
-		case "first_reported":
-			query = query.Where("first_reported = ?", values[i])
-			break
-		case "last_reported":
-			query = query.Where("last_reported = ?", values[i])
-			break
-		case "product_id":
-			query = query.Where("product_id = ?", values[i])
-			break
-		case "fixed":
-			query = query.Where("fixed = ?", values[i])
-			break
-			// Report
-		case "crash_id":
-			query = query.Where("crash_id = ?", values[i])
-			break
-		case "process_uptime":
-			query = query.Where("process_uptime = ?", values[i])
-			break
-		case "e_mail":
-			query = query.Where("e_mail = ?", values[i])
-			break
-		case "comment":
-			query = query.Where("comment = ?", values[i])
-			break
-		case "processed":
-			query = query.Where("processed = ?", values[i])
-			break
-		case "os":
-			query = query.Where("os = ?", values[i])
-			break
-		case "os_version":
-			query = query.Where("os_version = ?", values[i])
-			break
-		case "arch":
-			query = query.Where("arch = ?", values[i])
-			break
-		case "crash_location":
-			query = query.Where("crash_location = ?", values[i])
-			break
-		case "crash_path":
-			query = query.Where("crash_path = ?", values[i])
-			break
-		case "crash_line":
-			query = query.Where("crash_line = ?", values[i])
-			break
-		case "version_id":
-			query = query.Where("version_id = ?", values[i])
-			break
-		case "processing_time":
-			query = query.Where("processing_time = ?", values[i])
-			break
-			// Symfile
-		case "code":
-			query = query.Where("code = ?", values[i])
-			break
-		case "name":
-			query = query.Where("name = ?", values[i])
-			break
-		}
+	if value, exists := c.GetQuery("id"); exists {
+		query = query.Where("id = ?", value)
+	}
+	if value, exists := c.GetQuery("created_at"); exists {
+		query = query.Where("created_at = ?", value)
+	}
+	if value, exists := c.GetQuery("updated_at"); exists {
+		query = query.Where("updated_at = ?", value)
+	}
+	if value, exists := c.GetQuery("deleted_at"); exists {
+		query = query.Where("deleted_at = ?", value)
+	}
+	if value, exists := c.GetQuery("signature"); exists {
+		query = query.Where("signature = ?", value)
+	}
+	if value, exists := c.GetQuery("module"); exists {
+		query = query.Where("module = ?", value)
+	}
+	if value, exists := c.GetQuery("first_reported"); exists {
+		query = query.Where("first_reported = ?", value)
+	}
+	if value, exists := c.GetQuery("last_reported"); exists {
+		query = query.Where("last_reported = ?", value)
+	}
+	if value, exists := c.GetQuery("product_id"); exists {
+		query = query.Where("product_id = ?", value)
+	}
+	if value, exists := c.GetQuery("fixed"); exists {
+		query = query.Where("fixed = ?", value)
+	}
+	if value, exists := c.GetQuery("crash_id"); exists {
+		query = query.Where("crash_id = ?", value)
+	}
+	if value, exists := c.GetQuery("process_uptime"); exists {
+		query = query.Where("process_uptime = ?", value)
+	}
+	if value, exists := c.GetQuery("e_mail"); exists {
+		query = query.Where("e_mail = ?", value)
+	}
+	if value, exists := c.GetQuery("comment"); exists {
+		query = query.Where("comment = ?", value)
+	}
+	if value, exists := c.GetQuery("processed"); exists {
+		query = query.Where("processed = ?", value)
+	}
+	if value, exists := c.GetQuery("os"); exists {
+		query = query.Where("os = ?", value)
+	}
+	if value, exists := c.GetQuery("os_version"); exists {
+		query = query.Where("os_version = ?", value)
+	}
+	if value, exists := c.GetQuery("arch"); exists {
+		query = query.Where("arch = ?", value)
+	}
+	if value, exists := c.GetQuery("crash_location"); exists {
+		query = query.Where("crash_location = ?", value)
+	}
+	if value, exists := c.GetQuery("crash_path"); exists {
+		query = query.Where("crash_path = ?", value)
+	}
+	if value, exists := c.GetQuery("crash_line"); exists {
+		query = query.Where("crash_line = ?", value)
+	}
+	if value, exists := c.GetQuery("version_id"); exists {
+		query = query.Where("version_id = ?", value)
+	}
+	if value, exists := c.GetQuery("processing_time"); exists {
+		query = query.Where("processing_time = ?", value)
+	}
+	if value, exists := c.GetQuery("code"); exists {
+		query = query.Where("code = ?", value)
+	}
+	if value, exists := c.GetQuery("name"); exists {
+		query = query.Where("name = ?", value)
 	}
 	return query
 }
@@ -102,213 +95,203 @@ func filters(qry *gorm.DB, fields []string, values []string) *gorm.DB {
 // DSC stands for descending order direction
 const DSC = "desc"
 
-func order(qry *gorm.DB, fields []string, direction []string) *gorm.DB {
+func order(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	query := qry
-	for i, field := range fields {
-		switch field {
-		// Common
-		case "id":
-			if direction[i] == DSC {
-				query = query.Order("id DESC")
-			} else {
-				query = query.Order("id ASC")
-			}
-			break
-		case "created_at":
-			if direction[i] == DSC {
-				query = query.Order("created_at DESC")
-			} else {
-				query = query.Order("created_at ASC")
-			}
-			break
-		case "updated_at":
-			if direction[i] == DSC {
-				query = query.Order("updated_at DESC")
-			} else {
-				query = query.Order("updated_at ASC")
-			}
-			break
-		case "deleted_at":
-			if direction[i] == DSC {
-				query = query.Order("deleted_at DESC")
-			} else {
-				query = query.Order("deleted_at ASC")
-			}
-			break
-			// Crash
-		case "signature":
-			if direction[i] == DSC {
-				query = query.Order("signature DESC")
-			} else {
-				query = query.Order("signature ASC")
-			}
-			break
-		case "module":
-			if direction[i] == DSC {
-				query = query.Order("module DESC")
-			} else {
-				query = query.Order("module ASC")
-			}
-			break
-		case "first_reported":
-			if direction[i] == DSC {
-				query = query.Order("first_reported DESC")
-			} else {
-				query = query.Order("first_reported ASC")
-			}
-			break
-		case "last_reported":
-			if direction[i] == DSC {
-				query = query.Order("last_reported DESC")
-			} else {
-				query = query.Order("last_reported ASC")
-			}
-			break
-		case "product_id":
-			if direction[i] == DSC {
-				query = query.Order("product_id DESC")
-			} else {
-				query = query.Order("product_id ASC")
-			}
-			break
-		case "fixed":
-			if direction[i] == DSC {
-				query = query.Order("fixed DESC")
-			} else {
-				query = query.Order("fixed ASC")
-			}
-			break
-			// Report
-		case "crash_id":
-			if direction[i] == DSC {
-				query = query.Order("crash_id DESC")
-			} else {
-				query = query.Order("crash_id ASC")
-			}
-			break
-		case "process_uptime":
-			if direction[i] == DSC {
-				query = query.Order("process_uptime DESC")
-			} else {
-				query = query.Order("process_uptime ASC")
-			}
-			break
-		case "e_mail":
-			if direction[i] == DSC {
-				query = query.Order("e_mail DESC")
-			} else {
-				query = query.Order("e_mail ASC")
-			}
-			break
-		case "comment":
-			if direction[i] == DSC {
-				query = query.Order("comment DESC")
-			} else {
-				query = query.Order("comment ASC")
-			}
-			break
-		case "processed":
-			if direction[i] == DSC {
-				query = query.Order("processed DESC")
-			} else {
-				query = query.Order("processed ASC")
-			}
-			break
-		case "os":
-			if direction[i] == DSC {
-				query = query.Order("os DESC")
-			} else {
-				query = query.Order("os ASC")
-			}
-			break
-		case "os_version":
-			if direction[i] == DSC {
-				query = query.Order("os_version DESC")
-			} else {
-				query = query.Order("os_version ASC")
-			}
-			break
-		case "arch":
-			if direction[i] == DSC {
-				query = query.Order("arch DESC")
-			} else {
-				query = query.Order("arch ASC")
-			}
-			break
-		case "crash_location":
-			if direction[i] == DSC {
-				query = query.Order("crash_location DESC")
-			} else {
-				query = query.Order("crash_location ASC")
-			}
-			break
-		case "crash_path":
-			if direction[i] == DSC {
-				query = query.Order("crash_path DESC")
-			} else {
-				query = query.Order("crash_path ASC")
-			}
-			break
-		case "crash_line":
-			if direction[i] == DSC {
-				query = query.Order("crash_line DESC")
-			} else {
-				query = query.Order("crash_line ASC")
-			}
-			break
-		case "version_id":
-			if direction[i] == DSC {
-				query = query.Order("version_id DESC")
-			} else {
-				query = query.Order("version_id ASC")
-			}
-			break
-		case "processing_time":
-			if direction[i] == DSC {
-				query = query.Order("processing_time DESC")
-			} else {
-				query = query.Order("processing_time ASC")
-			}
-			break
-			// Symfile
-		case "code":
-			if direction[i] == DSC {
-				query = query.Order("code DESC")
-			} else {
-				query = query.Order("code ASC")
-			}
-			break
-		case "name":
-			if direction[i] == DSC {
-				query = query.Order("name DESC")
-			} else {
-				query = query.Order("name ASC")
-			}
-			break
+	if value, exists := c.GetQuery("o_id"); exists {
+		if value == DSC {
+			query = query.Order("id DESC")
+		} else {
+			query = query.Order("id ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_created_at"); exists {
+		if value == DSC {
+			query = query.Order("created_at DESC")
+		} else {
+			query = query.Order("created_at ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_updated_at"); exists {
+		if value == DSC {
+			query = query.Order("updated_at DESC")
+		} else {
+			query = query.Order("updated_at ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_deleted_at"); exists {
+		if value == DSC {
+			query = query.Order("deleted_at DESC")
+		} else {
+			query = query.Order("deleted_at ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_signature"); exists {
+		if value == DSC {
+			query = query.Order("signature DESC")
+		} else {
+			query = query.Order("signature ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_module"); exists {
+		if value == DSC {
+			query = query.Order("module DESC")
+		} else {
+			query = query.Order("module ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_first_reported"); exists {
+		if value == DSC {
+			query = query.Order("first_reported DESC")
+		} else {
+			query = query.Order("first_reported ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_last_reported"); exists {
+		if value == DSC {
+			query = query.Order("last_reported DESC")
+		} else {
+			query = query.Order("last_reported ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_product_id"); exists {
+		if value == DSC {
+			query = query.Order("product_id DESC")
+		} else {
+			query = query.Order("product_id ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_fixed"); exists {
+		if value == DSC {
+			query = query.Order("fixed DESC")
+		} else {
+			query = query.Order("fixed ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_crash_id"); exists {
+		if value == DSC {
+			query = query.Order("crash_id DESC")
+		} else {
+			query = query.Order("crash_id ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_process_uptime"); exists {
+		if value == DSC {
+			query = query.Order("process_uptime DESC")
+		} else {
+			query = query.Order("process_uptime ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_e_mail"); exists {
+		if value == DSC {
+			query = query.Order("e_mail DESC")
+		} else {
+			query = query.Order("e_mail ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_comment"); exists {
+		if value == DSC {
+			query = query.Order("comment DESC")
+		} else {
+			query = query.Order("comment ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_processed"); exists {
+		if value == DSC {
+			query = query.Order("processed DESC")
+		} else {
+			query = query.Order("processed ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_os"); exists {
+		if value == DSC {
+			query = query.Order("os DESC")
+		} else {
+			query = query.Order("os ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_os_version"); exists {
+		if value == DSC {
+			query = query.Order("os_version DESC")
+		} else {
+			query = query.Order("os_version ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_arch"); exists {
+		if value == DSC {
+			query = query.Order("arch DESC")
+		} else {
+			query = query.Order("arch ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_crash_location"); exists {
+		if value == DSC {
+			query = query.Order("crash_location DESC")
+		} else {
+			query = query.Order("crash_location ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_crash_path"); exists {
+		if value == DSC {
+			query = query.Order("crash_path DESC")
+		} else {
+			query = query.Order("crash_path ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_crash_line"); exists {
+		if value == DSC {
+			query = query.Order("crash_line DESC")
+		} else {
+			query = query.Order("crash_line ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_version_id"); exists {
+		if value == DSC {
+			query = query.Order("version_id DESC")
+		} else {
+			query = query.Order("version_id ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_processing_time"); exists {
+		if value == DSC {
+			query = query.Order("processing_time DESC")
+		} else {
+			query = query.Order("processing_time ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_code"); exists {
+		if value == DSC {
+			query = query.Order("code DESC")
+		} else {
+			query = query.Order("code ASC")
+		}
+	}
+	if value, exists := c.GetQuery("o_name"); exists {
+		if value == DSC {
+			query = query.Order("name DESC")
+		} else {
+			query = query.Order("name ASC")
 		}
 	}
 	return query
 }
 
-func paginate(qry *gorm.DB, limit string, offset string) *gorm.DB {
-	return qry.Limit(limit).Offset(offset)
+func paginate(qry *gorm.DB, c *gin.Context) (*gorm.DB, uint, int, int) {
+	var total uint
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
+	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
+	query := qry.Count(&total).Limit(limit).Offset(offset)
+	return query, total, limit, offset
 }
 
 // APIv1GetCrashes is the GET endpoint for crashes in API v1
 func APIv1GetCrashes(c *gin.Context) {
 	var Crashes []database.Crash
 	query := database.Db.Model(&database.Crash{})
-	ffields, _ := c.GetQueryArray("filter_field")
-	fvalues, _ := c.GetQueryArray("filter_value")
-	query = filters(query, ffields, fvalues)
-	ofields, _ := c.GetQueryArray("order_field")
-	odirection, _ := c.GetQueryArray("order_direction")
-	query = order(query, ofields, odirection)
-	limit := c.DefaultQuery("limit", "50")
-	offset := c.DefaultQuery("offset", "0")
-	query = paginate(query, limit, offset)
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
 	query.Find(&Crashes)
-	c.JSON(http.StatusOK, &Crashes)
+	c.JSON(http.StatusOK, gin.H{"Items": &Crashes, "ItemCount": total, "Limit": limit, "Offset": offset})
 }
 
 // APIv1GetCrash is the GET endpoint for a single crash in API v1
@@ -322,17 +305,11 @@ func APIv1GetCrash(c *gin.Context) {
 func APIv1GetReports(c *gin.Context) {
 	var Reports []database.Report
 	query := database.Db.Model(&database.Report{})
-	ffields, _ := c.GetQueryArray("filter_field")
-	fvalues, _ := c.GetQueryArray("filter_value")
-	query = filters(query, ffields, fvalues)
-	ofields, _ := c.GetQueryArray("order_field")
-	odirection, _ := c.GetQueryArray("order_direction")
-	query = order(query, ofields, odirection)
-	limit := c.DefaultQuery("limit", "50")
-	offset := c.DefaultQuery("offset", "0")
-	query = paginate(query, limit, offset)
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
 	query.Find(&Reports)
-	c.JSON(http.StatusOK, &Reports)
+	c.JSON(http.StatusOK, gin.H{"Items": &Reports, "ItemCount": total, "Limit": limit, "Offset": offset})
 }
 
 // APIv1GetReport is the GET endpoint for a single report in API v1
@@ -346,17 +323,11 @@ func APIv1GetReport(c *gin.Context) {
 func APIv1GetSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
 	query := database.Db.Model(&database.Symfile{})
-	ffields, _ := c.GetQueryArray("filter_field")
-	fvalues, _ := c.GetQueryArray("filter_value")
-	query = filters(query, ffields, fvalues)
-	ofields, _ := c.GetQueryArray("order_field")
-	odirection, _ := c.GetQueryArray("order_direction")
-	query = order(query, ofields, odirection)
-	limit := c.DefaultQuery("limit", "50")
-	offset := c.DefaultQuery("offset", "0")
-	query = paginate(query, limit, offset)
+	query = filters(query, c)
+	query = order(query, c)
+	query, total, limit, offset := paginate(query, c)
 	query.Find(&Symfiles)
-	c.JSON(http.StatusOK, &Symfiles)
+	c.JSON(http.StatusOK, gin.H{"Items": &Symfiles, "ItemCount": total, "Limit": limit, "Offset": offset})
 }
 
 // APIv1GetSymfile is the GET endpoint for a single symfile in API v1
