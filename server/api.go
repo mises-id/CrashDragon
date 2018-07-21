@@ -415,6 +415,52 @@ func APIv1GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, Product)
 }
 
+// APIv1NewProduct processes the new product endpoint
+func APIv1NewProduct(c *gin.Context) {
+	var Product database.Product
+	if err := c.BindJSON(&Product); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	Product.ID = uuid.NewV4()
+	if err := database.Db.Create(&Product).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": Product})
+	}
+}
+
+// APIv1UpdateProduct processes the update product endpoint
+func APIv1UpdateProduct(c *gin.Context) {
+	var Product database.Product
+	var Product2 database.Product
+	if err := c.BindJSON(&Product2); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Product).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	Product2.CreatedAt = Product.CreatedAt
+	Product2.ID = Product.ID
+	copier.Copy(&Product, &Product2)
+	if err := database.Db.Save(&Product).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Product})
+	}
+}
+
+// APIv1DeleteProduct processes the delete product endpoint
+func APIv1DeleteProduct(c *gin.Context) {
+	if err := database.Db.Delete(database.Product{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
+	}
+}
+
 // APIv1GetVersions is the GET endpoint for versions in API v1
 func APIv1GetVersions(c *gin.Context) {
 	var Versions []database.Version
@@ -431,6 +477,55 @@ func APIv1GetVersion(c *gin.Context) {
 	var Version database.Version
 	database.Db.First(&Version, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, Version)
+}
+
+// APIv1NewVersion processes the new product form
+func APIv1NewVersion(c *gin.Context) {
+	var Version database.Version
+	if err := c.BindJSON(&Version); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	Version.ID = uuid.NewV4()
+	if err := database.Db.Create(&Version).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": Version})
+	}
+}
+
+// APIv1UpdateVersion processes the new product form
+func APIv1UpdateVersion(c *gin.Context) {
+	var Version database.Version
+	var Version2 database.Version
+	if err := c.BindJSON(&Version2); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Version).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	Version2.CreatedAt = Version.CreatedAt
+	Version2.ID = Version.ID
+	if Version2.ID == uuid.Nil {
+		Version2.ProductID = Version.ProductID
+	}
+	copier.Copy(&Version, &Version2)
+	if err := database.Db.Save(&Version).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Version})
+	}
+}
+
+// APIv1DeleteVersion processes the delete version endpoint
+func APIv1DeleteVersion(c *gin.Context) {
+	if err := database.Db.Delete(database.Version{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
+	}
 }
 
 // APIv1GetUsers is the GET endpoint for users in API v1
@@ -451,6 +546,52 @@ func APIv1GetUser(c *gin.Context) {
 	c.JSON(http.StatusOK, User)
 }
 
+// APIv1NewUser processes the new user endpoint
+func APIv1NewUser(c *gin.Context) {
+	var User database.User
+	if err := c.BindJSON(&User); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	User.ID = uuid.NewV4()
+	if err := database.Db.Create(&User).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": User})
+	}
+}
+
+// APIv1UpdateUser processes the update user endpoint
+func APIv1UpdateUser(c *gin.Context) {
+	var User database.User
+	var User2 database.User
+	if err := c.BindJSON(&User2); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&User).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+		return
+	}
+	User2.CreatedAt = User.CreatedAt
+	User2.ID = User.ID
+	copier.Copy(&User, &User2)
+	if err := database.Db.Save(&User).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": User})
+	}
+}
+
+// APIv1DeleteUser processes the delete user endpoint
+func APIv1DeleteUser(c *gin.Context) {
+	if err := database.Db.Delete(database.User{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
+	}
+}
+
 // APIv1GetComments is the GET endpoint for comments in API v1
 func APIv1GetComments(c *gin.Context) {
 	var Comments []database.Comment
@@ -469,151 +610,48 @@ func APIv1GetComment(c *gin.Context) {
 	c.JSON(http.StatusOK, Comment)
 }
 
-/// !!!-1-1-1   API OLD 1-1-1-!!! ///
-
-// ---------------------------- Product endpoints ------------------------------
-
-// APINewProduct processes the new product endpoint
-func APINewProduct(c *gin.Context) {
-	var Product database.Product
-	if err := c.BindJSON(&Product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
+// APIv1NewComment processes the new comment endpoint
+func APIv1NewComment(c *gin.Context) {
+	var Comment database.Comment
+	if err := c.BindJSON(&Comment); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	Product.ID = uuid.NewV4()
-	if err := database.Db.Create(&Product).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
+	Comment.ID = uuid.NewV4()
+	if err := database.Db.Create(&Comment).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
-		c.JSON(http.StatusCreated, gin.H{"error": nil, "object": Product})
+		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": Comment})
 	}
 }
 
-// APIUpdateProduct processes the update product endpoint
-func APIUpdateProduct(c *gin.Context) {
-	var Product database.Product
-	var Product2 database.Product
-	if err := c.BindJSON(&Product2); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
+// APIv1UpdateComment processes the update comment endpoint
+func APIv1UpdateComment(c *gin.Context) {
+	var Comment database.Comment
+	var Comment2 database.Comment
+	if err := c.BindJSON(&Comment2); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Product).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
+	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Comment).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	Product2.CreatedAt = Product.CreatedAt
-	Product2.ID = Product.ID
-	copier.Copy(&Product, &Product2)
-	if err := database.Db.Save(&Product).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
+	Comment2.CreatedAt = Comment.CreatedAt
+	Comment2.ID = Comment.ID
+	copier.Copy(&Comment, &Comment2)
+	if err := database.Db.Save(&Comment).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
-		c.JSON(http.StatusAccepted, gin.H{"error": nil, "object": Product})
+		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Comment})
 	}
 }
 
-// APIDeleteProduct processes the delete product endpoint
-func APIDeleteProduct(c *gin.Context) {
-	if err := database.Db.Delete(database.Product{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
+// APIv1DeleteComment processes the delete comment endpoint
+func APIv1DeleteComment(c *gin.Context) {
+	if err := database.Db.Delete(database.Comment{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": nil})
-	}
-}
-
-// ---------------------------- Version endpoints ------------------------------
-
-// APINewVersion processes the new product form
-func APINewVersion(c *gin.Context) {
-	var Version database.Version
-	if err := c.BindJSON(&Version); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-		return
-	}
-	Version.ID = uuid.NewV4()
-	if err := database.Db.Create(&Version).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusCreated, gin.H{"error": nil, "object": Version})
-	}
-}
-
-// APIUpdateVersion processes the new product form
-func APIUpdateVersion(c *gin.Context) {
-	var Version database.Version
-	var Version2 database.Version
-	if err := c.BindJSON(&Version2); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-		return
-	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Version).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-		return
-	}
-	Version2.CreatedAt = Version.CreatedAt
-	Version2.ID = Version.ID
-	if Version2.ID == uuid.Nil {
-		Version2.ProductID = Version.ProductID
-	}
-	copier.Copy(&Version, &Version2)
-	if err := database.Db.Save(&Version).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusAccepted, gin.H{"error": nil, "object": Version})
-	}
-}
-
-// APIDeleteVersion processes the delete version endpoint
-func APIDeleteVersion(c *gin.Context) {
-	if err := database.Db.Delete(database.Version{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": nil})
-	}
-}
-
-// ------------------------------ User endpoints -------------------------------
-
-// APINewUser processes the new user endpoint
-func APINewUser(c *gin.Context) {
-	var User database.User
-	if err := c.BindJSON(&User); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-		return
-	}
-	User.ID = uuid.NewV4()
-	if err := database.Db.Create(&User).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusCreated, gin.H{"error": nil, "object": User})
-	}
-}
-
-// APIUpdateUser processes the update user endpoint
-func APIUpdateUser(c *gin.Context) {
-	var User database.User
-	var User2 database.User
-	if err := c.BindJSON(&User2); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-		return
-	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&User).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-		return
-	}
-	User2.CreatedAt = User.CreatedAt
-	User2.ID = User.ID
-	copier.Copy(&User, &User2)
-	if err := database.Db.Save(&User).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusAccepted, gin.H{"error": nil, "object": User})
-	}
-}
-
-// APIDeleteUser processes the delete user endpoint
-func APIDeleteUser(c *gin.Context) {
-	if err := database.Db.Delete(database.User{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "object": nil})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"error": nil, "object": nil})
+		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
 	}
 }

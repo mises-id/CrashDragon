@@ -68,29 +68,27 @@ func initRouter() *gin.Engine {
 
 	apiv1.GET("/products", APIv1GetProducts)
 	apiv1.GET("/products/:id", APIv1GetProduct)
+	apiv1.POST("/products", APIv1NewProduct)
+	apiv1.PUT("/products/:id", APIv1UpdateProduct)
+	apiv1.DELETE("/products/:id", APIv1DeleteProduct)
 
 	apiv1.GET("/versions", APIv1GetVersions)
 	apiv1.GET("/versions/:id", APIv1GetVersion)
+	apiv1.POST("/versions", APIv1NewVersion)
+	apiv1.PUT("/versions/:id", APIv1UpdateVersion)
+	apiv1.DELETE("/versions/:id", APIv1DeleteVersion)
 
 	apiv1.GET("/users", APIv1GetUsers)
 	apiv1.GET("/users/:id", APIv1GetUser)
+	apiv1.POST("/users", APIv1NewUser)
+	apiv1.PUT("/users/:id", APIv1UpdateUser)
+	apiv1.DELETE("/users/:id", APIv1DeleteUser)
 
 	apiv1.GET("/comments", APIv1GetComments)
 	apiv1.GET("/comments/:id", APIv1GetComment)
-
-	//////// OLD
-
-	apiv1.POST("/products", APINewProduct)
-	apiv1.PUT("/products/:id", APIUpdateProduct)
-	apiv1.DELETE("/products/:id", APIDeleteProduct)
-
-	apiv1.POST("/versions", APINewVersion)
-	apiv1.PUT("/versions/:id", APIUpdateVersion)
-	apiv1.DELETE("/versions/:id", APIDeleteVersion)
-
-	apiv1.POST("/users", APINewUser)
-	apiv1.PUT("/users/:id", APIUpdateUser)
-	apiv1.DELETE("/users/:id", APIDeleteUser)
+	apiv1.POST("/comments", APIv1NewComment)
+	apiv1.PUT("/comments/:id", APIv1UpdateComment)
+	apiv1.DELETE("/comments/:id", APIv1DeleteComment)
 
 	// simple-breakpad endpoints
 	router.GET("/", GetIndex)
