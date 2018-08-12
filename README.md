@@ -4,7 +4,38 @@ CrashDragon is a simple Minidump server, inspired by
 [simple-breakpad-server][]. It's meant to be used as backend for Apps that
 either use Google's [Breakpad client][bp] or its successor, [Crashpad][].
 
-## GSoC
+## GSoC 2018
+
+CrashDragon was part of the 2018 GSoC program, where the software got
+extended and various critical bugs were fixed. During the GSoC period
+the commits 5c05624c5bbc696434bf971c354b3d5be0f7901b to
+2acc4984e05ad990e067e215b98bb1f35499ec37 have been done. The overall goal
+was to make CrashDragon easier to use and to extend it's functionality.
+
+Most of the GSoC work this year was researching RESTful JSON API concepts,
+doing research about testing and performance tweaks to CrashDragon, which has
+a rather big database by now.
+
+### Bugfixes
+The following bugs have been fixed in the GSoC period:
+* #33
+* #30
+* #32
+* #31
+* #13
+* #11
+* #37
+* #38
+* #40
+* #36
+* #25
+* #39
+* #15
+
+The main changes were extensions to the UI, a JSON API and also first
+API tests have been implemented.
+
+## GSoC 2017
 
 CrashDragon was part of the 2017 GSoC program, where the software got
 implemented from ground up. This includes all commits from
