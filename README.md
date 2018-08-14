@@ -16,21 +16,23 @@ Most of the GSoC work this year was researching RESTful JSON API concepts,
 doing research about testing and performance tweaks to CrashDragon, which has
 a rather big database by now.
 
+### Features implemented
+* More statistics about OS/Version on Crash (#33)
+* Add selection of version besides selection of product (#32)
+* Button to remove one specific crash (#31)
+* Allow giving the path to the symbolicator binary in the config (#13)
+* Show some info about a Crash on a crash page (#11)
+* Add install target to makefile (#38)
+* Display when a crash was marked as fixed (#36)
+* Put symbols in separate filesystem locations (#15)
+
 ### Bugfixes
 The following bugs have been fixed in the GSoC period:
-* #33
-* #30
-* #32
-* #31
-* #13
-* #11
-* #37
-* #38
-* #40
-* #36
-* #25
-* #39
-* #15
+* Uploading symbols for non-existing version of a product should not fail (#30)
+* Crash on wrong breakpad output (#37)
+* Get correct OS crash counts when filtering for Version (#40)
+* Support graceful shutdown (#25)
+* Improve separation of the "empty stacks" based on the dll in crashed in (#39)
 
 The main changes were extensions to the UI, a JSON API and also first
 API tests have been implemented.
