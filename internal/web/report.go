@@ -198,10 +198,14 @@ func GetReport(c *gin.Context) {
 	Item.Processor = Report.Report.SystemInfo.CPUInfo + " (" + strconv.Itoa(Report.Report.SystemInfo.CPUCount) + " cores)"
 	Item.Reason = Report.Report.CrashInfo.Type
 	Item.Comment = Report.Comment
-	h := (Report.ProcessUptime / 3600000) % 24
-	m := (Report.ProcessUptime / 60000) % 60
-	s := (Report.ProcessUptime / 1000) % 60
-	Item.Uptime = fmt.Sprintf("%02d:%02d:%02d", h, m, s)
+	if Report.ProcessUptime < 5000 {
+		Item.Uptime = fmt.Sprintf("%d ms", Report.ProcessUptime)
+	} else {
+		s := Report.ProcessUptime / 1000
+		m := s / 60
+		h := m / 60
+		Item.Uptime = fmt.Sprintf("%02d:%02d:%02d", h, m % 60, s % 60)
+	}
 	Item.GitRepo = Report.Version.GitRepo
 	Item.File = Report.CrashPath
 	Item.Line = Report.CrashLine
