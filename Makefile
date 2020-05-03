@@ -62,7 +62,7 @@ web/assets/stylesheets/app.css:
 
 build/bin/minidump_stackwalk:
 	cd third_party/breakpad && ./autogen.sh 
-	cd third_party/breakpad && ./configure --libdir="$(CURDIR)/build/lib" --prefix="$(CURDIR)/build"
+	cd third_party/breakpad && ./configure --libdir="$(CURDIR)/build/lib" --prefix="$(CURDIR)/build" CXXFLAGS="-Wno-error" CFLAGS="-Wno-error"
 	cd third_party/breakpad && $(MAKE) install
 
 clean:
