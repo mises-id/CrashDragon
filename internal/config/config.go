@@ -56,8 +56,8 @@ func GetConfig(path string) error {
 	C.BindAddress = "0.0.0.0:8080"
 	C.BindSocket = "/var/run/crashdragon/crashdragon.sock"
 	C.ContentDirectory = "../share/crashdragon/files"
-	C.TemplatesDirectory = "../share/crashdragon/templates"
-	C.AssetsDirectory = "../share/crashdragon/assets"
+	C.TemplatesDirectory = "./web/templates"
+	C.AssetsDirectory = "./web/assets"
 	C.SymbolicatorPath = "./minidump_stackwalk"
 
 	var cerr error

@@ -7,14 +7,14 @@ import (
 	"strings"
 	"sync"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 	uuid "github.com/satori/go.uuid"
 )
 
-const VER_1_2_0 = "1.2.0"
-const VER_1_2_1 = "1.2.1"
-const CUR_VER = VER_1_2_1
+const ver1_2_0 = "1.2.0"
+const ver1_2_1 = "1.2.1"
+const curVer = ver1_2_1
 
 var wg sync.WaitGroup
 
@@ -31,18 +31,18 @@ func RunMigrations() {
 	var Migration database.Migration
 	database.Db.First(&Migration, "component = 'database'")
 	switch Migration.Version {
-	case VER_1_2_1:
+	case ver1_2_1:
 		log.Printf("Database migration is version 1.2.1")
 		break
-	case VER_1_2_0:
+	case ver1_2_0:
 		log.Print("Database migration is version 1.2.0")
 		var Migration2 database.Migration
 		database.Db.First(&Migration2, "component = 'crashdragon'")
-		if Migration2.Version != VER_1_2_0 {
+		if Migration2.Version != ver1_2_0 {
 			log.Print("Running crash migration, please wait...")
 			//migrateCrashes() // Very slow
 			migrateSymfiles()
-			Migration2.Version = VER_1_2_0
+			Migration2.Version = ver1_2_0
 			database.Db.Save(&Migration2)
 			log.Print("Crashes migrated!")
 		} else {
@@ -50,11 +50,11 @@ func RunMigrations() {
 		}
 		Migration2 = database.Migration{}
 		database.Db.First(&Migration2, "component = 'database'")
-		Migration2.Version = VER_1_2_1
+		Migration2.Version = ver1_2_1
 		database.Db.Save(&Migration2)
 		Migration2 = database.Migration{}
 		database.Db.First(&Migration2, "component = 'crashdragon'")
-		Migration2.Version = VER_1_2_1
+		Migration2.Version = ver1_2_1
 		database.Db.Save(&Migration2)
 		break
 	default:
@@ -171,9 +171,9 @@ func dbMigrations() {
 	var cnt uint
 	database.Db.Find(&Migrations).Count(&cnt)
 	if cnt != 2 {
-		var cd = database.Migration{ID: uuid.NewV4(), Component: "crashdragon", Version: CUR_VER}
+		var cd = database.Migration{ID: uuid.NewV4(), Component: "crashdragon", Version: curVer}
 		database.Db.Create(&cd)
-		var db = database.Migration{ID: uuid.NewV4(), Component: "database", Version: CUR_VER}
+		var db = database.Migration{ID: uuid.NewV4(), Component: "database", Version: curVer}
 		database.Db.Create(&db)
 	}
 }

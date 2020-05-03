@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )

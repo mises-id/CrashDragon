@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"

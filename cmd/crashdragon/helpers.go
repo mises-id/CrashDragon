@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 )

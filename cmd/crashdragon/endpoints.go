@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
-	"code.videolan.org/videolan/CrashDragon/processor"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
+	"code.videolan.org/videolan/CrashDragon/internal/processor"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 )

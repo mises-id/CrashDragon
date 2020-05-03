@@ -1,6 +1,8 @@
-build/
-bin/
-vendor/*/
+build/lib
+build/share
+build/bin
+build/include
+
 *.css
 
 # Created by https://www.gitignore.io/api/go,macos,linux,windows

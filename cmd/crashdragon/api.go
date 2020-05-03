@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"

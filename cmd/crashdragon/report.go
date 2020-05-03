@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
-	"code.videolan.org/videolan/CrashDragon/processor"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
+	"code.videolan.org/videolan/CrashDragon/internal/processor"
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
