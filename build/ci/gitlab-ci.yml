@@ -1,0 +1,42 @@
+default:
+  image: registry.videolan.org/videolan-alpine-golang:20200505114738
+  tags: [amd64, docker]
+
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
+build-go:
+  stage: build
+  extends: .go-cache
+  script:
+    - go build -i -v ./cmd/crashdragon
+
+build-all:
+  stage: build
+  extends: .go-cache
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  script:
+    - make
+  # Allow failur until Breakpad build issues are fixed
+  allow_failure: true
+
+test:
+  stage: test
+  extends: .go-cache
+  script:
+    - go test -cover $(go list ./... | grep -v ./third_party) -v -coverprofile=coverage.out
+    - go tool cover -func=coverage.out
+
+lint:
+  stage: test
+  script:
+    # Forcefully remove this as it breaks the linter,
+    # ignoring currently does not work reliably either with the linter.
+    - rm -rf third_party/breakpad
+    - golangci-lint run
+  allow_failure: true
