@@ -358,7 +358,7 @@ func APIv1GetCrashes(c *gin.Context) {
 func APIv1GetCrash(c *gin.Context) {
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Crash)
+	c.JSON(http.StatusOK, gin.H{"Item": Crash, "Error": nil})
 }
 
 // APIv1GetReports is the GET endpoint for reports in API v1
@@ -376,7 +376,7 @@ func APIv1GetReports(c *gin.Context) {
 func APIv1GetReport(c *gin.Context) {
 	var Report database.Report
 	database.Db.First(&Report, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Report)
+	c.JSON(http.StatusOK, gin.H{"Item": Report, "Error": nil})
 }
 
 // APIv1GetSymfiles is the GET endpoint for symfiles in API v1
@@ -394,7 +394,7 @@ func APIv1GetSymfiles(c *gin.Context) {
 func APIv1GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.Db.First(&Symfile, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Symfile)
+	c.JSON(http.StatusOK, gin.H{"Item": Symfile, "Error": nil})
 }
 
 // APIv1GetProducts is the GET endpoint for products in API v1
@@ -412,7 +412,7 @@ func APIv1GetProducts(c *gin.Context) {
 func APIv1GetProduct(c *gin.Context) {
 	var Product database.Product
 	database.Db.First(&Product, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Product)
+	c.JSON(http.StatusOK, gin.H{"Item": Product, "Error": nil})
 }
 
 // APIv1NewProduct processes the new product endpoint
@@ -476,7 +476,7 @@ func APIv1GetVersions(c *gin.Context) {
 func APIv1GetVersion(c *gin.Context) {
 	var Version database.Version
 	database.Db.First(&Version, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Version)
+	c.JSON(http.StatusOK, gin.H{"Item": Version, "Error": nil})
 }
 
 // APIv1NewVersion processes the new product form
@@ -543,7 +543,7 @@ func APIv1GetUsers(c *gin.Context) {
 func APIv1GetUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, User)
+	c.JSON(http.StatusOK, gin.H{"Item": User, "Error": nil})
 }
 
 // APIv1NewUser processes the new user endpoint
@@ -607,7 +607,7 @@ func APIv1GetComments(c *gin.Context) {
 func APIv1GetComment(c *gin.Context) {
 	var Comment database.Comment
 	database.Db.First(&Comment, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Comment)
+	c.JSON(http.StatusOK, gin.H{"Item": Comment, "Error": nil})
 }
 
 // APIv1NewComment processes the new comment endpoint
