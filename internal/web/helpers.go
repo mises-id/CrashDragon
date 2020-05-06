@@ -1,8 +1,7 @@
-package main
+package web
 
 import (
 	"encoding/base64"
-	"errors"
 	"net/http"
 	"strings"
 
@@ -13,17 +12,12 @@ import (
 
 // Auth middleware which checks the Authorization header field and looks up the user in the database
 func Auth(c *gin.Context) {
-	var auth string
 	var user string
-	// FIXME: Change the Header workaround to use the native gin function once it is stable
-	//c.GetHeader("Authorization") //gin gonic develop branch
-	// Workaround
-	if auths, _ := c.Request.Header["Authorization"]; len(auths) > 0 {
-		auth = auths[0]
-		// End of workaround
-	} else {
+	auth := c.GetHeader("Authorization")
+	if auth == "" {
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
 		c.AbortWithStatus(http.StatusUnauthorized)
+		return
 	}
 	if strings.HasPrefix(auth, "Basic ") {
 		base := strings.Split(auth, " ")[1]
@@ -31,6 +25,7 @@ func Auth(c *gin.Context) {
 		user = strings.Split(string(userpass), ":")[0]
 	}
 	if user == "" {
+		// TODO: c.Header()
 		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
@@ -47,42 +42,46 @@ func Auth(c *gin.Context) {
 	c.Next()
 }
 
-//IsAdmin checks if the currently logged-in user is an admin
+// IsAdmin checks if the currently logged-in user is an admin
 func IsAdmin(c *gin.Context) {
 	user := c.MustGet("user").(database.User)
 	if user.IsAdmin {
 		c.Next()
 		return
 	}
-	c.AbortWithError(http.StatusUnauthorized, errors.New("this requires admin privileges"))
+	c.AbortWithStatus(http.StatusUnauthorized)
 }
 
-//GetProductCookie returns the content of the currently selected product cookie
-func GetProductCookie(c *gin.Context) (bool, *database.Product) {
+// GetCookies returns the selected product and version (or nil if none)
+func GetCookies(c *gin.Context) (*database.Product, *database.Version) {
+	var prod *database.Product
+	var ver *database.Version
 	slug, err := c.Cookie("product")
 	if err != nil || slug == "" || slug == "all" {
 		c.SetCookie("product", "all", 0, "/", "", false, false)
-		return true, nil
+		prod = nil
+	} else {
+		var Product database.Product
+		if err = database.Db.First(&Product, "slug = ?", slug).Error; err != nil {
+			c.SetCookie("product", "all", 0, "/", "", false, false)
+			prod = nil
+		} else {
+			prod = &Product
+		}
 	}
-	var Product database.Product
-	if err := database.Db.First(&Product, "slug = ?", slug).Error; err != nil {
-		c.SetCookie("product", "all", 0, "/", "", false, false)
-		return true, nil
-	}
-	return false, &Product
-}
 
-//GetVersionCookie returns the content of the currently selected version cookie
-func GetVersionCookie(c *gin.Context) (bool, *database.Version) {
-	slug, err := c.Cookie("version")
+	slug, err = c.Cookie("version")
 	if err != nil || slug == "" || slug == "all" {
 		c.SetCookie("version", "all", 0, "/", "", false, false)
-		return true, nil
+		ver = nil
+	} else {
+		var Version database.Version
+		if err = database.Db.First(&Version, "slug = ?", slug).Error; err != nil {
+			c.SetCookie("version", "all", 0, "/", "", false, false)
+			ver = nil
+		} else {
+			ver = &Version
+		}
 	}
-	var Version database.Version
-	if err := database.Db.First(&Version, "slug = ?", slug).Error; err != nil {
-		c.SetCookie("version", "all", 0, "/", "", false, false)
-		return true, nil
-	}
-	return false, &Version
+	return prod, ver
 }

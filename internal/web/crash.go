@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"html/template"
@@ -39,6 +39,7 @@ func PostCrashComment(c *gin.Context) {
 	Comment.UserID = User.ID
 	Comment.ID = uuid.NewV4()
 	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
+	//#nosec G203
 	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
 	if len(strings.TrimSpace(string(Comment.Content))) == 0 {
 		c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String())
@@ -54,12 +55,11 @@ func PostCrashComment(c *gin.Context) {
 func GetCrashes(c *gin.Context) {
 	var Crashes []database.Crash
 	query := database.Db
-	all, prod := GetProductCookie(c)
-	if !all {
+	prod, ver := GetCookies(c)
+	if prod != nil {
 		query = query.Where("product_id = ?", prod.ID)
 	}
-	all, ver := GetVersionCookie(c)
-	if !all {
+	if ver != nil {
 		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ?", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID).QueryExpr())
 		query = query.Where("id in (?)", database.Db.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
 	} else {
@@ -98,8 +98,10 @@ func GetCrashes(c *gin.Context) {
 }
 
 // GetCrash returns details of a crash
+// TODO: Cursor-based pagination
+//nolint:funlen
 func GetCrash(c *gin.Context) {
-	all, ver := GetVersionCookie(c)
+	_, ver := GetCookies(c)
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -108,12 +110,12 @@ func GetCrash(c *gin.Context) {
 	}
 	var count int
 	query := database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID)
-	if !all {
+	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
 	query.Count(&count)
 	query = database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC")
-	if !all {
+	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
 	query.Offset(offset).Limit(50).Related(&Crash.Reports)
@@ -177,11 +179,11 @@ func MarkCrashFixed(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/crashes/"+c.Param("id"))
 }
 
-func addHit(m map[string]map[string]int, Os, Version string, Count int) {
-	mm, ok := m[Os]
+func addHit(m map[string]map[string]int, os, version string, count int) {
+	mm, ok := m[os]
 	if !ok {
 		mm = make(map[string]int)
-		m[Os] = mm
+		m[os] = mm
 	}
-	mm[Version] = Count
+	mm[version] = count
 }

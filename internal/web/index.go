@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"crypto/sha256"
@@ -25,6 +25,7 @@ type chartData struct {
 }
 
 // GetIndex returns index page with stats
+//nolint:gocognit,funlen
 func GetIndex(c *gin.Context) {
 	type statResult struct {
 		Date  string
@@ -47,6 +48,7 @@ func GetIndex(c *gin.Context) {
 	for _, row := range DateResult {
 		VersionData.Labels = append(VersionData.Labels, row.Result)
 	}
+	//nolint:dupl
 	for _, row := range VersionResult {
 		var Version database.Version
 		database.Db.First(&Version, "id = ?", row.Result)
@@ -65,11 +67,11 @@ func GetIndex(c *gin.Context) {
 			for _, row := range VersionStatResult {
 				if row.Date == date && row.Field == version.ID {
 					versionAndDateInRow = true
-					VersionData.Datasets[i].Data = append(version.Data, row.Count)
+					VersionData.Datasets[i].Data = append(VersionData.Datasets[i].Data, row.Count)
 				}
 			}
 			if !versionAndDateInRow {
-				VersionData.Datasets[i].Data = append(version.Data, 0)
+				VersionData.Datasets[i].Data = append(VersionData.Datasets[i].Data, 0)
 			}
 		}
 	}
@@ -83,6 +85,7 @@ func GetIndex(c *gin.Context) {
 	for _, row := range DateResult {
 		ProductData.Labels = append(ProductData.Labels, row.Result)
 	}
+	//nolint:dupl
 	for _, row := range ProductResult {
 		var Product database.Product
 		database.Db.First(&Product, "id = ?", row.Result)
@@ -101,11 +104,11 @@ func GetIndex(c *gin.Context) {
 			for _, row := range ProductStatResult {
 				if row.Date == date && row.Field == product.ID {
 					productAndDateInRow = true
-					ProductData.Datasets[i].Data = append(product.Data, row.Count)
+					ProductData.Datasets[i].Data = append(ProductData.Datasets[i].Data, row.Count)
 				}
 			}
 			if !productAndDateInRow {
-				ProductData.Datasets[i].Data = append(product.Data, 0)
+				ProductData.Datasets[i].Data = append(ProductData.Datasets[i].Data, 0)
 			}
 		}
 	}
@@ -134,11 +137,11 @@ func GetIndex(c *gin.Context) {
 			for _, row := range PlatformStatResult {
 				if row.Date == date && row.Field == platform.Label {
 					platformAndDateInRow = true
-					PlatformData.Datasets[i].Data = append(platform.Data, row.Count)
+					PlatformData.Datasets[i].Data = append(PlatformData.Datasets[i].Data, row.Count)
 				}
 			}
 			if !platformAndDateInRow {
-				PlatformData.Datasets[i].Data = append(platform.Data, 0)
+				PlatformData.Datasets[i].Data = append(PlatformData.Datasets[i].Data, 0)
 			}
 		}
 	}

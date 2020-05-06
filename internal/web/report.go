@@ -1,10 +1,10 @@
-package main
+package web
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -49,6 +49,7 @@ func PostReportComment(c *gin.Context) {
 	Comment.UserID = User.ID
 	Comment.ID = uuid.NewV4()
 	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))
+	//#nosec G203
 	Comment.Content = template.HTML(bluemonday.UGCPolicy().SanitizeBytes(unsafe))
 	if len(strings.TrimSpace(string(Comment.Content))) == 0 {
 		c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
@@ -60,6 +61,7 @@ func PostReportComment(c *gin.Context) {
 }
 
 // GetReports returns crashreports
+//nolint:funlen,gocognit
 func GetReports(c *gin.Context) {
 	var Reports []database.Report
 	var List []struct {
@@ -77,12 +79,11 @@ func GetReports(c *gin.Context) {
 		Line      int
 	}
 	query := database.Db
-	all, prod := GetProductCookie(c)
-	if !all {
+	prod, ver := GetCookies(c)
+	if prod != nil {
 		query = query.Where("product_id = ?", prod.ID)
 	}
-	all, ver := GetVersionCookie(c)
-	if !all {
+	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
 	if sig := c.Query("signature"); sig != "" {
@@ -95,11 +96,12 @@ func GetReports(c *gin.Context) {
 		platforms := strings.Split(platform, ",")
 		var filter []string
 		for _, os := range platforms {
-			if os == "Mac OS X" {
+			switch os {
+			case "Mac OS X":
 				filter = append(filter, "'Mac OS X'")
-			} else if os == "Windows" {
+			case "Windows":
 				filter = append(filter, "'Windows'")
-			} else if os == "Linux" {
+			case "Linux":
 				filter = append(filter, "'Linux'")
 			}
 		}
@@ -171,6 +173,7 @@ func GetReports(c *gin.Context) {
 }
 
 // GetReport returns details of crashreport
+//nolint:funlen
 func GetReport(c *gin.Context) {
 	var Report database.Report
 	database.Db.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
@@ -238,10 +241,16 @@ func GetReport(c *gin.Context) {
 // DeleteReport deletes a crashreport
 func DeleteReport(c *gin.Context) {
 	filepth := filepath.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
-	os.Remove(filepath.Join(filepth, c.Param("id")+".dmp"))
+	err := os.Remove(filepath.Join(filepth, c.Param("id")+".dmp"))
+	if err != nil {
+		log.Printf("Error removing minidump: %+v", err)
+	}
 
 	filepth = filepath.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
-	os.Remove(filepath.Join(filepth, c.Param("id")+".txt"))
+	err = os.Remove(filepath.Join(filepth, c.Param("id")+".txt"))
+	if err != nil {
+		log.Printf("Error removing txt: %+v", err)
+	}
 
 	database.Db.Unscoped().Delete(&database.Comment{}, "report_id = ?", c.Param("id"))
 	database.Db.Unscoped().Delete(&database.Report{}, "id = ?", c.Param("id"))
@@ -250,25 +259,30 @@ func DeleteReport(c *gin.Context) {
 }
 
 // GetReportFile returns minidump file of crashreport
+//nolint:funlen
 func GetReportFile(c *gin.Context) {
 	var Report database.Report
 	if err := database.Db.Where("id = ?", c.Param("id")).First(&Report).Error; err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
+		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
 	name := c.Param("name")
 	switch name {
 	case "upload_file_minidump":
-		file := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp")
-		f, err := os.Open(file)
+		f, err := os.Open(filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp"))
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-		defer f.Close()
+		defer func() {
+			err = f.Close()
+			if err != nil {
+				log.Printf("Error closing the minidump file: %+v", err)
+			}
+		}()
 		data, err := ioutil.ReadAll(f)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
 		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".dmp\"")
@@ -279,26 +293,29 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		file := filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt")
-		f, err := os.Open(file)
+		f, err := os.Open(filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt"))
 		if os.IsNotExist(err) {
 			processor.ProcessText(&Report)
-			f, err = os.Open(file)
+			f, err = os.Open(filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt"))
 		}
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithStatus(http.StatusInternalServerError)
 			return
 		}
-		defer f.Close()
 		data, err := ioutil.ReadAll(f)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			_ = f.Close()
 			return
 		}
 		c.Data(http.StatusOK, "text/plain", data)
+		err = f.Close()
+		if err != nil {
+			log.Printf("Error closing the txt file: %+v", err)
+		}
 		return
 	default:
-		c.AbortWithError(http.StatusBadRequest, errors.New(name+" is a unknwon file"))
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 }

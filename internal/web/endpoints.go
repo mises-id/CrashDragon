@@ -1,9 +1,9 @@
-package main
+package web
 
 import (
 	"bufio"
-	"errors"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -18,20 +18,26 @@ import (
 )
 
 // PostReports processes crashreport
+//nolint:funlen
 func PostReports(c *gin.Context) {
 	file, _, err := c.Request.FormFile("upload_file_minidump")
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Printf("Error closing Minidump file after upload: %+v", err)
+		}
+	}()
 	var Report database.Report
 	Report.Processed = false
 	Report.ID = uuid.NewV4()
 
 	var Product database.Product
 	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("the specified prod does not exist"))
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Report.ProductID = Product.ID
@@ -39,7 +45,7 @@ func PostReports(c *gin.Context) {
 
 	var Version database.Version
 	if err = database.Db.First(&Version, "slug = ? AND product_id = ? AND ignore = false", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("the specified ver does not exist or is ignored"))
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Report.VersionID = Version.ID
@@ -49,28 +55,34 @@ func PostReports(c *gin.Context) {
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
 	filepth := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
-	err = os.MkdirAll(filepth, 0755)
+	err = os.MkdirAll(filepth, 0750)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	f, err := os.Create(filepath.Join(filepth, Report.ID.String()+".dmp"))
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	defer f.Close()
 	_, err = io.Copy(f, file)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		err = f.Close()
+		if err != nil {
+			log.Printf("Error closing the local minidump: %+v", err)
+		}
 		return
+	}
+	err = f.Close()
+	if err != nil {
+		log.Printf("Error closing the local minidump: %+v", err)
 	}
 	processor.AddToQueue(Report)
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
 		"object": Report.ID,
 	})
-	return
 }
 
 // ReprocessReport processes the Crashreport again with current symbols
@@ -80,21 +92,26 @@ func ReprocessReport(c *gin.Context) {
 	processor.Reprocess(Report)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
-	return
 }
 
 // PostSymfiles processes symfile
+//nolint:funlen,gocognit
 func PostSymfiles(c *gin.Context) {
 	file, _, err := c.Request.FormFile("symfile")
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			log.Printf("Error closing Symfile after upload: %+v", err)
+		}
+	}()
 	var Symfile database.Symfile
 	var Product database.Product
 	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, errors.New("the specified prod does not exist"))
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Symfile.ProductID = Product.ID
@@ -114,16 +131,16 @@ func PostSymfiles(c *gin.Context) {
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 	if err = scanner.Err(); err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
 	parts := strings.Split(scanner.Text(), " ")
 	if parts[0] != "MODULE" {
-		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file does not start with 'MODULE'"))
+		c.AbortWithStatus(http.StatusUnprocessableEntity)
 		return
 	}
 	if parts[3] == "000000000000000000000000000000000" {
-		c.AbortWithError(http.StatusUnprocessableEntity, errors.New("sym-file has invalid code"))
+		c.AbortWithStatus(http.StatusUnprocessableEntity)
 		return
 	}
 	updated := true
@@ -136,7 +153,7 @@ func PostSymfiles(c *gin.Context) {
 			err = os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
 		}
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			c.AbortWithStatus(http.StatusInternalServerError)
 			database.Db.Delete(&Symfile)
 			return
 		}
@@ -146,31 +163,44 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.Code = parts[3]
 	Symfile.Name = parts[4]
 	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
-	err = os.MkdirAll(filepth, 0755)
+	err = os.MkdirAll(filepth, 0750)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		database.Db.Delete(&Symfile)
 		return
 	}
 	f, err := os.Create(filepath.Join(filepth, Symfile.Name+".sym"))
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		database.Db.Delete(&Symfile)
 		return
 	}
-	defer f.Close()
-	file.Seek(0, 0)
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		log.Printf("Error seeking to the beginning: %+v", err)
+	}
 	_, err = io.Copy(f, file)
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
+		c.AbortWithStatus(http.StatusInternalServerError)
 		database.Db.Delete(&Symfile)
+		err = f.Close()
+		if err != nil {
+			log.Printf("Error closing the file: %+v", err)
+		}
 		return
+	}
+	err = f.Close()
+	if err != nil {
+		log.Printf("Error closing the file: %+v", err)
 	}
 	if updated {
 		if err = database.Db.Save(&Symfile).Error; err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
+			c.AbortWithStatus(http.StatusBadRequest)
 			database.Db.Delete(&Symfile)
-			os.Remove(f.Name())
+			err = os.Remove(f.Name())
+			if err != nil {
+				log.Printf("Error removing the file: %+v", err)
+			}
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
@@ -180,13 +210,15 @@ func PostSymfiles(c *gin.Context) {
 		return
 	}
 	if err = database.Db.Create(&Symfile).Error; err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		os.Remove(f.Name())
+		c.AbortWithStatus(http.StatusBadRequest)
+		err = os.Remove(f.Name())
+		if err != nil {
+			log.Printf("Error removing the file: %+v", err)
+		}
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{
 		"status": http.StatusCreated,
 		"object": Symfile,
 	})
-	return
 }

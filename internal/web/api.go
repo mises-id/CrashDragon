@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"net/http"
@@ -12,6 +12,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+//nolint:gocognit,funlen
 func filters(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	query := qry
 	if value, exists := c.GetQuery("id"); exists {
@@ -113,6 +114,7 @@ func filters(qry *gorm.DB, c *gin.Context) *gorm.DB {
 // DSC stands for descending order direction
 const DSC = "desc"
 
+//nolint:gocognit,funlen
 func order(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	query := qry
 	if value, exists := c.GetQuery("o_id"); exists {
@@ -416,6 +418,7 @@ func APIv1GetProduct(c *gin.Context) {
 }
 
 // APIv1NewProduct processes the new product endpoint
+//nolint:dupl
 func APIv1NewProduct(c *gin.Context) {
 	var Product database.Product
 	if err := c.BindJSON(&Product); err != nil {
@@ -444,8 +447,12 @@ func APIv1UpdateProduct(c *gin.Context) {
 	}
 	Product2.CreatedAt = Product.CreatedAt
 	Product2.ID = Product.ID
-	copier.Copy(&Product, &Product2)
-	if err := database.Db.Save(&Product).Error; err != nil {
+	err := copier.Copy(&Product, &Product2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&Product).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Product})
@@ -480,6 +487,7 @@ func APIv1GetVersion(c *gin.Context) {
 }
 
 // APIv1NewVersion processes the new product form
+//nolint:dupl
 func APIv1NewVersion(c *gin.Context) {
 	var Version database.Version
 	if err := c.BindJSON(&Version); err != nil {
@@ -511,8 +519,12 @@ func APIv1UpdateVersion(c *gin.Context) {
 	if Version2.ID == uuid.Nil {
 		Version2.ProductID = Version.ProductID
 	}
-	copier.Copy(&Version, &Version2)
-	if err := database.Db.Save(&Version).Error; err != nil {
+	err := copier.Copy(&Version, &Version2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&Version).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Version})
@@ -547,6 +559,7 @@ func APIv1GetUser(c *gin.Context) {
 }
 
 // APIv1NewUser processes the new user endpoint
+//nolint:dupl
 func APIv1NewUser(c *gin.Context) {
 	var User database.User
 	if err := c.BindJSON(&User); err != nil {
@@ -575,8 +588,12 @@ func APIv1UpdateUser(c *gin.Context) {
 	}
 	User2.CreatedAt = User.CreatedAt
 	User2.ID = User.ID
-	copier.Copy(&User, &User2)
-	if err := database.Db.Save(&User).Error; err != nil {
+	err := copier.Copy(&User, &User2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&User).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": User})
@@ -611,6 +628,7 @@ func APIv1GetComment(c *gin.Context) {
 }
 
 // APIv1NewComment processes the new comment endpoint
+//nolint:dupl
 func APIv1NewComment(c *gin.Context) {
 	var Comment database.Comment
 	if err := c.BindJSON(&Comment); err != nil {
@@ -639,8 +657,12 @@ func APIv1UpdateComment(c *gin.Context) {
 	}
 	Comment2.CreatedAt = Comment.CreatedAt
 	Comment2.ID = Comment.ID
-	copier.Copy(&Comment, &Comment2)
-	if err := database.Db.Save(&Comment).Error; err != nil {
+	err := copier.Copy(&Comment, &Comment2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&Comment).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Comment})
