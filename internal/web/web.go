@@ -103,7 +103,8 @@ func initBreakpadRoutes(breakpad *gin.RouterGroup) {
 	breakpad.POST("/reports", PostReports)
 }
 
-func init() {
+// Init initzializes the router
+func Init() {
 	router = gin.Default()
 	srv = &http.Server{
 		Handler: router,

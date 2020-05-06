@@ -31,6 +31,7 @@ func main() {
 
 	migrations.RunMigrations()
 	processor.StartQueue()
+	web.Init()
 	web.Run()
 
 	// Wait for SIGINT
