@@ -1,3 +1,4 @@
+// Package database provides the database functions and models for CrashDragon
 package database
 
 import (

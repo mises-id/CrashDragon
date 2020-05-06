@@ -34,7 +34,7 @@ func main() {
 	web.Run()
 
 	// Wait for SIGINT
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
 
@@ -46,7 +46,12 @@ func main() {
 	}
 
 	log.Println("Queue empty, closing database...")
-	database.Db.Close()
+	err = database.Db.Close()
+	if err != nil {
+		log.Printf("Error closing the database!")
+		os.Exit(1)
+		return
+	}
 
 	log.Println("Closed database, good bye!")
 	os.Exit(0)

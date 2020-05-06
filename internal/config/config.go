@@ -1,3 +1,4 @@
+// Package config provides the config for CrashDragon
 package config
 
 import (
@@ -40,11 +41,11 @@ func WriteConfig(path string) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(path), 0775)
+	err = os.MkdirAll(filepath.Dir(path), 0750)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
+	err = ioutil.WriteFile(path, buf.Bytes(), 0600)
 	return err
 }
 
