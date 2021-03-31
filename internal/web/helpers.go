@@ -15,7 +15,7 @@ func Auth(c *gin.Context) {
 	var user string
 	auth := c.GetHeader("Authorization")
 	if auth == "" {
-		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
+		c.Header("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
@@ -25,18 +25,17 @@ func Auth(c *gin.Context) {
 		user = strings.Split(string(userpass), ":")[0]
 	}
 	if user == "" {
-		// TODO: c.Header()
-		c.Writer.Header().Set("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
+		c.Header("WWW-Authenticate", "Basic realm=\"CrashDragon\"")
 		c.AbortWithStatus(http.StatusUnauthorized)
 		return
 	}
 	var User database.User
-	database.Db.FirstOrInit(&User, "name = ?", user)
+	database.DB.FirstOrInit(&User, "name = ?", user)
 	if User.ID == uuid.Nil {
 		User.ID = uuid.NewV4()
 		User.IsAdmin = false
 		User.Name = user
-		database.Db.Create(&User)
+		database.DB.Create(&User)
 	}
 	c.Set("user", User)
 	c.Next()
@@ -62,7 +61,7 @@ func GetCookies(c *gin.Context) (*database.Product, *database.Version) {
 		prod = nil
 	} else {
 		var Product database.Product
-		if err = database.Db.First(&Product, "slug = ?", slug).Error; err != nil {
+		if err = database.DB.First(&Product, "slug = ?", slug).Error; err != nil {
 			c.SetCookie("product", "all", 0, "/", "", false, false)
 			prod = nil
 		} else {
@@ -76,7 +75,7 @@ func GetCookies(c *gin.Context) (*database.Product, *database.Version) {
 		ver = nil
 	} else {
 		var Version database.Version
-		if err = database.Db.First(&Version, "slug = ?", slug).Error; err != nil {
+		if err = database.DB.First(&Version, "slug = ?", slug).Error; err != nil {
 			c.SetCookie("version", "all", 0, "/", "", false, false)
 			ver = nil
 		} else {

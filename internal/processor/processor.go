@@ -117,7 +117,7 @@ func processReport(report database.Report, reprocess bool) {
 	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", report.Product.Slug, report.Version.Slug)
 
 	dataJSON, err := runProcessor(file, symbolsPath, "json")
-	tx := database.Db.Begin()
+	tx := database.DB.Begin()
 	if err != nil {
 		err = os.Remove(file)
 		if err != nil {
@@ -205,11 +205,11 @@ func processReport(report database.Report, reprocess bool) {
 
 func processCrash(tx *gorm.DB, report database.Report, reprocess bool, crash *database.Crash) {
 	if reprocess && report.CrashID != uuid.Nil {
-		database.Db.First(&crash, "id = ?", report.CrashID)
+		database.DB.First(&crash, "id = ?", report.CrashID)
 		crash.Signature = report.Signature
 		crash.Module = report.Module
 	} else {
-		database.Db.FirstOrInit(&crash, "signature = ? AND module = ?", report.Signature, report.Module)
+		database.DB.FirstOrInit(&crash, "signature = ? AND module = ?", report.Signature, report.Module)
 	}
 
 	if crash.ID == uuid.Nil {

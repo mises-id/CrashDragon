@@ -29,7 +29,7 @@ type commentcrashes struct {
 func PostCrashComment(c *gin.Context) {
 	User := c.MustGet("user").(database.User)
 	var Crash database.Crash
-	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	database.DB.First(&Crash, "id = ?", c.Param("id"))
 	if Crash.ID == uuid.Nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -46,23 +46,23 @@ func PostCrashComment(c *gin.Context) {
 	}
 	Comment.ReportID = uuid.Nil
 	Comment.CrashID = Crash.ID
-	database.Db.Create(&Comment)
+	database.DB.Create(&Comment)
 	c.Redirect(http.StatusMovedPermanently, "/crashes/"+Crash.ID.String()+"#comment-"+Comment.ID.String())
 }
 
 // GetCrashes returns crashes
 func GetCrashes(c *gin.Context) {
 	var Crashes []database.Crash
-	query := database.Db
+	query := database.DB
 	prod, ver := GetCookies(c)
 	if prod != nil {
 		query = query.Where("product_id = ?", prod.ID)
 	}
 	if ver != nil {
-		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ?", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID).QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID).QueryExpr())
-		query = query.Where("id in (?)", database.Db.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.DB.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ?", ver.ID).QueryExpr(), database.DB.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID).QueryExpr(), database.DB.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID).QueryExpr())
+		query = query.Where("id in (?)", database.DB.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
 	} else {
-		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id").QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Windows NT'").QueryExpr(), database.Db.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Mac OS X'").QueryExpr())
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.DB.Table("reports").Select("count(*)").Where("crash_id = crashes.id").QueryExpr(), database.DB.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Windows NT'").QueryExpr(), database.DB.Table("reports").Select("count(*)").Where("crash_id = crashes.id AND os = 'Mac OS X'").QueryExpr())
 	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
@@ -102,23 +102,23 @@ func GetCrashes(c *gin.Context) {
 func GetCrash(c *gin.Context) {
 	_, ver := GetCookies(c)
 	var Crash database.Crash
-	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	database.DB.First(&Crash, "id = ?", c.Param("id"))
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
 		offset = 0
 	}
 	var count int
-	query := database.Db.Model(&database.Report{}).Where("crash_id = ?", Crash.ID)
+	query := database.DB.Model(&database.Report{}).Where("crash_id = ?", Crash.ID)
 	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
 	query.Count(&count)
-	query = database.Db.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC")
+	query = database.DB.Model(&Crash).Preload("Product").Preload("Version").Order("created_at DESC")
 	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
 	query.Offset(offset).Limit(50).Related(&Crash.Reports)
-	database.Db.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
+	database.DB.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
 	var next int
 	var prev int
 	if (offset + 50) >= count {
@@ -130,19 +130,19 @@ func GetCrash(c *gin.Context) {
 	versions := make(map[string]int)
 	vercnt := 0
 	for _, Version := range database.Versions {
-		database.Db.Model(&database.Report{}).Where("version_id = ? AND crash_id = ?", Version.ID, Crash.ID).Count(&vercnt)
+		database.DB.Model(&database.Report{}).Where("version_id = ? AND crash_id = ?", Version.ID, Crash.ID).Count(&vercnt)
 		if vercnt != 0 {
 			versions[Version.Name] = vercnt
 		}
 	}
 	var osStats []oscrashes
-	database.Db.Raw("SELECT count(*) AS count, os, os_version FROM reports WHERE crash_id = ? GROUP BY os, os_version ORDER BY os ASC, os_version ASC", Crash.ID).Scan(&osStats)
+	database.DB.Raw("SELECT count(*) AS count, os, os_version FROM reports WHERE crash_id = ? GROUP BY os, os_version ORDER BY os ASC, os_version ASC", Crash.ID).Scan(&osStats)
 	osVersions := make(map[string]map[string]int)
 	for _, Stat := range osStats {
 		addHit(osVersions, Stat.Os, Stat.OsVersion, Stat.Count)
 	}
 	var crashComments []commentcrashes
-	database.Db.Raw("SELECT id AS report_id, comment FROM reports WHERE crash_id = ? AND comment != '' ORDER BY id ASC", Crash.ID).Scan(&crashComments)
+	database.DB.Raw("SELECT id AS report_id, comment FROM reports WHERE crash_id = ? AND comment != '' ORDER BY id ASC", Crash.ID).Scan(&crashComments)
 	comment := make(map[string]string)
 	for _, Comment := range crashComments {
 		comment[Comment.ReportID.String()] = Comment.Comment
@@ -167,14 +167,14 @@ func GetCrash(c *gin.Context) {
 // MarkCrashFixed marks a given crash as fixed for the current version
 func MarkCrashFixed(c *gin.Context) {
 	var Crash database.Crash
-	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	database.DB.First(&Crash, "id = ?", c.Param("id"))
 	if Crash.Fixed != nil {
 		Crash.Fixed = nil
 	} else {
 		Crash.Fixed = new(time.Time)
 		*Crash.Fixed = time.Now()
 	}
-	database.Db.Save(&Crash)
+	database.DB.Save(&Crash)
 	c.Redirect(http.StatusFound, "/crashes/"+c.Param("id"))
 }
 

@@ -24,7 +24,7 @@ func main() {
 		log.Fatalf("Config error: %+v", err)
 	}
 
-	err = database.InitDb(config.C.DatabaseConnection)
+	err = database.InitDB(config.C.DatabaseConnection)
 	if err != nil {
 		log.Fatalf("Database error: %+v", err)
 	}
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	log.Println("Queue empty, closing database...")
-	err = database.Db.Close()
+	err = database.DB.Close()
 	if err != nil {
 		log.Printf("Error closing the database!")
 		os.Exit(1)

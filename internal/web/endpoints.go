@@ -36,7 +36,7 @@ func PostReports(c *gin.Context) {
 	Report.ID = uuid.NewV4()
 
 	var Product database.Product
-	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
+	if err = database.DB.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -44,7 +44,7 @@ func PostReports(c *gin.Context) {
 	Report.Product = Product
 
 	var Version database.Version
-	if err = database.Db.First(&Version, "slug = ? AND product_id = ? AND ignore = false", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
+	if err = database.DB.First(&Version, "slug = ? AND product_id = ? AND ignore = false", c.Request.FormValue("ver"), Report.ProductID).Error; err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -88,7 +88,7 @@ func PostReports(c *gin.Context) {
 // ReprocessReport processes the Crashreport again with current symbols
 func ReprocessReport(c *gin.Context) {
 	var Report database.Report
-	database.Db.Where("id = ?", c.Param("id")).First(&Report)
+	database.DB.Where("id = ?", c.Param("id")).First(&Report)
 	processor.Reprocess(Report)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
@@ -110,21 +110,21 @@ func PostSymfiles(c *gin.Context) {
 	}()
 	var Symfile database.Symfile
 	var Product database.Product
-	if err = database.Db.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
+	if err = database.DB.First(&Product, "slug = ?", c.Request.FormValue("prod")).Error; err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Symfile.ProductID = Product.ID
 	Symfile.Product = Product
 	var Version database.Version
-	if err = database.Db.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Symfile.ProductID).Error; err != nil {
+	if err = database.DB.First(&Version, "slug = ? AND product_id = ?", c.Request.FormValue("ver"), Symfile.ProductID).Error; err != nil {
 		Version.ID = uuid.NewV4()
 		Version.Name = c.Request.FormValue("ver")
 		Version.Slug = c.Request.FormValue("ver")
 		Version.Ignore = false
 		Version.Product = Product
 		Version.ProductID = Product.ID
-		database.Db.Create(&Version)
+		database.DB.Create(&Version)
 	}
 	Symfile.VersionID = Version.ID
 	Symfile.Version = Version
@@ -144,7 +144,7 @@ func PostSymfiles(c *gin.Context) {
 		return
 	}
 	updated := true
-	if err = database.Db.Where("code = ?", parts[3]).First(&Symfile).Error; err != nil {
+	if err = database.DB.Where("code = ?", parts[3]).First(&Symfile).Error; err != nil {
 		Symfile.ID = uuid.NewV4()
 		updated = false
 	} else {
@@ -154,7 +154,7 @@ func PostSymfiles(c *gin.Context) {
 		}
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
-			database.Db.Delete(&Symfile)
+			database.DB.Delete(&Symfile)
 			return
 		}
 	}
@@ -166,13 +166,13 @@ func PostSymfiles(c *gin.Context) {
 	err = os.MkdirAll(filepth, 0750)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
-		database.Db.Delete(&Symfile)
+		database.DB.Delete(&Symfile)
 		return
 	}
 	f, err := os.Create(filepath.Join(filepth, Symfile.Name+".sym"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
-		database.Db.Delete(&Symfile)
+		database.DB.Delete(&Symfile)
 		return
 	}
 	_, err = file.Seek(0, 0)
@@ -182,7 +182,7 @@ func PostSymfiles(c *gin.Context) {
 	_, err = io.Copy(f, file)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
-		database.Db.Delete(&Symfile)
+		database.DB.Delete(&Symfile)
 		err = f.Close()
 		if err != nil {
 			log.Printf("Error closing the file: %+v", err)
@@ -194,9 +194,9 @@ func PostSymfiles(c *gin.Context) {
 		log.Printf("Error closing the file: %+v", err)
 	}
 	if updated {
-		if err = database.Db.Save(&Symfile).Error; err != nil {
+		if err = database.DB.Save(&Symfile).Error; err != nil {
 			c.AbortWithStatus(http.StatusBadRequest)
-			database.Db.Delete(&Symfile)
+			database.DB.Delete(&Symfile)
 			err = os.Remove(f.Name())
 			if err != nil {
 				log.Printf("Error removing the file: %+v", err)
@@ -209,7 +209,7 @@ func PostSymfiles(c *gin.Context) {
 		})
 		return
 	}
-	if err = database.Db.Create(&Symfile).Error; err != nil {
+	if err = database.DB.Create(&Symfile).Error; err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		err = os.Remove(f.Name())
 		if err != nil {

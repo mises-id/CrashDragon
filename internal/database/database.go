@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq" //Postgres functions
+	_ "github.com/lib/pq" // Postgres functions
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -256,23 +256,23 @@ type Migration struct {
 	Version   string
 }
 
-// Db is the database handler
-var Db *gorm.DB
+// DB is the database handler
+var DB *gorm.DB
 
-// InitDb sets up the database
-func InitDb(connection string) error {
+// InitDB sets up the database
+func InitDB(connection string) error {
 	var err error
-	Db, err = gorm.Open("postgres", connection)
+	DB, err = gorm.Open("postgres", connection)
 	if err != nil {
 		log.Fatalf("FAT Database error: %+v", err)
 		return err
 	}
 	if os.Getenv("GIN_MODE") != "release" {
-		Db.LogMode(true)
+		DB.LogMode(true)
 	}
 
-	Db.Order("name ASC").Find(&Products)
-	Db.Order("name ASC").Find(&Versions)
+	DB.Order("name ASC").Find(&Products)
+	DB.Order("name ASC").Find(&Versions)
 	return err
 }
 

@@ -24,13 +24,13 @@ func GetAdminIndex(c *gin.Context) {
 	var countVersions int
 	var countUsers int
 	var countComments int
-	database.Db.Model(database.Report{}).Count(&countReports)
-	database.Db.Model(database.Crash{}).Count(&countCrashes)
-	database.Db.Model(database.Symfile{}).Count(&countSymfiles)
-	database.Db.Model(database.Product{}).Count(&countProducts)
-	database.Db.Model(database.Version{}).Count(&countVersions)
-	database.Db.Model(database.User{}).Count(&countUsers)
-	database.Db.Model(database.Comment{}).Count(&countComments)
+	database.DB.Model(database.Report{}).Count(&countReports)
+	database.DB.Model(database.Crash{}).Count(&countCrashes)
+	database.DB.Model(database.Symfile{}).Count(&countSymfiles)
+	database.DB.Model(database.Product{}).Count(&countProducts)
+	database.DB.Model(database.Version{}).Count(&countVersions)
+	database.DB.Model(database.User{}).Count(&countUsers)
+	database.DB.Model(database.Comment{}).Count(&countComments)
 	c.HTML(http.StatusOK, "admin_index.html", gin.H{
 		"admin":         true,
 		"prods":         database.Products,
@@ -49,7 +49,7 @@ func GetAdminIndex(c *gin.Context) {
 // GetAdminProducts returns a list of all products
 func GetAdminProducts(c *gin.Context) {
 	var Products []database.Product
-	database.Db.Order("name ASC").Find(&Products)
+	database.DB.Order("name ASC").Find(&Products)
 	c.HTML(http.StatusOK, "admin_products.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
@@ -84,14 +84,14 @@ func PostAdminNewProduct(c *gin.Context) {
 	Product.ID = id
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
-	database.Db.Create(&Product)
+	database.DB.Create(&Product)
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
 // GetAdminEditProduct returns the edit product form
 func GetAdminEditProduct(c *gin.Context) {
 	var Product database.Product
-	database.Db.First(&Product, "ID = ?", c.Param("id"))
+	database.DB.First(&Product, "ID = ?", c.Param("id"))
 	c.HTML(http.StatusOK, "admin_product.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
@@ -105,23 +105,23 @@ func GetAdminEditProduct(c *gin.Context) {
 // PostAdminEditProduct processes the edit product form
 func PostAdminEditProduct(c *gin.Context) {
 	var Product database.Product
-	database.Db.First(&Product, "ID = ?", c.Param("id"))
+	database.DB.First(&Product, "ID = ?", c.Param("id"))
 	Product.Slug = c.PostForm("slug")
 	Product.Name = c.PostForm("name")
-	database.Db.Save(&Product)
+	database.DB.Save(&Product)
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
 // GetAdminDeleteProduct deletes a product from the database
 func GetAdminDeleteProduct(c *gin.Context) {
-	database.Db.Delete(database.Product{}, "ID = ?", c.Param("id"))
+	database.DB.Delete(database.Product{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
 // GetAdminVersions returns a list of all versions
 func GetAdminVersions(c *gin.Context) {
 	var Versions []database.Version
-	database.Db.Preload("Product").Find(&Versions)
+	database.DB.Preload("Product").Find(&Versions)
 	c.HTML(http.StatusOK, "admin_versions.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
@@ -136,7 +136,7 @@ func GetAdminNewVersion(c *gin.Context) {
 	var Version database.Version
 	Version.ID = uuid.NewV4()
 	var Products []database.Product
-	database.Db.Order("name ASC").Find(&Products)
+	database.DB.Order("name ASC").Find(&Products)
 	c.HTML(http.StatusOK, "admin_version.html", gin.H{
 		"admin":    true,
 		"prods":    database.Products,
@@ -171,16 +171,16 @@ func PostAdminNewVersion(c *gin.Context) {
 	} else {
 		Version.Ignore = true
 	}
-	database.Db.Create(&Version)
+	database.DB.Create(&Version)
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
 // GetAdminEditVersion returns the edit product form
 func GetAdminEditVersion(c *gin.Context) {
 	var Version database.Version
-	database.Db.First(&Version, "ID = ?", c.Param("id"))
+	database.DB.First(&Version, "ID = ?", c.Param("id"))
 	var Products []database.Product
-	database.Db.Order("name ASC").Find(&Products)
+	database.DB.Order("name ASC").Find(&Products)
 	c.HTML(http.StatusOK, "admin_version.html", gin.H{
 		"admin":    true,
 		"prods":    database.Products,
@@ -195,7 +195,7 @@ func GetAdminEditVersion(c *gin.Context) {
 // PostAdminEditVersion processes the edit product form
 func PostAdminEditVersion(c *gin.Context) {
 	var Version database.Version
-	database.Db.First(&Version, "ID = ?", c.Param("id"))
+	database.DB.First(&Version, "ID = ?", c.Param("id"))
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
 	Version.GitRepo = c.PostForm("gitrepo")
@@ -210,20 +210,20 @@ func PostAdminEditVersion(c *gin.Context) {
 		return
 	}
 	Version.ProductID = id
-	database.Db.Save(&Version)
+	database.DB.Save(&Version)
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
 // GetAdminDeleteVersion deletes a product from the database
 func GetAdminDeleteVersion(c *gin.Context) {
-	database.Db.Delete(database.Version{}, "ID = ?", c.Param("id"))
+	database.DB.Delete(database.Version{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
 // GetAdminUsers returns a list of all users
 func GetAdminUsers(c *gin.Context) {
 	var Users []database.User
-	database.Db.Find(&Users)
+	database.DB.Find(&Users)
 	c.HTML(http.StatusOK, "admin_users.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
@@ -262,14 +262,14 @@ func PostAdminNewUser(c *gin.Context) {
 	} else {
 		User.IsAdmin = true
 	}
-	database.Db.Create(&User)
+	database.DB.Create(&User)
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
 // GetAdminEditUser returns the edit user form
 func GetAdminEditUser(c *gin.Context) {
 	var User database.User
-	database.Db.First(&User, "ID = ?", c.Param("id"))
+	database.DB.First(&User, "ID = ?", c.Param("id"))
 	c.HTML(http.StatusOK, "admin_user.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
@@ -283,27 +283,27 @@ func GetAdminEditUser(c *gin.Context) {
 // PostAdminEditUser processes the edit user form
 func PostAdminEditUser(c *gin.Context) {
 	var User database.User
-	database.Db.First(&User, "ID = ?", c.Param("id"))
+	database.DB.First(&User, "ID = ?", c.Param("id"))
 	User.Name = c.PostForm("name")
 	if adm := c.DefaultPostForm("admin", "off"); adm == checkboxOff {
 		User.IsAdmin = false
 	} else {
 		User.IsAdmin = true
 	}
-	database.Db.Save(&User)
+	database.DB.Save(&User)
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
 // GetAdminDeleteUser deletes a user from the database
 func GetAdminDeleteUser(c *gin.Context) {
-	database.Db.Delete(database.User{}, "ID = ?", c.Param("id"))
+	database.DB.Delete(database.User{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
 // GetAdminSymfiles gets a list of currently uploaded symfiles
 func GetAdminSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
-	database.Db.Preload("Product").Preload("Version").Find(&Symfiles)
+	database.DB.Preload("Product").Preload("Version").Find(&Symfiles)
 	c.HTML(http.StatusOK, "admin_symfiles.html", gin.H{
 		"admin": true,
 		"prods": database.Products,
@@ -316,7 +316,7 @@ func GetAdminSymfiles(c *gin.Context) {
 // GetAdminDeleteSymfile deletes the given symfile
 func GetAdminDeleteSymfile(c *gin.Context) {
 	var Symfile database.Symfile
-	database.Db.Preload("Product").Preload("Version").First(&Symfile, "ID = ?", c.Param("id"))
+	database.DB.Preload("Product").Preload("Version").First(&Symfile, "ID = ?", c.Param("id"))
 	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 	if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
 		err := os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
@@ -324,6 +324,6 @@ func GetAdminDeleteSymfile(c *gin.Context) {
 			log.Printf("Error removing Symfile: %+v", err)
 		}
 	}
-	database.Db.Delete(&Symfile)
+	database.DB.Delete(&Symfile)
 	c.Redirect(http.StatusFound, "/admin/symfiles")
 }

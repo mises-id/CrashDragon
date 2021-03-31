@@ -16,7 +16,7 @@ import (
 // GetSymfiles returns symfiles
 func GetSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
-	query := database.Db
+	query := database.DB
 	prod, ver := GetCookies(c)
 	if prod != nil {
 		query = query.Where("product_id = ?", prod.ID)
@@ -56,7 +56,7 @@ func GetSymfiles(c *gin.Context) {
 // GetSymfile returns content of symfile
 func GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
-	database.Db.Where("id = ?", c.Param("id")).Preload("Product").Preload("Version").First(&Symfile)
+	database.DB.Where("id = ?", c.Param("id")).Preload("Product").Preload("Version").First(&Symfile)
 	if !strings.HasPrefix(c.Request.Header.Get("Accept"), "text/html") {
 		c.JSON(http.StatusOK, Symfile)
 		return

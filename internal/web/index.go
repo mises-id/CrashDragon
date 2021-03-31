@@ -37,21 +37,21 @@ func GetIndex(c *gin.Context) {
 	}
 
 	var DateResult []genericResult
-	database.Db.Raw("SELECT (generate_series(CURRENT_DATE - '30 days'::interval, CURRENT_DATE, '1 day'::interval))::date::text AS result;").Scan(&DateResult)
+	database.DB.Raw("SELECT (generate_series(CURRENT_DATE - '30 days'::interval, CURRENT_DATE, '1 day'::interval))::date::text AS result;").Scan(&DateResult)
 
 	// Version Stats diagram
 	var VersionStatResult []statResult
 	var VersionResult []genericResult
 	var VersionData chartData
-	database.Db.Raw("SELECT version_id AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY version_id;").Scan(&VersionResult)
-	database.Db.Raw("SELECT created_at::date::text AS date, version_id AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, version_id ORDER BY created_at::date ASC, version_id ASC;").Scan(&VersionStatResult)
+	database.DB.Raw("SELECT version_id AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY version_id;").Scan(&VersionResult)
+	database.DB.Raw("SELECT created_at::date::text AS date, version_id AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, version_id ORDER BY created_at::date ASC, version_id ASC;").Scan(&VersionStatResult)
 	for _, row := range DateResult {
 		VersionData.Labels = append(VersionData.Labels, row.Result)
 	}
 	//nolint:dupl
 	for _, row := range VersionResult {
 		var Version database.Version
-		database.Db.First(&Version, "id = ?", row.Result)
+		database.DB.First(&Version, "id = ?", row.Result)
 		var ChartDataset chartDataset
 		ChartDataset.ID = row.Result
 		ChartDataset.Label = Version.Name
@@ -80,15 +80,15 @@ func GetIndex(c *gin.Context) {
 	var ProductStatResult []statResult
 	var ProductResult []genericResult
 	var ProductData chartData
-	database.Db.Raw("SELECT product_id AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY product_id;").Scan(&ProductResult)
-	database.Db.Raw("SELECT created_at::date::text AS date, product_id AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, product_id ORDER BY created_at::date ASC, product_id ASC;").Scan(&ProductStatResult)
+	database.DB.Raw("SELECT product_id AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY product_id;").Scan(&ProductResult)
+	database.DB.Raw("SELECT created_at::date::text AS date, product_id AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, product_id ORDER BY created_at::date ASC, product_id ASC;").Scan(&ProductStatResult)
 	for _, row := range DateResult {
 		ProductData.Labels = append(ProductData.Labels, row.Result)
 	}
 	//nolint:dupl
 	for _, row := range ProductResult {
 		var Product database.Product
-		database.Db.First(&Product, "id = ?", row.Result)
+		database.DB.First(&Product, "id = ?", row.Result)
 		var ChartDataset chartDataset
 		ChartDataset.ID = row.Result
 		ChartDataset.Label = Product.Name
@@ -117,8 +117,8 @@ func GetIndex(c *gin.Context) {
 	var PlatformStatResult []statResult
 	var PlatformResult []genericResult
 	var PlatformData chartData
-	database.Db.Raw("SELECT os AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY os;").Scan(&PlatformResult)
-	database.Db.Raw("SELECT created_at::date::text AS date, os AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, os ORDER BY created_at::date ASC, os ASC;").Scan(&PlatformStatResult)
+	database.DB.Raw("SELECT os AS result FROM reports WHERE (created_at > now() - '30 days'::interval) GROUP BY os;").Scan(&PlatformResult)
+	database.DB.Raw("SELECT created_at::date::text AS date, os AS field, count(*) FROM (SELECT * FROM reports WHERE created_at > now() - '30 days'::interval) AS dates GROUP BY created_at::date, os ORDER BY created_at::date ASC, os ASC;").Scan(&PlatformStatResult)
 	for _, row := range DateResult {
 		PlatformData.Labels = append(PlatformData.Labels, row.Result)
 	}

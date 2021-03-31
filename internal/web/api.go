@@ -348,7 +348,7 @@ func paginate(qry *gorm.DB, c *gin.Context) (*gorm.DB, uint, int, int) {
 // APIv1GetCrashes is the GET endpoint for crashes in API v1
 func APIv1GetCrashes(c *gin.Context) {
 	var Crashes []database.Crash
-	query := database.Db.Model(&database.Crash{})
+	query := database.DB.Model(&database.Crash{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -359,14 +359,14 @@ func APIv1GetCrashes(c *gin.Context) {
 // APIv1GetCrash is the GET endpoint for a single crash in API v1
 func APIv1GetCrash(c *gin.Context) {
 	var Crash database.Crash
-	database.Db.First(&Crash, "id = ?", c.Param("id"))
+	database.DB.First(&Crash, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": Crash, "Error": nil})
 }
 
 // APIv1GetReports is the GET endpoint for reports in API v1
 func APIv1GetReports(c *gin.Context) {
 	var Reports []database.Report
-	query := database.Db.Model(&database.Report{})
+	query := database.DB.Model(&database.Report{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -377,14 +377,14 @@ func APIv1GetReports(c *gin.Context) {
 // APIv1GetReport is the GET endpoint for a single report in API v1
 func APIv1GetReport(c *gin.Context) {
 	var Report database.Report
-	database.Db.First(&Report, "id = ?", c.Param("id"))
+	database.DB.First(&Report, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": Report, "Error": nil})
 }
 
 // APIv1GetSymfiles is the GET endpoint for symfiles in API v1
 func APIv1GetSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
-	query := database.Db.Model(&database.Symfile{})
+	query := database.DB.Model(&database.Symfile{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -395,14 +395,14 @@ func APIv1GetSymfiles(c *gin.Context) {
 // APIv1GetSymfile is the GET endpoint for a single symfile in API v1
 func APIv1GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
-	database.Db.First(&Symfile, "id = ?", c.Param("id"))
+	database.DB.First(&Symfile, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": Symfile, "Error": nil})
 }
 
 // APIv1GetProducts is the GET endpoint for products in API v1
 func APIv1GetProducts(c *gin.Context) {
 	var Products []database.Product
-	query := database.Db.Model(&database.Product{})
+	query := database.DB.Model(&database.Product{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -413,7 +413,7 @@ func APIv1GetProducts(c *gin.Context) {
 // APIv1GetProduct is the GET endpoint for product in API v1
 func APIv1GetProduct(c *gin.Context) {
 	var Product database.Product
-	database.Db.First(&Product, "id = ?", c.Param("id"))
+	database.DB.First(&Product, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": Product, "Error": nil})
 }
 
@@ -426,7 +426,7 @@ func APIv1NewProduct(c *gin.Context) {
 		return
 	}
 	Product.ID = uuid.NewV4()
-	if err := database.Db.Create(&Product).Error; err != nil {
+	if err := database.DB.Create(&Product).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": Product})
@@ -441,7 +441,7 @@ func APIv1UpdateProduct(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Product).Error; err != nil {
+	if err := database.DB.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Product).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
@@ -452,7 +452,7 @@ func APIv1UpdateProduct(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	if err = database.Db.Save(&Product).Error; err != nil {
+	if err = database.DB.Save(&Product).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Product})
@@ -461,7 +461,7 @@ func APIv1UpdateProduct(c *gin.Context) {
 
 // APIv1DeleteProduct processes the delete product endpoint
 func APIv1DeleteProduct(c *gin.Context) {
-	if err := database.Db.Delete(database.Product{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+	if err := database.DB.Delete(database.Product{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
@@ -471,7 +471,7 @@ func APIv1DeleteProduct(c *gin.Context) {
 // APIv1GetVersions is the GET endpoint for versions in API v1
 func APIv1GetVersions(c *gin.Context) {
 	var Versions []database.Version
-	query := database.Db.Model(&database.Version{})
+	query := database.DB.Model(&database.Version{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -482,7 +482,7 @@ func APIv1GetVersions(c *gin.Context) {
 // APIv1GetVersion is the GET endpoint for version in API v1
 func APIv1GetVersion(c *gin.Context) {
 	var Version database.Version
-	database.Db.First(&Version, "id = ?", c.Param("id"))
+	database.DB.First(&Version, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": Version, "Error": nil})
 }
 
@@ -495,7 +495,7 @@ func APIv1NewVersion(c *gin.Context) {
 		return
 	}
 	Version.ID = uuid.NewV4()
-	if err := database.Db.Create(&Version).Error; err != nil {
+	if err := database.DB.Create(&Version).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": Version})
@@ -510,7 +510,7 @@ func APIv1UpdateVersion(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Version).Error; err != nil {
+	if err := database.DB.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Version).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
@@ -524,7 +524,7 @@ func APIv1UpdateVersion(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	if err = database.Db.Save(&Version).Error; err != nil {
+	if err = database.DB.Save(&Version).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Version})
@@ -533,7 +533,7 @@ func APIv1UpdateVersion(c *gin.Context) {
 
 // APIv1DeleteVersion processes the delete version endpoint
 func APIv1DeleteVersion(c *gin.Context) {
-	if err := database.Db.Delete(database.Version{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+	if err := database.DB.Delete(database.Version{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
@@ -543,7 +543,7 @@ func APIv1DeleteVersion(c *gin.Context) {
 // APIv1GetUsers is the GET endpoint for users in API v1
 func APIv1GetUsers(c *gin.Context) {
 	var Users []database.User
-	query := database.Db.Model(&database.User{})
+	query := database.DB.Model(&database.User{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -554,7 +554,7 @@ func APIv1GetUsers(c *gin.Context) {
 // APIv1GetUser is the GET endpoint for user in API v1
 func APIv1GetUser(c *gin.Context) {
 	var User database.User
-	database.Db.First(&User, "id = ?", c.Param("id"))
+	database.DB.First(&User, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": User, "Error": nil})
 }
 
@@ -567,7 +567,7 @@ func APIv1NewUser(c *gin.Context) {
 		return
 	}
 	User.ID = uuid.NewV4()
-	if err := database.Db.Create(&User).Error; err != nil {
+	if err := database.DB.Create(&User).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": User})
@@ -582,7 +582,7 @@ func APIv1UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&User).Error; err != nil {
+	if err := database.DB.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&User).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
@@ -593,7 +593,7 @@ func APIv1UpdateUser(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	if err = database.Db.Save(&User).Error; err != nil {
+	if err = database.DB.Save(&User).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": User})
@@ -602,7 +602,7 @@ func APIv1UpdateUser(c *gin.Context) {
 
 // APIv1DeleteUser processes the delete user endpoint
 func APIv1DeleteUser(c *gin.Context) {
-	if err := database.Db.Delete(database.User{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+	if err := database.DB.Delete(database.User{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})
@@ -612,7 +612,7 @@ func APIv1DeleteUser(c *gin.Context) {
 // APIv1GetComments is the GET endpoint for comments in API v1
 func APIv1GetComments(c *gin.Context) {
 	var Comments []database.Comment
-	query := database.Db.Model(&database.Comment{})
+	query := database.DB.Model(&database.Comment{})
 	query = filters(query, c)
 	query = order(query, c)
 	query, total, limit, offset := paginate(query, c)
@@ -623,7 +623,7 @@ func APIv1GetComments(c *gin.Context) {
 // APIv1GetComment is the GET endpoint for comment in API v1
 func APIv1GetComment(c *gin.Context) {
 	var Comment database.Comment
-	database.Db.First(&Comment, "id = ?", c.Param("id"))
+	database.DB.First(&Comment, "id = ?", c.Param("id"))
 	c.JSON(http.StatusOK, gin.H{"Item": Comment, "Error": nil})
 }
 
@@ -636,7 +636,7 @@ func APIv1NewComment(c *gin.Context) {
 		return
 	}
 	Comment.ID = uuid.NewV4()
-	if err := database.Db.Create(&Comment).Error; err != nil {
+	if err := database.DB.Create(&Comment).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusCreated, gin.H{"Error": nil, "Item": Comment})
@@ -651,7 +651,7 @@ func APIv1UpdateComment(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
-	if err := database.Db.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Comment).Error; err != nil {
+	if err := database.DB.Where("id = ?", uuid.FromStringOrNil(c.Param("id"))).Find(&Comment).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 		return
 	}
@@ -662,7 +662,7 @@ func APIv1UpdateComment(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	if err = database.Db.Save(&Comment).Error; err != nil {
+	if err = database.DB.Save(&Comment).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Comment})
@@ -671,7 +671,7 @@ func APIv1UpdateComment(c *gin.Context) {
 
 // APIv1DeleteComment processes the delete comment endpoint
 func APIv1DeleteComment(c *gin.Context) {
-	if err := database.Db.Delete(database.Comment{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
+	if err := database.DB.Delete(database.Comment{}, "id = ?", uuid.FromStringOrNil(c.Param("id"))).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"Error": nil, "Item": nil})

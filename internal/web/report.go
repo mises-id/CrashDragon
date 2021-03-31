@@ -24,14 +24,14 @@ import (
 // PostReportCrashID allows you to change the crash id of a crashreport
 func PostReportCrashID(c *gin.Context) {
 	var Report database.Report
-	database.Db.First(&Report, "id = ?", c.Param("id"))
+	database.DB.First(&Report, "id = ?", c.Param("id"))
 	id, err := uuid.FromString(c.PostForm("crashid"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusPreconditionFailed)
 		return
 	}
 	Report.CrashID = id
-	database.Db.Save(&Report)
+	database.DB.Save(&Report)
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
 }
 
@@ -39,7 +39,7 @@ func PostReportCrashID(c *gin.Context) {
 func PostReportComment(c *gin.Context) {
 	User := c.MustGet("user").(database.User)
 	var Report database.Report
-	database.Db.First(&Report, "id = ?", c.Param("id"))
+	database.DB.First(&Report, "id = ?", c.Param("id"))
 	if Report.ID == uuid.Nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
@@ -55,7 +55,7 @@ func PostReportComment(c *gin.Context) {
 	}
 	Comment.ReportID = Report.ID
 	Comment.CrashID = uuid.Nil
-	database.Db.Create(&Comment)
+	database.DB.Create(&Comment)
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String()+"#comment-"+Comment.ID.String())
 }
 
@@ -77,7 +77,7 @@ func GetReports(c *gin.Context) {
 		File      string
 		Line      int
 	}
-	query := database.Db
+	query := database.DB
 	prod, ver := GetCookies(c)
 	if prod != nil {
 		query = query.Where("product_id = ?", prod.ID)
@@ -175,8 +175,8 @@ func GetReports(c *gin.Context) {
 //nolint:funlen
 func GetReport(c *gin.Context) {
 	var Report database.Report
-	database.Db.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
-	database.Db.Model(&Report).Preload("User").Order("created_at ASC").Related(&Report.Comments)
+	database.DB.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
+	database.DB.Model(&Report).Preload("User").Order("created_at ASC").Related(&Report.Comments)
 	var Item struct {
 		ID             string
 		CrashID        string
@@ -251,8 +251,8 @@ func DeleteReport(c *gin.Context) {
 		log.Printf("Error removing txt: %+v", err)
 	}
 
-	database.Db.Unscoped().Delete(&database.Comment{}, "report_id = ?", c.Param("id"))
-	database.Db.Unscoped().Delete(&database.Report{}, "id = ?", c.Param("id"))
+	database.DB.Unscoped().Delete(&database.Comment{}, "report_id = ?", c.Param("id"))
+	database.DB.Unscoped().Delete(&database.Report{}, "id = ?", c.Param("id"))
 
 	c.Redirect(http.StatusFound, "/")
 }
@@ -261,7 +261,7 @@ func DeleteReport(c *gin.Context) {
 //nolint:funlen
 func GetReportFile(c *gin.Context) {
 	var Report database.Report
-	if err := database.Db.Where("id = ?", c.Param("id")).First(&Report).Error; err != nil {
+	if err := database.DB.Where("id = ?", c.Param("id")).First(&Report).Error; err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
