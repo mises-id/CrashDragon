@@ -45,7 +45,6 @@ func PostReportComment(c *gin.Context) {
 		return
 	}
 	var Comment database.Comment
-	database.Db.FirstOrInit(&Comment)
 	Comment.UserID = User.ID
 	Comment.ID = uuid.NewV4()
 	unsafe := blackfriday.MarkdownCommon([]byte(c.PostForm("comment")))

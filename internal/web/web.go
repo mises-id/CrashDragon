@@ -169,10 +169,11 @@ func Run() {
 // Stop stops the webserver
 func Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
+		cancel()
 		log.Fatalf("Server Shutdown: %+v", err)
 	}
+	defer cancel()
 	if config.C.UseSocket {
 		defer func() {
 			err := listener.Close()

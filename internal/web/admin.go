@@ -46,7 +46,7 @@ func GetAdminIndex(c *gin.Context) {
 	})
 }
 
-//GetAdminProducts returns a list of all products
+// GetAdminProducts returns a list of all products
 func GetAdminProducts(c *gin.Context) {
 	var Products []database.Product
 	database.Db.Order("name ASC").Find(&Products)
@@ -59,7 +59,7 @@ func GetAdminProducts(c *gin.Context) {
 	})
 }
 
-//GetAdminNewProduct returns the new product form
+// GetAdminNewProduct returns the new product form
 func GetAdminNewProduct(c *gin.Context) {
 	var Product database.Product
 	Product.ID = uuid.NewV4()
@@ -73,7 +73,7 @@ func GetAdminNewProduct(c *gin.Context) {
 	})
 }
 
-//PostAdminNewProduct processes the new product form
+// PostAdminNewProduct processes the new product form
 func PostAdminNewProduct(c *gin.Context) {
 	var Product database.Product
 	id, err := uuid.FromString(c.PostForm("id"))
@@ -88,7 +88,7 @@ func PostAdminNewProduct(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
-//GetAdminEditProduct returns the edit product form
+// GetAdminEditProduct returns the edit product form
 func GetAdminEditProduct(c *gin.Context) {
 	var Product database.Product
 	database.Db.First(&Product, "ID = ?", c.Param("id"))
@@ -102,7 +102,7 @@ func GetAdminEditProduct(c *gin.Context) {
 	})
 }
 
-//PostAdminEditProduct processes the edit product form
+// PostAdminEditProduct processes the edit product form
 func PostAdminEditProduct(c *gin.Context) {
 	var Product database.Product
 	database.Db.First(&Product, "ID = ?", c.Param("id"))
@@ -112,13 +112,13 @@ func PostAdminEditProduct(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
-//GetAdminDeleteProduct deletes a product from the database
+// GetAdminDeleteProduct deletes a product from the database
 func GetAdminDeleteProduct(c *gin.Context) {
 	database.Db.Delete(database.Product{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/products")
 }
 
-//GetAdminVersions returns a list of all versions
+// GetAdminVersions returns a list of all versions
 func GetAdminVersions(c *gin.Context) {
 	var Versions []database.Version
 	database.Db.Preload("Product").Find(&Versions)
@@ -131,7 +131,7 @@ func GetAdminVersions(c *gin.Context) {
 	})
 }
 
-//GetAdminNewVersion returns the new product form
+// GetAdminNewVersion returns the new product form
 func GetAdminNewVersion(c *gin.Context) {
 	var Version database.Version
 	Version.ID = uuid.NewV4()
@@ -148,7 +148,7 @@ func GetAdminNewVersion(c *gin.Context) {
 	})
 }
 
-//PostAdminNewVersion processes the new product form
+// PostAdminNewVersion processes the new product form
 func PostAdminNewVersion(c *gin.Context) {
 	var Version database.Version
 	id, err := uuid.FromString(c.PostForm("id"))
@@ -175,7 +175,7 @@ func PostAdminNewVersion(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
-//GetAdminEditVersion returns the edit product form
+// GetAdminEditVersion returns the edit product form
 func GetAdminEditVersion(c *gin.Context) {
 	var Version database.Version
 	database.Db.First(&Version, "ID = ?", c.Param("id"))
@@ -192,7 +192,7 @@ func GetAdminEditVersion(c *gin.Context) {
 	})
 }
 
-//PostAdminEditVersion processes the edit product form
+// PostAdminEditVersion processes the edit product form
 func PostAdminEditVersion(c *gin.Context) {
 	var Version database.Version
 	database.Db.First(&Version, "ID = ?", c.Param("id"))
@@ -214,13 +214,13 @@ func PostAdminEditVersion(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
-//GetAdminDeleteVersion deletes a product from the database
+// GetAdminDeleteVersion deletes a product from the database
 func GetAdminDeleteVersion(c *gin.Context) {
 	database.Db.Delete(database.Version{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/versions")
 }
 
-//GetAdminUsers returns a list of all users
+// GetAdminUsers returns a list of all users
 func GetAdminUsers(c *gin.Context) {
 	var Users []database.User
 	database.Db.Find(&Users)
@@ -233,7 +233,7 @@ func GetAdminUsers(c *gin.Context) {
 	})
 }
 
-//GetAdminNewUser returns the new user form
+// GetAdminNewUser returns the new user form
 func GetAdminNewUser(c *gin.Context) {
 	var User database.User
 	User.ID = uuid.NewV4()
@@ -247,7 +247,7 @@ func GetAdminNewUser(c *gin.Context) {
 	})
 }
 
-//PostAdminNewUser processes the new user form
+// PostAdminNewUser processes the new user form
 func PostAdminNewUser(c *gin.Context) {
 	var User database.User
 	id, err := uuid.FromString(c.PostForm("id"))
@@ -266,7 +266,7 @@ func PostAdminNewUser(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
-//GetAdminEditUser returns the edit user form
+// GetAdminEditUser returns the edit user form
 func GetAdminEditUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "ID = ?", c.Param("id"))
@@ -280,7 +280,7 @@ func GetAdminEditUser(c *gin.Context) {
 	})
 }
 
-//PostAdminEditUser processes the edit user form
+// PostAdminEditUser processes the edit user form
 func PostAdminEditUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "ID = ?", c.Param("id"))
@@ -294,13 +294,13 @@ func PostAdminEditUser(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
-//GetAdminDeleteUser deletes a user from the database
+// GetAdminDeleteUser deletes a user from the database
 func GetAdminDeleteUser(c *gin.Context) {
 	database.Db.Delete(database.User{}, "ID = ?", c.Param("id"))
 	c.Redirect(http.StatusFound, "/admin/users")
 }
 
-//GetAdminSymfiles gets a list of currently uploaded symfiles
+// GetAdminSymfiles gets a list of currently uploaded symfiles
 func GetAdminSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
 	database.Db.Preload("Product").Preload("Version").Find(&Symfiles)
@@ -313,7 +313,7 @@ func GetAdminSymfiles(c *gin.Context) {
 	})
 }
 
-//GetAdminDeleteSymfile deletes the given symfile
+// GetAdminDeleteSymfile deletes the given symfile
 func GetAdminDeleteSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.Db.Preload("Product").Preload("Version").First(&Symfile, "ID = ?", c.Param("id"))
