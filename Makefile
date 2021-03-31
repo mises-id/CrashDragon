@@ -55,7 +55,7 @@ SASSCFLAGS ?= -t compressed
 all: build/bin/crashdragon build/bin/minidump_stackwalk
 
 build/bin/crashdragon: $(GO_SRC) web/assets/stylesheets/app.css
-	$(GO) build -o build/bin/crashdragon $(GO_SRC)
+	$(GO) build -o build/bin/crashdragon -ldflags "-X 'main.Version=$(git describe --always)'" $(GO_SRC)
 
 web/assets/stylesheets/app.css:
 	$(SASSC) $(SASSCFLAGS) $(@D)/app.scss > $@.tmp && mv $@.tmp $@

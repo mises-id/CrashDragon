@@ -13,7 +13,7 @@ build-go:
   stage: build
   extends: .go-cache
   script:
-    - go build -i -v ./cmd/crashdragon
+    - go build -i -v -ldflags "-X 'main.Version=$(git describe --always)'" ./cmd/crashdragon
 
 build-all:
   stage: build

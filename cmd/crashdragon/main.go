@@ -13,11 +13,20 @@ import (
 	"code.videolan.org/videolan/CrashDragon/internal/web"
 )
 
+// Version holds the current version, filled by the Makefile
+var Version = "Unknown"
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(os.Stderr)
 	cf := flag.String("config", "../etc/crashdragon.toml", "specifies the config file to use")
+	flag.Bool("version", false, "")
 	flag.Parse()
+
+	if isFlagPassed("version") {
+		log.Printf("Crashdragon Version: %s", Version)
+		os.Exit(0)
+	}
 
 	err := config.GetConfig(*cf)
 	if err != nil {
@@ -56,4 +65,14 @@ func main() {
 
 	log.Println("Closed database, good bye!")
 	os.Exit(0)
+}
+
+func isFlagPassed(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }
