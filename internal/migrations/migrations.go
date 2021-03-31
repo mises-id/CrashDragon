@@ -1,3 +1,4 @@
+// Package migrations provides the database content migrations for CrashDragon
 package migrations
 
 import (
@@ -7,22 +8,25 @@ import (
 	"strings"
 	"sync"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 	uuid "github.com/satori/go.uuid"
 )
 
-const VER_1_2_0 = "1.2.0"
-const VER_1_2_1 = "1.2.1"
-const CUR_VER = VER_1_2_1
+const (
+	ver1_2_0 = "1.2.0"
+	ver1_2_1 = "1.2.1"
+	curVer   = ver1_2_1
+)
 
-var wg sync.WaitGroup
+var (
+	wg  sync.WaitGroup
+	sem = make(chan struct{}, 10)
+)
 
 type result struct {
 	ID uuid.UUID
 }
-
-var sem = make(chan struct{}, 10)
 
 // RunMigrations runs the needed migrations
 func RunMigrations() {
@@ -31,18 +35,17 @@ func RunMigrations() {
 	var Migration database.Migration
 	database.Db.First(&Migration, "component = 'database'")
 	switch Migration.Version {
-	case VER_1_2_1:
+	case ver1_2_1:
 		log.Printf("Database migration is version 1.2.1")
-		break
-	case VER_1_2_0:
+	case ver1_2_0:
 		log.Print("Database migration is version 1.2.0")
 		var Migration2 database.Migration
 		database.Db.First(&Migration2, "component = 'crashdragon'")
-		if Migration2.Version != VER_1_2_0 {
+		if Migration2.Version != ver1_2_0 {
 			log.Print("Running crash migration, please wait...")
-			//migrateCrashes() // Very slow
+			migrateCrashes() // Very slow
 			migrateSymfiles()
-			Migration2.Version = VER_1_2_0
+			Migration2.Version = ver1_2_0
 			database.Db.Save(&Migration2)
 			log.Print("Crashes migrated!")
 		} else {
@@ -50,18 +53,15 @@ func RunMigrations() {
 		}
 		Migration2 = database.Migration{}
 		database.Db.First(&Migration2, "component = 'database'")
-		Migration2.Version = VER_1_2_1
+		Migration2.Version = ver1_2_1
 		database.Db.Save(&Migration2)
 		Migration2 = database.Migration{}
 		database.Db.First(&Migration2, "component = 'crashdragon'")
-		Migration2.Version = VER_1_2_1
+		Migration2.Version = ver1_2_1
 		database.Db.Save(&Migration2)
-		break
 	default:
 		log.Fatal("Database migration version unsupported...")
-		break
 	}
-
 }
 
 func migrateSymfiles() {
@@ -70,7 +70,7 @@ func migrateSymfiles() {
 	for i, Symfile := range Symfiles {
 		log.Printf("Moving symfile %d/%d", i+1, len(Symfiles))
 		filepthnew := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
-		err := os.MkdirAll(filepthnew, 0755)
+		err := os.MkdirAll(filepthnew, 0750)
 		if err != nil {
 			log.Fatal("Can not create directory ", err)
 		}
@@ -90,13 +90,13 @@ func migrateCrashes() {
 		sem <- struct{}{}
 		log.Printf("Re-reading %d/%d crashes, please wait...", curc+1, ccount)
 		wg.Add(1)
-		go migrateCrash(curc, cra)
+		go migrateCrash(cra)
 	}
 	wg.Wait()
 	database.Db.Exec("VACUUM ANALYZE;")
 }
 
-func migrateCrash(curc int, cra result) {
+func migrateCrash(cra result) {
 	defer wg.Done()
 	tx := database.Db.Begin()
 	var crash database.Crash
@@ -111,30 +111,34 @@ func migrateCrash(curc int, cra result) {
 		if report.Report.CrashInfo.CrashingThread >= len(report.Report.Threads) {
 			continue
 		}
+	Loop:
 		for _, Frame := range report.Report.Threads[report.Report.CrashInfo.CrashingThread].Frames {
-			if Frame.Function == report.Signature {
+			switch {
+			case Frame.Function == report.Signature:
 				report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
-				break
-			} else if report.Module == "" {
+				break Loop
+			case report.Module == "":
 				report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
-			} else {
-				break
+			default:
+				break Loop
 			}
 		}
-		if crash.Module == "" && existingModules[report.Module] == uuid.Nil {
+		switch {
+		case crash.Module == "" && existingModules[report.Module] == uuid.Nil:
 			crash.Module = report.Module
 			existingModules[crash.Module] = crash.ID
 			tx.Save(&crash)
 			report.CrashID = crash.ID
-		} else if crash.Module != report.Module && existingModules[report.Module] == uuid.Nil {
+		case crash.Module != report.Module && existingModules[report.Module] == uuid.Nil:
 			crash.ID = uuid.NewV4()
 			crash.Module = report.Module
 			existingModules[crash.Module] = crash.ID
 			tx.Create(&crash)
 			report.CrashID = crash.ID
-		} else if existingModules[report.Module] != uuid.Nil {
+		case existingModules[report.Module] != uuid.Nil:
 			report.CrashID = existingModules[report.Module]
 		}
+
 		tx.Save(&report)
 	}
 	err := tx.Commit().Error
@@ -171,9 +175,9 @@ func dbMigrations() {
 	var cnt uint
 	database.Db.Find(&Migrations).Count(&cnt)
 	if cnt != 2 {
-		var cd = database.Migration{ID: uuid.NewV4(), Component: "crashdragon", Version: CUR_VER}
+		var cd = database.Migration{ID: uuid.NewV4(), Component: "crashdragon", Version: curVer}
 		database.Db.Create(&cd)
-		var db = database.Migration{ID: uuid.NewV4(), Component: "database", Version: CUR_VER}
+		var db = database.Migration{ID: uuid.NewV4(), Component: "database", Version: curVer}
 		database.Db.Create(&db)
 	}
 }

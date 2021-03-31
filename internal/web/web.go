@@ -1,35 +1,34 @@
-package main
+// Package web provides the gin router and the endpoints for it
+package web
 
 import (
 	"context"
-	"flag"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"time"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
-	"code.videolan.org/videolan/CrashDragon/migrations"
-	"code.videolan.org/videolan/CrashDragon/processor"
-
+	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"github.com/gin-gonic/gin"
 )
 
-func initRouter() *gin.Engine {
-	router := gin.Default()
+var (
+	router   *gin.Engine
+	srv      *http.Server
+	listener net.Listener
+)
 
-	auth := router.Group("/", Auth)
+func initAuthRoutes(auth *gin.RouterGroup) {
 	auth.POST("/crashes/:id/comments", PostCrashComment)
 	auth.POST("/reports/:id/comments", PostReportComment)
 	auth.POST("/reports/:id/crashid", PostReportCrashID)
 	auth.POST("/reports/:id/reprocess", ReprocessReport)
 	auth.POST("/reports/:id/delete", DeleteReport)
+}
 
-	admin := auth.Group("/admin", IsAdmin)
+func initAdminRoutes(admin *gin.RouterGroup) {
 	admin.GET("/", GetAdminIndex)
 	admin.POST("/symfiles", PostSymfiles)
 
@@ -56,9 +55,9 @@ func initRouter() *gin.Engine {
 
 	admin.GET("/symfiles", GetAdminSymfiles)
 	admin.GET("/symfiles/delete/:id", GetAdminDeleteSymfile)
+}
 
-	// Admin JSON endpoints
-	apiv1 := auth.Group("/api/v1")
+func initAPIv1Routes(apiv1 *gin.RouterGroup) {
 	apiv1.GET("/crashes", APIv1GetCrashes)
 	apiv1.GET("/crashes/:id", APIv1GetCrash)
 	apiv1.GET("/reports", APIv1GetReports)
@@ -89,95 +88,97 @@ func initRouter() *gin.Engine {
 	apiv1.POST("/comments", APIv1NewComment)
 	apiv1.PUT("/comments/:id", APIv1UpdateComment)
 	apiv1.DELETE("/comments/:id", APIv1DeleteComment)
-
-	// simple-breakpad endpoints
-	router.GET("/", GetIndex)
-	router.GET("/crashes", GetCrashes)
-	router.GET("/crashes/:id", GetCrash)
-	router.POST("/crashes/:id/fixed", MarkCrashFixed)
-	router.GET("/reports", GetReports)
-	router.GET("/reports/:id", GetReport)
-	router.GET("/reports/:id/files/:name", GetReportFile)
-	router.GET("/symfiles", GetSymfiles)
-	router.GET("/symfiles/:id", GetSymfile)
-
-	router.POST("/reports", PostReports)
-
-	router.Static("/static", config.C.AssetsDirectory)
-	router.LoadHTMLGlob(filepath.Join(config.C.TemplatesDirectory, "*.html"))
-	return router
 }
 
-func main() {
-	log.SetFlags(log.Lshortfile)
-	log.SetOutput(os.Stderr)
-	cf := flag.String("config", "../etc/crashdragon.toml", "specifies the config file to use")
-	flag.Parse()
-	err := config.GetConfig(*cf)
-	if err != nil {
-		log.Fatalf("FAT Config error: %+v", err)
-		return
-	}
-	err = database.InitDb(config.C.DatabaseConnection)
-	if err != nil {
-		log.Fatalf("FAT Database error: %+v", err)
-		return
-	}
-	migrations.RunMigrations()
-	processor.StartQueue()
+func initBreakpadRoutes(breakpad *gin.RouterGroup) {
+	breakpad.GET("/", GetIndex)
+	breakpad.GET("/crashes", GetCrashes)
+	breakpad.GET("/crashes/:id", GetCrash)
+	breakpad.POST("/crashes/:id/fixed", MarkCrashFixed)
+	breakpad.GET("/reports", GetReports)
+	breakpad.GET("/reports/:id", GetReport)
+	breakpad.GET("/reports/:id/files/:name", GetReportFile)
+	breakpad.GET("/symfiles", GetSymfiles)
+	breakpad.GET("/symfiles/:id", GetSymfile)
+	breakpad.POST("/reports", PostReports)
+}
 
-	router := initRouter()
-
-	srv := &http.Server{
+// Init initzializes the router
+func Init() {
+	router = gin.Default()
+	srv = &http.Server{
 		Handler: router,
 	}
 
-	// See: https://github.com/gin-gonic/gin/blob/master/examples/graceful-shutdown/graceful-shutdown/server.go
-	if config.C.UseSocket {
-		os.Remove(config.C.BindSocket)
-		listener, err := net.Listen("unix", config.C.BindSocket)
-		if err != nil {
-			log.Fatalf("FAT Socket error: %+v", err)
-			return
+	auth := router.Group("/", Auth)
+	initAuthRoutes(auth)
+
+	admin := auth.Group("/admin", IsAdmin)
+	initAdminRoutes(admin)
+
+	// Admin JSON endpoints
+	apiv1 := auth.Group("/api/v1")
+	initAPIv1Routes(apiv1)
+
+	// simple-breakpad endpoints
+	breakpad := router.Group("/")
+	initBreakpadRoutes(breakpad)
+
+	// Static files and templates
+	router.Static("/static", config.C.AssetsDirectory)
+	router.LoadHTMLGlob(filepath.Join(config.C.TemplatesDirectory, "*.html"))
+}
+
+func runIP(ip string) {
+	srv.Addr = ip
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Listen: %+v", err)
 		}
-		defer listener.Close()
-		go func() {
-			// service connections
-			if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
-				log.Fatalf("listen: %s\n", err)
-			}
-		}()
-		log.Print("Listening on socket ", config.C.BindSocket)
-	} else {
-		srv.Addr = config.C.BindAddress
-		go func() {
-			// service connections
-			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				log.Fatalf("listen: %s\n", err)
-			}
-		}()
-		log.Print("Listening on address ", config.C.BindAddress)
+	}()
+	log.Print("Listening on address ", ip)
+}
+
+func runSocket(sock string) {
+	err := os.Remove(sock)
+	if err != nil {
+		log.Printf("There was an error removing the old socket: %+v", err)
 	}
+	listener, err = net.Listen("unix", sock)
+	if err != nil {
+		log.Fatalf("Socket error: %+v", err)
+		return
+	}
+	go func() {
+		if err := srv.Serve(listener); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Listen: %+v", err)
+		}
+	}()
+	log.Print("Listening on socket ", sock)
+}
 
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
+// Run runs the web server
+func Run() {
+	if config.C.UseSocket {
+		runSocket(config.C.BindSocket)
+	} else {
+		runIP(config.C.BindAddress)
+	}
+}
 
-	log.Println("Closing Server...")
+// Stop stops the webserver
+func Stop() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatal("Server Shutdown:", err)
+		log.Fatalf("Server Shutdown: %+v", err)
 	}
-
-	log.Println("Server stopped, waiting for processor queue to empty...")
-	for processor.QueueSize() > 0 {
+	if config.C.UseSocket {
+		defer func() {
+			err := listener.Close()
+			if err != nil {
+				log.Printf("There was an error closing the socket: %+v", err)
+			}
+		}()
 	}
-
-	log.Println("Queue empty, closing database...")
-	database.Db.Close()
-
-	log.Println("Closed database, good bye!")
-	os.Exit(0)
-	return
 }

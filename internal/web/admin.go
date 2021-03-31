@@ -1,16 +1,19 @@
-package main
+package web
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 )
+
+const checkboxOff = "off"
 
 // GetAdminIndex returns the index page for the admin area
 func GetAdminIndex(c *gin.Context) {
@@ -75,7 +78,7 @@ func PostAdminNewProduct(c *gin.Context) {
 	var Product database.Product
 	id, err := uuid.FromString(c.PostForm("id"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Product.ID = id
@@ -150,20 +153,20 @@ func PostAdminNewVersion(c *gin.Context) {
 	var Version database.Version
 	id, err := uuid.FromString(c.PostForm("id"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Version.ID = id
 	id, err = uuid.FromString(c.PostForm("product"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Version.ProductID = id
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
 	Version.GitRepo = c.PostForm("gitrepo")
-	if ign := c.DefaultPostForm("ignore", "off"); ign == "off" {
+	if ign := c.DefaultPostForm("ignore", "off"); ign == checkboxOff {
 		Version.Ignore = false
 	} else {
 		Version.Ignore = true
@@ -196,14 +199,14 @@ func PostAdminEditVersion(c *gin.Context) {
 	Version.Slug = c.PostForm("slug")
 	Version.Name = c.PostForm("name")
 	Version.GitRepo = c.PostForm("gitrepo")
-	if ign := c.DefaultPostForm("ignore", "off"); ign == "off" {
+	if ign := c.DefaultPostForm("ignore", "off"); ign == checkboxOff {
 		Version.Ignore = false
 	} else {
 		Version.Ignore = true
 	}
 	id, err := uuid.FromString(c.PostForm("product"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	Version.ProductID = id
@@ -249,12 +252,12 @@ func PostAdminNewUser(c *gin.Context) {
 	var User database.User
 	id, err := uuid.FromString(c.PostForm("id"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	User.ID = id
 	User.Name = c.PostForm("name")
-	if adm := c.DefaultPostForm("admin", "off"); adm == "off" {
+	if adm := c.DefaultPostForm("admin", "off"); adm == checkboxOff {
 		User.IsAdmin = false
 	} else {
 		User.IsAdmin = true
@@ -282,7 +285,7 @@ func PostAdminEditUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "ID = ?", c.Param("id"))
 	User.Name = c.PostForm("name")
-	if adm := c.DefaultPostForm("admin", "off"); adm == "off" {
+	if adm := c.DefaultPostForm("admin", "off"); adm == checkboxOff {
 		User.IsAdmin = false
 	} else {
 		User.IsAdmin = true
@@ -316,7 +319,10 @@ func GetAdminDeleteSymfile(c *gin.Context) {
 	database.Db.Preload("Product").Preload("Version").First(&Symfile, "ID = ?", c.Param("id"))
 	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 	if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
-		os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
+		err := os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
+		if err != nil {
+			log.Printf("Error removing Symfile: %+v", err)
+		}
 	}
 	database.Db.Delete(&Symfile)
 	c.Redirect(http.StatusFound, "/admin/symfiles")

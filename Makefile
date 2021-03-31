@@ -16,66 +16,69 @@ INSTALL_DATA = $(INSTALL) -c -m 644
 INSTALL_SCRIPT = $(INSTALL) -c
 
 HTML_TEMPLATES = \
-	templates/admin_index.html \
-	templates/admin_product.html \
-	templates/admin_products.html \
-	templates/admin_symfiles.html \
-	templates/admin_user.html \
-	templates/admin_users.html \
-	templates/admin_version.html \
-	templates/admin_versions.html \
-	templates/crashes.html \
-	templates/crash.html \
-	templates/foot.html \
-	templates/head.html \
-	templates/index.html \
-	templates/report.html \
-	templates/reports.html \
-	templates/symfiles.html
+	web/templates/admin_index.html \
+	web/templates/admin_product.html \
+	web/templates/admin_products.html \
+	web/templates/admin_symfiles.html \
+	web/templates/admin_user.html \
+	web/templates/admin_users.html \
+	web/templates/admin_version.html \
+	web/templates/admin_versions.html \
+	web/templates/crashes.html \
+	web/templates/crash.html \
+	web/templates/foot.html \
+	web/templates/head.html \
+	web/templates/index.html \
+	web/templates/report.html \
+	web/templates/reports.html \
+	web/templates/symfiles.html
 
 ASSETS_FONTS = \
-	assets/fonts/bootstrap/glyphicons-halflings-regular.eot \
-	assets/fonts/bootstrap/glyphicons-halflings-regular.svg \
-	assets/fonts/bootstrap/glyphicons-halflings-regular.ttf \
-	assets/fonts/bootstrap/glyphicons-halflings-regular.woff \
-	assets/fonts/bootstrap/glyphicons-halflings-regular.woff2
+	web/assets/fonts/bootstrap/glyphicons-halflings-regular.eot \
+	web/assets/fonts/bootstrap/glyphicons-halflings-regular.svg \
+	web/assets/fonts/bootstrap/glyphicons-halflings-regular.ttf \
+	web/assets/fonts/bootstrap/glyphicons-halflings-regular.woff \
+	web/assets/fonts/bootstrap/glyphicons-halflings-regular.woff2
 
 ASSETS_JS = \
-	assets/javascripts/app.js \
-	assets/javascripts/bootstrap.js \
-	assets/javascripts/bootstrap.min.js \
-	assets/javascripts/jquery.min.js \
-	assets/javascripts/bootstrap-sprockets.js \
-	assets/javascripts/Chart.bundle.min.js
+	web/assets/javascripts/app.js \
+	web/assets/javascripts/bootstrap.js \
+	web/assets/javascripts/bootstrap.min.js \
+	web/assets/javascripts/jquery.min.js \
+	web/assets/javascripts/bootstrap-sprockets.js \
+	web/assets/javascripts/Chart.bundle.min.js
 
-GO_SRC   = ./server/$(wildcard *.go)
+GO_SRC   = ./cmd/crashdragon/$(wildcard *.go)
 
 SASSCFLAGS ?= -t compressed
 
-all: crashdragon build/bin/minidump_stackwalk
+all: build/bin/crashdragon build/bin/minidump_stackwalk
 
-crashdragon: $(GO_SRC) assets/stylesheets/app.css
-	$(GO) build -o bin/crashdragon $(GO_SRC)
+build/bin/crashdragon: $(GO_SRC) web/assets/stylesheets/app.css
+	$(GO) build -o build/bin/crashdragon $(GO_SRC)
 
-assets/stylesheets/app.css:
+web/assets/stylesheets/app.css:
 	$(SASSC) $(SASSCFLAGS) $(@D)/app.scss > $@.tmp && mv $@.tmp $@
 
 build/bin/minidump_stackwalk:
-	cd breakpad && ./autogen.sh && ./configure --prefix="$(CURDIR)/build" && $(MAKE) install
+	cd third_party/breakpad && ./autogen.sh 
+	cd third_party/breakpad && ./configure --libdir="$(CURDIR)/build/lib" --prefix="$(CURDIR)/build" CXXFLAGS="-Wno-error" CFLAGS="-Wno-error"
+	cd third_party/breakpad && $(MAKE) install
 
 clean:
-	rm -f bin/crashdragon
-	rm -f assets/stylesheets/app.css.tmp
-	rm -f assets/stylesheets/app.css
-	rm -rf build/
-	cd breakpad && $(MAKE) distclean
+	cd third_party/breakpad && $(MAKE) uninstall
+	rm -f build/bin/crashdragon
+	rm -f web/assets/stylesheets/app.css.tmp
+	rm -f web/assets/stylesheets/app.css
+	rm -rf build/lib build/bin build/include build/share
+	cd third_party/breakpad && $(MAKE) distclean
 
 install: all
 	$(INSTALL) -d $(DESTDIR)$(bindir)
-	$(INSTALL_PROGRAM) bin/crashdragon $(DESTDIR)$(bindir)
+	$(INSTALL_PROGRAM) build/bin/crashdragon $(DESTDIR)$(bindir)
 	$(INSTALL_PROGRAM) build/bin/minidump_stackwalk $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets
-	$(INSTALL_DATA) assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets
+	$(INSTALL_DATA) web/assets/stylesheets/app.css $(DESTDIR)$(datadir)/crashdragon/assets/stylesheets
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
 	$(INSTALL_DATA) $(ASSETS_JS) $(DESTDIR)$(datadir)/crashdragon/assets/javascripts
 	$(INSTALL) -d $(DESTDIR)$(datadir)/crashdragon/assets/fonts/bootstrap

@@ -1,10 +1,10 @@
-package main
+package web
 
 import (
 	"net/http"
 	"strconv"
 
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
@@ -12,6 +12,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+//nolint:gocognit,funlen
 func filters(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	query := qry
 	if value, exists := c.GetQuery("id"); exists {
@@ -113,6 +114,7 @@ func filters(qry *gorm.DB, c *gin.Context) *gorm.DB {
 // DSC stands for descending order direction
 const DSC = "desc"
 
+//nolint:gocognit,funlen
 func order(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	query := qry
 	if value, exists := c.GetQuery("o_id"); exists {
@@ -358,7 +360,7 @@ func APIv1GetCrashes(c *gin.Context) {
 func APIv1GetCrash(c *gin.Context) {
 	var Crash database.Crash
 	database.Db.First(&Crash, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Crash)
+	c.JSON(http.StatusOK, gin.H{"Item": Crash, "Error": nil})
 }
 
 // APIv1GetReports is the GET endpoint for reports in API v1
@@ -376,7 +378,7 @@ func APIv1GetReports(c *gin.Context) {
 func APIv1GetReport(c *gin.Context) {
 	var Report database.Report
 	database.Db.First(&Report, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Report)
+	c.JSON(http.StatusOK, gin.H{"Item": Report, "Error": nil})
 }
 
 // APIv1GetSymfiles is the GET endpoint for symfiles in API v1
@@ -394,7 +396,7 @@ func APIv1GetSymfiles(c *gin.Context) {
 func APIv1GetSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.Db.First(&Symfile, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Symfile)
+	c.JSON(http.StatusOK, gin.H{"Item": Symfile, "Error": nil})
 }
 
 // APIv1GetProducts is the GET endpoint for products in API v1
@@ -412,10 +414,11 @@ func APIv1GetProducts(c *gin.Context) {
 func APIv1GetProduct(c *gin.Context) {
 	var Product database.Product
 	database.Db.First(&Product, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Product)
+	c.JSON(http.StatusOK, gin.H{"Item": Product, "Error": nil})
 }
 
 // APIv1NewProduct processes the new product endpoint
+//nolint:dupl
 func APIv1NewProduct(c *gin.Context) {
 	var Product database.Product
 	if err := c.BindJSON(&Product); err != nil {
@@ -444,8 +447,12 @@ func APIv1UpdateProduct(c *gin.Context) {
 	}
 	Product2.CreatedAt = Product.CreatedAt
 	Product2.ID = Product.ID
-	copier.Copy(&Product, &Product2)
-	if err := database.Db.Save(&Product).Error; err != nil {
+	err := copier.Copy(&Product, &Product2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&Product).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Product})
@@ -476,10 +483,11 @@ func APIv1GetVersions(c *gin.Context) {
 func APIv1GetVersion(c *gin.Context) {
 	var Version database.Version
 	database.Db.First(&Version, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Version)
+	c.JSON(http.StatusOK, gin.H{"Item": Version, "Error": nil})
 }
 
 // APIv1NewVersion processes the new product form
+//nolint:dupl
 func APIv1NewVersion(c *gin.Context) {
 	var Version database.Version
 	if err := c.BindJSON(&Version); err != nil {
@@ -511,8 +519,12 @@ func APIv1UpdateVersion(c *gin.Context) {
 	if Version2.ID == uuid.Nil {
 		Version2.ProductID = Version.ProductID
 	}
-	copier.Copy(&Version, &Version2)
-	if err := database.Db.Save(&Version).Error; err != nil {
+	err := copier.Copy(&Version, &Version2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&Version).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Version})
@@ -543,10 +555,11 @@ func APIv1GetUsers(c *gin.Context) {
 func APIv1GetUser(c *gin.Context) {
 	var User database.User
 	database.Db.First(&User, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, User)
+	c.JSON(http.StatusOK, gin.H{"Item": User, "Error": nil})
 }
 
 // APIv1NewUser processes the new user endpoint
+//nolint:dupl
 func APIv1NewUser(c *gin.Context) {
 	var User database.User
 	if err := c.BindJSON(&User); err != nil {
@@ -575,8 +588,12 @@ func APIv1UpdateUser(c *gin.Context) {
 	}
 	User2.CreatedAt = User.CreatedAt
 	User2.ID = User.ID
-	copier.Copy(&User, &User2)
-	if err := database.Db.Save(&User).Error; err != nil {
+	err := copier.Copy(&User, &User2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&User).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": User})
@@ -607,10 +624,11 @@ func APIv1GetComments(c *gin.Context) {
 func APIv1GetComment(c *gin.Context) {
 	var Comment database.Comment
 	database.Db.First(&Comment, "id = ?", c.Param("id"))
-	c.JSON(http.StatusOK, Comment)
+	c.JSON(http.StatusOK, gin.H{"Item": Comment, "Error": nil})
 }
 
 // APIv1NewComment processes the new comment endpoint
+//nolint:dupl
 func APIv1NewComment(c *gin.Context) {
 	var Comment database.Comment
 	if err := c.BindJSON(&Comment); err != nil {
@@ -639,8 +657,12 @@ func APIv1UpdateComment(c *gin.Context) {
 	}
 	Comment2.CreatedAt = Comment.CreatedAt
 	Comment2.ID = Comment.ID
-	copier.Copy(&Comment, &Comment2)
-	if err := database.Db.Save(&Comment).Error; err != nil {
+	err := copier.Copy(&Comment, &Comment2)
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	if err = database.Db.Save(&Comment).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err.Error(), "Item": nil})
 	} else {
 		c.JSON(http.StatusAccepted, gin.H{"Error": nil, "Item": Comment})

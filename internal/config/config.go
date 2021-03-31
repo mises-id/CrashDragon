@@ -1,3 +1,4 @@
+// Package config provides the config for CrashDragon
 package config
 
 import (
@@ -40,11 +41,11 @@ func WriteConfig(path string) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(filepath.Dir(path), 0775)
+	err = os.MkdirAll(filepath.Dir(path), 0750)
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(path, buf.Bytes(), 0644)
+	err = ioutil.WriteFile(path, buf.Bytes(), 0600)
 	return err
 }
 
@@ -56,8 +57,8 @@ func GetConfig(path string) error {
 	C.BindAddress = "0.0.0.0:8080"
 	C.BindSocket = "/var/run/crashdragon/crashdragon.sock"
 	C.ContentDirectory = "../share/crashdragon/files"
-	C.TemplatesDirectory = "../share/crashdragon/templates"
-	C.AssetsDirectory = "../share/crashdragon/assets"
+	C.TemplatesDirectory = "./web/templates"
+	C.AssetsDirectory = "./web/assets"
 	C.SymbolicatorPath = "./minidump_stackwalk"
 
 	var cerr error

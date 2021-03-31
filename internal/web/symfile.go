@@ -1,4 +1,4 @@
-package main
+package web
 
 import (
 	"io/ioutil"
@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"code.videolan.org/videolan/CrashDragon/config"
-	"code.videolan.org/videolan/CrashDragon/database"
+	"code.videolan.org/videolan/CrashDragon/internal/config"
+	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,12 +17,11 @@ import (
 func GetSymfiles(c *gin.Context) {
 	var Symfiles []database.Symfile
 	query := database.Db
-	all, prod := GetProductCookie(c)
-	if !all {
+	prod, ver := GetCookies(c)
+	if prod != nil {
 		query = query.Where("product_id = ?", prod.ID)
 	}
-	all, ver := GetVersionCookie(c)
-	if !all {
+	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -64,12 +63,12 @@ func GetSymfile(c *gin.Context) {
 	}
 	f, err := os.Open(filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
 	c.Data(http.StatusOK, "text/plain", data)
