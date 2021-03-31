@@ -23,6 +23,7 @@ type Config struct {
 	TemplatesDirectory string
 	AssetsDirectory    string
 	SymbolicatorPath   string
+	TrimModuleNames    bool
 }
 
 //C is the actual configuration read from the file
@@ -60,6 +61,7 @@ func GetConfig(path string) error {
 	C.TemplatesDirectory = "./web/templates"
 	C.AssetsDirectory = "./web/assets"
 	C.SymbolicatorPath = "./minidump_stackwalk"
+	C.TrimModuleNames = true
 
 	var cerr error
 	if _, err := os.Stat(path); err == nil {

@@ -164,7 +164,11 @@ func processReport(report database.Report, reprocess bool) {
 				continue
 			}
 			if report.Module == "" || (report.Signature == "" && Frame.Function != "") {
-				report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
+				if config.C.TrimModuleNames {
+					report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
+				} else {
+					report.Module = Frame.Module
+				}
 				report.Signature = Frame.Function
 			}
 			if Frame.File == "" {
