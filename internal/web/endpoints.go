@@ -51,7 +51,7 @@ func PostReports(c *gin.Context) {
 	Report.VersionID = Version.ID
 	Report.Version = Version
 
-	Report.ProcessUptime, _ = strconv.Atoi(c.Request.FormValue("ptime"))
+	Report.ProcessUptime, _ = strconv.ParseUint(c.Request.FormValue("ptime"), 10, 64)
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
 	filepth := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])

@@ -114,7 +114,7 @@ type Report struct {
 	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
 	Crash   Crash     `json:"-"`
 
-	ProcessUptime int
+	ProcessUptime uint64
 	EMail         string
 	Comment       string
 	Processed     bool
