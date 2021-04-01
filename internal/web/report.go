@@ -59,24 +59,26 @@ func PostReportComment(c *gin.Context) {
 	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String()+"#comment-"+Comment.ID.String())
 }
 
+type reportInfo struct {
+	ID        string
+	Signature string
+	Module    string
+	Date      time.Time
+	Product   string
+	Version   string
+	Platform  string
+	Reason    string
+	Location  string
+	GitRepo   string
+	File      string
+	Line      int
+}
+
 // GetReports returns crashreports
 //nolint:funlen,gocognit
 func GetReports(c *gin.Context) {
 	var Reports []database.Report
-	var List []struct {
-		ID        string
-		Signature string
-		Module    string
-		Date      time.Time
-		Product   string
-		Version   string
-		Platform  string
-		Reason    string
-		Location  string
-		GitRepo   string
-		File      string
-		Line      int
-	}
+	var List []reportInfo
 	query := database.DB
 	prod, ver := GetCookies(c)
 	if prod != nil {
@@ -129,20 +131,7 @@ func GetReports(c *gin.Context) {
 	}
 	prev = offset - 50
 	for _, Report := range Reports {
-		var Item struct {
-			ID        string
-			Signature string
-			Module    string
-			Date      time.Time
-			Product   string
-			Version   string
-			Platform  string
-			Reason    string
-			Location  string
-			GitRepo   string
-			File      string
-			Line      int
-		}
+		var Item reportInfo
 		Item.ID = Report.ID.String()
 		Item.Date = Report.CreatedAt
 		Item.Product = Report.Product.Name
