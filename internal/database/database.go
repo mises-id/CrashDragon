@@ -104,6 +104,18 @@ type Crash struct {
 	Fixed *time.Time `sql:"DEFAULT NULL"`
 }
 
+// CrashCount database model
+type CrashCount struct {
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
+
+	CrashID   uuid.UUID `gorm:"index" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	VersionID uuid.UUID `gorm:"index" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Os        string    `gorm:"index"`
+	Count     uint
+}
+
 // Report database model
 type Report struct {
 	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`

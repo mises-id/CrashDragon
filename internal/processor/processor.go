@@ -197,6 +197,11 @@ func processReport(report database.Report, reprocess bool) {
 		tx.Save(&report)
 	} else {
 		tx.Create(&report)
+
+		var CrashCount database.CrashCount
+		tx.FirstOrCreate(&CrashCount, database.CrashCount{VersionID: report.Version.ID, CrashID: report.Crash.ID, Os: report.Os})
+		CrashCount.Count++
+		tx.Save(&CrashCount)
 	}
 
 	tx.Save(&Crash)

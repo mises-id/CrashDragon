@@ -16,7 +16,8 @@ import (
 const (
 	ver1_2_0 = "1.2.0"
 	ver1_2_1 = "1.2.1"
-	curVer   = ver1_2_1
+	ver1_3_0 = "1.3.0"
+	curVer   = ver1_3_0
 )
 
 var (
@@ -35,6 +36,9 @@ func RunMigrations() {
 	var Migration database.Migration
 	database.DB.First(&Migration, "component = 'database'")
 	switch Migration.Version {
+	case ver1_3_0:
+		log.Printf("Database migration is version 1.3.0")
+		database.DB.Exec("UPDATE migrations SET version = '1.3.0' WHERE component = 'crashdragon';")
 	case ver1_2_1:
 		log.Printf("Database migration is version 1.2.1")
 	case ver1_2_0:
@@ -149,7 +153,7 @@ func migrateCrash(cra result) {
 }
 
 func dbMigrations() {
-	database.DB.AutoMigrate(&database.Product{}, &database.Version{}, &database.User{}, &database.Comment{}, &database.Crash{}, &database.Report{}, &database.Symfile{}, &database.Migration{})
+	database.DB.AutoMigrate(&database.Product{}, &database.Version{}, &database.User{}, &database.Comment{}, &database.Crash{}, &database.CrashCount{}, &database.Report{}, &database.Symfile{}, &database.Migration{})
 
 	database.DB.Model(&database.Version{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
 	database.DB.Model(&database.Comment{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
@@ -170,6 +174,10 @@ func dbMigrations() {
 	database.DB.Model(&database.Report{}).AddIndex("idx_crash_id", "crash_id")
 	database.DB.Model(&database.Report{}).AddIndex("idx_product_id", "product_id")
 	database.DB.Model(&database.Report{}).AddIndex("idx_version_id", "version_id")
+
+	database.DB.Model(&database.CrashCount{}).AddIndex("idx_crashcount_crash", "crash_id")
+	database.DB.Model(&database.CrashCount{}).AddIndex("idx_crashcount_version", "version_id")
+	database.DB.Model(&database.CrashCount{}).AddIndex("idx_crashcount_os", "os")
 
 	var Migrations []database.Migration
 	var cnt uint
