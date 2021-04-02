@@ -3,6 +3,7 @@ package database
 
 import (
 	"encoding/json"
+	"errors"
 	"html/template"
 	"log"
 	"os"
@@ -284,7 +285,7 @@ func InitDB(connection string) error {
 	}
 
 	DB.Order("name ASC").Find(&Products)
-	DB.Order("name ASC").Find(&Versions)
+	DB.Order("string_to_array(regexp_replace(name, '[^0-9.]', '', 'g'), '.')::int[]").Find(&Versions)
 	return err
 }
 
@@ -305,24 +306,33 @@ func (c *Report) AfterFind() error {
 
 // AfterSave is called on saving Products, updates the variable
 func (c *Product) AfterSave(tx *gorm.DB) error {
-	err := tx.Find(&Products).Error
+	err := tx.Order("name ASC").Find(&Products).Error
 	return err
 }
 
 // AfterDelete is called on deleting Products, updates the variable
 func (c *Product) AfterDelete(tx *gorm.DB) error {
-	err := tx.Find(&Products).Error
+	err := tx.Order("name ASC").Find(&Products).Error
 	return err
+}
+
+// BeforeSave is called on saving Versions, ensures there is no dot on the end
+func (c *Version) BeforeSave(tx *gorm.DB) error {
+	if c.Name[len(c.Name)-1] == '.' {
+		tx.Rollback()
+		return errors.New("version name must not end with dot")
+	}
+	return nil
 }
 
 // AfterSave is called on saving Versions, updates the variable
 func (c *Version) AfterSave(tx *gorm.DB) error {
-	err := tx.Find(&Versions).Error
+	err := tx.Order("string_to_array(regexp_replace(name, '[^0-9.]', '', 'g'), '.')::int[]").Find(&Versions).Error
 	return err
 }
 
 // AfterDelete is called on deleting Versions, updates the variable
 func (c *Version) AfterDelete(tx *gorm.DB) error {
-	err := tx.Find(&Versions).Error
+	err := tx.Order("string_to_array(regexp_replace(name, '[^0-9.]', '', 'g'), '.')::int[]").Find(&Versions).Error
 	return err
 }
