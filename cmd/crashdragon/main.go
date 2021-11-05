@@ -11,6 +11,7 @@ import (
 	"code.videolan.org/videolan/CrashDragon/internal/migrations"
 	"code.videolan.org/videolan/CrashDragon/internal/processor"
 	"code.videolan.org/videolan/CrashDragon/internal/web"
+	"github.com/robfig/cron/v3"
 	"github.com/spf13/viper"
 )
 
@@ -43,6 +44,10 @@ func main() {
 	web.Init()
 	web.Run()
 
+	c := cron.New()
+	c.AddFunc("@daily", database.RemoveOldReports)
+	c.Start()
+
 	// Wait for SIGINT
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -50,6 +55,7 @@ func main() {
 
 	log.Println("Stopping Server...")
 
+	c.Stop()
 	web.Stop()
 	log.Println("Server stopped, waiting for processor queue to empty...")
 	for processor.QueueSize() > 0 {

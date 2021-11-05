@@ -40,25 +40,22 @@ DO $$
 
 			-- Remove deleted_at fields and delete entries with nun-NULL entries there
 			DELETE FROM comments WHERE deleted_at IS NOT NULL;
-			ALTER TABLE comments DROP deleted_at;
-
-			DELETE FROM reports WHERE deleted_at IS NOT NULL;
-			ALTER TABLE reports DROP deleted_at;
+			ALTER TABLE comments DROP COLUMN IF EXISTS deleted_at;
 
 			DELETE FROM crashes WHERE deleted_at IS NOT NULL;
-			ALTER TABLE crashes DROP deleted_at;
+			ALTER TABLE crashes DROP COLUMN IF EXISTS deleted_at;
 
 			DELETE FROM symfiles WHERE deleted_at IS NOT NULL;
-			ALTER TABLE symfiles DROP deleted_at;
+			ALTER TABLE symfiles DROP COLUMN IF EXISTS deleted_at;
 
 			DELETE FROM versions WHERE deleted_at IS NOT NULL;
-			ALTER TABLE versions DROP deleted_at;
+			ALTER TABLE versions DROP COLUMN IF EXISTS deleted_at;
 
 			DELETE FROM products WHERE deleted_at IS NOT NULL;
-			ALTER TABLE products DROP deleted_at;
+			ALTER TABLE products DROP COLUMN IF EXISTS deleted_at;
 
 			DELETE FROM users WHERE deleted_at IS NOT NULL;
-			ALTER TABLE users DROP deleted_at;
+			ALTER TABLE users DROP COLUMN IF EXISTS deleted_at;
 
 			VACUUM ANALYZE;
 

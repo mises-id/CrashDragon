@@ -3,6 +3,7 @@
 ## Version x.x.x
 * Add: API endpoints
 * Add: `-version` command line argument, which prints the current CrashDragon version, then exits
+* Add: `Housekeeping.ReportRetentionTime` config field to configure the duration Reports should be kept (supports either integers or Go duration strings). Reports older then this retention time will be removed from the database and disk.
 * Fix: Version selector now stays in the right order after deleting a version, #48
 * Fix: Move Crash counts to own table to get rid of numerous `count()`s on the main page, see #48
 * Change: Use Go Modules instead of third party govendor

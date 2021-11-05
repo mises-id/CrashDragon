@@ -7,11 +7,13 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" // Postgres functions
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 // Product defines the structure of a product
@@ -282,6 +284,12 @@ func InitDB(connection string) error {
 	return err
 }
 
+// RemoveOldReports removes reports older than the configured report retention time
+func RemoveOldReports() {
+	removeAge := time.Now().Add(-viper.GetDuration("Housekeeping.ReportRetentionTime"))
+	DB.Delete(&Report{}, "created_at < ?", removeAge)
+}
+
 // BeforeSave is called before a crashreport is saved and maps the Report to a JSON string
 func (c *Report) BeforeSave() error {
 	var b []byte
@@ -294,6 +302,22 @@ func (c *Report) BeforeSave() error {
 func (c *Report) AfterFind() error {
 	b := []byte(c.ReportContentJSON)
 	err := json.Unmarshal(b, &c.Report)
+	return err
+}
+
+// AfterDelete is called after a report gets deleted in the database, makes sure to also delete the report on disk
+func (c *Report) AfterDelete(tx *gorm.DB) error {
+	file := filepath.Join(viper.GetString("Directory.Content"), "Reports", c.ID.String()[0:2], c.ID.String()[0:4], c.ID.String()+".dmp")
+	err := os.Remove(file)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	file = filepath.Join(viper.GetString("Directory.Content"), "TXT", c.ID.String()[0:2], c.ID.String()[0:4], c.ID.String()+".txt")
+	err = os.Remove(file)
+	if err != nil {
+		tx.Rollback()
+	}
 	return err
 }
 

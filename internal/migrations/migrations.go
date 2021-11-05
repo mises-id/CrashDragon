@@ -38,6 +38,8 @@ func RunMigrations() {
 	switch Migration.Version {
 	case ver1_3_0:
 		log.Printf("Database migration is version 1.3.0")
+		database.DB.Exec("ALTER TABLE reports DROP COLUMN IF EXISTS deleted_at;")
+		database.RemoveOldReports()
 		database.DB.Exec("UPDATE migrations SET version = '1.3.0' WHERE component = 'crashdragon';")
 	case ver1_2_1:
 		log.Printf("Database migration is version 1.2.1")
