@@ -34,8 +34,34 @@ DO $$
 	BEGIN
 		IF (SELECT version FROM migrations WHERE component = 'database') = '1.2.1' THEN
 			RAISE NOTICE 'Database migration version is 1.2.1, migrating...';
+			-- Migrate crash counts to own table
 			migrate_counts();
 			DROP FUNCTION IF EXISTS migrate_counts();
+
+			-- Remove deleted_at fields and delete entries with nun-NULL entries there
+			DELETE FROM comments WHERE deleted_at IS NOT NULL;
+			ALTER TABLE comments DROP deleted_at;
+
+			DELETE FROM reports WHERE deleted_at IS NOT NULL;
+			ALTER TABLE reports DROP deleted_at;
+
+			DELETE FROM crashes WHERE deleted_at IS NOT NULL;
+			ALTER TABLE crashes DROP deleted_at;
+
+			DELETE FROM symfiles WHERE deleted_at IS NOT NULL;
+			ALTER TABLE symfiles DROP deleted_at;
+
+			DELETE FROM versions WHERE deleted_at IS NOT NULL;
+			ALTER TABLE versions DROP deleted_at;
+
+			DELETE FROM products WHERE deleted_at IS NOT NULL;
+			ALTER TABLE products DROP deleted_at;
+
+			DELETE FROM users WHERE deleted_at IS NOT NULL;
+			ALTER TABLE users DROP deleted_at;
+
+			VACUUM ANALYZE;
+
 			UPDATE migrations SET version = '1.3.0' WHERE component = 'database';
 			RAISE NOTICE 'Database migration version is now 1.3.0';
 		ELSE

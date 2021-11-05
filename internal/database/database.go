@@ -16,10 +16,9 @@ import (
 
 // Product defines the structure of a product
 type Product struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	Name string
 	Slug string
@@ -30,10 +29,9 @@ var Products []Product
 
 // Version defines the structure of a product
 type Version struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	Name    string
 	Slug    string
@@ -51,10 +49,9 @@ var Versions []Version
 
 // User defines the structure of a user
 type User struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	Name    string
 	IsAdmin bool
@@ -64,10 +61,9 @@ type User struct {
 
 // Comment defines the structure of a comment
 type Comment struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	CrashID  uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
 	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
@@ -80,10 +76,9 @@ type Comment struct {
 
 // Crash database model
 type Crash struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	Signature     string
 	Module        string
@@ -119,10 +114,9 @@ type CrashCount struct {
 
 // Report database model
 type Report struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
 	Crash   Crash     `json:"-"`
@@ -157,10 +151,9 @@ type Report struct {
 
 // Symfile database model
 type Symfile struct {
-	ID        uuid.UUID  `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	CreatedAt time.Time  `json:",omitempty"`
-	UpdatedAt time.Time  `json:",omitempty"`
-	DeletedAt *time.Time `json:",omitempty"`
+	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	CreatedAt time.Time `json:",omitempty"`
+	UpdatedAt time.Time `json:",omitempty"`
 
 	Os string
 
