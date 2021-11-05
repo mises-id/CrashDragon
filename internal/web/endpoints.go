@@ -91,7 +91,7 @@ func ReprocessReport(c *gin.Context) {
 	database.DB.Where("id = ?", c.Param("id")).First(&Report)
 	processor.Reprocess(Report)
 	c.SetCookie("result", "OK", 0, "/", "", false, false)
-	c.Redirect(http.StatusMovedPermanently, "/reports/"+Report.ID.String())
+	c.Redirect(http.StatusFound, "/reports/"+Report.ID.String())
 }
 
 // PostSymfiles processes symfile
