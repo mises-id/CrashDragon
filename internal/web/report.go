@@ -119,12 +119,12 @@ func GetReports(c *gin.Context) {
 		offset = 0
 	}
 	query = query.Where("processed = true")
-	var count int
+	var count int64
 	query.Model(database.Report{}).Count(&count)
 	query.Order("created_at DESC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Reports)
 	var next int
 	var prev int
-	if (offset + 50) >= count {
+	if (int64(offset) + 50) >= count {
 		next = -1
 	} else {
 		next = offset + 50
@@ -165,7 +165,7 @@ func GetReports(c *gin.Context) {
 func GetReport(c *gin.Context) {
 	var Report database.Report
 	database.DB.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
-	database.DB.Model(&Report).Preload("User").Order("created_at ASC").Related(&Report.Comments)
+	database.DB.Model(&Report).Preload("User").Order("created_at ASC").Association("Comments").Find(&Report.Comments)
 	var Item struct {
 		ID             string
 		CrashID        string

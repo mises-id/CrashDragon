@@ -5,11 +5,10 @@ import (
 	"strconv"
 
 	"code.videolan.org/videolan/CrashDragon/internal/database"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/copier"
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 )
 
 //nolint:gocognit,funlen
@@ -337,8 +336,8 @@ func order(qry *gorm.DB, c *gin.Context) *gorm.DB {
 	return query
 }
 
-func paginate(qry *gorm.DB, c *gin.Context) (*gorm.DB, uint, int, int) {
-	var total uint
+func paginate(qry *gorm.DB, c *gin.Context) (*gorm.DB, int64, int, int) {
+	var total int64
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	query := qry.Count(&total).Limit(limit).Offset(offset)

@@ -10,20 +10,21 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq" // Postgres functions
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 // Product defines the structure of a product
 type Product struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
 	Name string
-	Slug string
+	Slug string `gorm:"uniqueIndex"`
 }
 
 // Products contains all currently available products and is used for the switcher in the header
@@ -31,19 +32,19 @@ var Products []Product
 
 // Version defines the structure of a product
 type Version struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
 	Name    string
-	Slug    string
+	Slug    string `gorm:"uniqueIndex:idx_version_slug_product"`
 	GitRepo string
 	Ignore  bool
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	Product   Product   `json:"-"`
+	ProductID uuid.UUID `gorm:"uniqueIndex:idx_version_slug_product" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Product   Product   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
-	Crashes []*Crash `gorm:"many2many:crash_versions;" json:"-"`
+	Crashes []*Crash `gorm:"many2many:crash_versions;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 // Versions contains all currently available versions and is used for the switcher in the header
@@ -51,11 +52,11 @@ var Versions []Version
 
 // User defines the structure of a user
 type User struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
-	Name    string
+	Name    string `gorm:"uniqueIndex"`
 	IsAdmin bool
 
 	Comments []Comment `json:"-"`
@@ -63,7 +64,7 @@ type User struct {
 
 // Comment defines the structure of a comment
 type Comment struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
@@ -71,22 +72,22 @@ type Comment struct {
 	ReportID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
 
 	UserID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	User   User      `json:"-"`
+	User   User      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
 	Content template.HTML
 }
 
 // Crash database model
 type Crash struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
-	Signature     string
-	Module        string
-	AllCrashCount uint `gorm:"-" json:",omitempty"`
-	WinCrashCount uint `gorm:"-" json:",omitempty"`
-	MacCrashCount uint `gorm:"-" json:",omitempty"`
+	Signature     string `gorm:"uniqueIndex:idx_crash_signature_module"`
+	Module        string `gorm:"uniqueIndex:idx_crash_signature_module"`
+	AllCrashCount uint   `gorm:"-" json:",omitempty"`
+	WinCrashCount uint   `gorm:"-" json:",omitempty"`
+	MacCrashCount uint   `gorm:"-" json:",omitempty"`
 
 	Reports  []Report  `json:",omitempty"`
 	Comments []Comment `json:",omitempty"`
@@ -97,14 +98,14 @@ type Crash struct {
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	Product   Product   `json:"-"`
 
-	Versions []*Version `gorm:"many2many:crash_versions;" json:",omitempty"`
+	Versions []*Version `gorm:"many2many:crash_versions;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:",omitempty"`
 
 	Fixed *time.Time `sql:"DEFAULT NULL"`
 }
 
 // CrashCount database model
 type CrashCount struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
@@ -116,12 +117,12 @@ type CrashCount struct {
 
 // Report database model
 type Report struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
-	CrashID uuid.UUID `sql:"type:uuid DEFAULT NULL" json:",omitempty"`
-	Crash   Crash     `json:"-"`
+	CrashID uuid.UUID `gorm:"index" sql:"type:uuid DEFAULT NULL" json:",omitempty"`
+	Crash   Crash     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"-"`
 
 	ProcessUptime uint64
 	EMail         string
@@ -142,32 +143,32 @@ type Report struct {
 	ReportContentJSON string        `sql:"type:JSONB NOT NULL DEFAULT '{}'::JSONB" json:"-"`
 	Report            ReportContent `gorm:"-" json:",omitempty"`
 
-	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	Product   Product   `json:"-"`
+	ProductID uuid.UUID `gorm:"index" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Product   Product   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
-	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	Version   Version   `json:"-"`
+	VersionID uuid.UUID `gorm:"index" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	Version   Version   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
 	ProcessingTime float64
 }
 
 // Symfile database model
 type Symfile struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
 	CreatedAt time.Time `json:",omitempty"`
 	UpdatedAt time.Time `json:",omitempty"`
 
 	Os string
 
 	Arch string
-	Code string `gorm:"unique;index"`
+	Code string `gorm:"uniqueIndex"`
 	Name string
 
 	ProductID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	Product   Product   `json:"-"`
+	Product   Product   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
 	VersionID uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL" json:",omitempty"`
-	Version   Version   `json:"-"`
+	Version   Version   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
 // ReportContent of a crashreport
@@ -256,11 +257,11 @@ type ReportContent struct {
 
 // Migration is a table for the component versions
 type Migration struct {
-	ID        uuid.UUID `sql:"type:uuid NOT NULL DEFAULT NULL"`
+	ID        uuid.UUID `gorm:"primaryKey" sql:"type:uuid NOT NULL DEFAULT NULL"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Component string `gorm:"unique,index"`
+	Component string `gorm:"uniqueIndex"`
 	Version   string
 }
 
@@ -270,15 +271,15 @@ var DB *gorm.DB
 // InitDB sets up the database
 func InitDB(connection string) error {
 	var err error
-	DB, err = gorm.Open("postgres", connection)
+	DB, err = gorm.Open(postgres.Open(connection), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		log.Fatalf("FAT Database error: %+v", err)
 		return err
 	}
-	if os.Getenv("GIN_MODE") != "release" {
-		DB.LogMode(true)
-	}
 
+	DB.AutoMigrate(&Product{}, &Version{}, &User{}, &Comment{}, &Crash{}, &CrashCount{}, &Report{}, &Symfile{}, &Migration{})
 	DB.Order("name ASC").Find(&Products)
 	DB.Order("string_to_array(regexp_replace(name, '[^0-9.]', '', 'g'), '.')::int[]").Find(&Versions)
 	return err
@@ -291,7 +292,7 @@ func RemoveOldReports() {
 }
 
 // BeforeSave is called before a crashreport is saved and maps the Report to a JSON string
-func (c *Report) BeforeSave() error {
+func (c *Report) BeforeSave(tx *gorm.DB) error {
 	var b []byte
 	b, err := json.Marshal(c.Report)
 	c.ReportContentJSON = string(b)
@@ -299,7 +300,7 @@ func (c *Report) BeforeSave() error {
 }
 
 // AfterFind is called on finds, maps JSON string to Report
-func (c *Report) AfterFind() error {
+func (c *Report) AfterFind(tx *gorm.DB) error {
 	b := []byte(c.ReportContentJSON)
 	err := json.Unmarshal(b, &c.Report)
 	return err
@@ -307,18 +308,22 @@ func (c *Report) AfterFind() error {
 
 // AfterDelete is called after a report gets deleted in the database, makes sure to also delete the report on disk
 func (c *Report) AfterDelete(tx *gorm.DB) error {
+	if c.ID == uuid.Nil {
+		return nil
+	}
 	file := filepath.Join(viper.GetString("Directory.Content"), "Reports", c.ID.String()[0:2], c.ID.String()[0:4], c.ID.String()+".dmp")
 	err := os.Remove(file)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		tx.Rollback()
 		return err
 	}
 	file = filepath.Join(viper.GetString("Directory.Content"), "TXT", c.ID.String()[0:2], c.ID.String()[0:4], c.ID.String()+".txt")
 	err = os.Remove(file)
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		tx.Rollback()
+		return err
 	}
-	return err
+	return nil
 }
 
 // AfterSave is called on saving Products, updates the variable

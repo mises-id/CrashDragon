@@ -28,12 +28,12 @@ func GetSymfiles(c *gin.Context) {
 	if err != nil {
 		offset = 0
 	}
-	var count int
+	var count int64
 	query.Model(database.Symfile{}).Count(&count)
 	query.Order("created_at ASC").Offset(offset).Limit(50).Preload("Product").Preload("Version").Find(&Symfiles)
 	var next int
 	var prev int
-	if (offset + 50) >= count {
+	if (int64(offset) + 50) >= count {
 		next = -1
 	} else {
 		next = offset + 50

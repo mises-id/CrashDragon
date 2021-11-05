@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"code.videolan.org/videolan/CrashDragon/internal/database"
-
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
@@ -17,13 +16,13 @@ const checkboxOff = "off"
 
 // GetAdminIndex returns the index page for the admin area
 func GetAdminIndex(c *gin.Context) {
-	var countReports int
-	var countCrashes int
-	var countSymfiles int
-	var countProducts int
-	var countVersions int
-	var countUsers int
-	var countComments int
+	var countReports int64
+	var countCrashes int64
+	var countSymfiles int64
+	var countProducts int64
+	var countVersions int64
+	var countUsers int64
+	var countComments int64
 	database.DB.Model(database.Report{}).Count(&countReports)
 	database.DB.Model(database.Crash{}).Count(&countCrashes)
 	database.DB.Model(database.Symfile{}).Count(&countSymfiles)

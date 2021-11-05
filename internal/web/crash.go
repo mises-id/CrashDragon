@@ -59,16 +59,16 @@ func GetCrashes(c *gin.Context) {
 		query = query.Where("product_id = ?", prod.ID)
 	}
 	if ver != nil {
-		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND version_id = ?", ver.ID).QueryExpr(), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID).QueryExpr(), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID).QueryExpr())
-		query = query.Where("id in (?)", database.DB.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID).QueryExpr())
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND version_id = ?", ver.ID), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Windows NT'", ver.ID), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND version_id = ? AND os = 'Mac OS X'", ver.ID))
+		query = query.Where("id in (?)", database.DB.Table("crash_versions").Select("crash_id").Where("version_id = ?", ver.ID))
 	} else {
-		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id").QueryExpr(), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND os = 'Windows NT'").QueryExpr(), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND os = 'Mac OS X'").QueryExpr())
+		query = query.Select("*, (?) AS all_crash_count, (?) AS win_crash_count, (?) AS mac_crash_count", database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id"), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND os = 'Windows NT'"), database.DB.Table("crash_counts").Select("SUM(count)").Where("crash_id = crashes.id AND os = 'Mac OS X'"))
 	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
 		offset = 0
 	}
-	var count int
+	var count int64
 	query.Model(database.Crash{}).Count(&count)
 	if c.Query("show_fixed") != "true" {
 		query = query.Where("fixed IS NULL")
@@ -76,7 +76,7 @@ func GetCrashes(c *gin.Context) {
 	query.Order("all_crash_count DESC").Offset(offset).Limit(50).Find(&Crashes)
 	var next int
 	var prev int
-	if (offset + 50) >= count {
+	if (int64(offset) + 50) >= count {
 		next = -1
 	} else {
 		next = offset + 50
@@ -107,7 +107,7 @@ func GetCrash(c *gin.Context) {
 	if err != nil {
 		offset = 0
 	}
-	var count int
+	var count int64
 	query := database.DB.Model(&database.Report{}).Where("crash_id = ?", Crash.ID)
 	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
@@ -117,11 +117,11 @@ func GetCrash(c *gin.Context) {
 	if ver != nil {
 		query = query.Where("version_id = ?", ver.ID)
 	}
-	query.Offset(offset).Limit(50).Related(&Crash.Reports)
-	database.DB.Model(&Crash).Preload("User").Order("created_at ASC").Related(&Crash.Comments)
+	query.Offset(offset).Limit(50).Association("Reports").Find(&Crash.Reports)
+	database.DB.Model(&Crash).Preload("User").Order("created_at ASC").Association("Comments").Find(&Crash.Comments)
 	var next int
 	var prev int
-	if (offset + 50) >= count {
+	if (int64(offset) + 50) >= count {
 		next = -1
 	} else {
 		next = offset + 50

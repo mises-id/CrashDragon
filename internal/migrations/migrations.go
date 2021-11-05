@@ -89,7 +89,7 @@ func migrateSymfiles() {
 }
 
 func migrateCrashes() {
-	var ccount uint
+	var ccount int64
 	var crashes []result
 	database.DB.Model(&database.Crash{}).Select("id").Where("module IS NULL").Scan(&crashes).Count(&ccount)
 	for curc, cra := range crashes {
@@ -155,34 +155,8 @@ func migrateCrash(cra result) {
 }
 
 func dbMigrations() {
-	database.DB.AutoMigrate(&database.Product{}, &database.Version{}, &database.User{}, &database.Comment{}, &database.Crash{}, &database.CrashCount{}, &database.Report{}, &database.Symfile{}, &database.Migration{})
-
-	database.DB.Model(&database.Version{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
-	database.DB.Model(&database.Comment{}).AddForeignKey("user_id", "users(id)", "RESTRICT", "RESTRICT")
-	database.DB.Model(&database.Report{}).AddForeignKey("crash_id", "crashes(id)", "RESTRICT", "RESTRICT")
-	database.DB.Model(&database.Report{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
-	database.DB.Model(&database.Report{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
-	database.DB.Model(&database.Symfile{}).AddForeignKey("product_id", "products(id)", "RESTRICT", "RESTRICT")
-	database.DB.Model(&database.Symfile{}).AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
-	database.DB.Table("crash_versions").AddForeignKey("crash_id", "crashes(id)", "RESTRICT", "RESTRICT")
-	database.DB.Table("crash_versions").AddForeignKey("version_id", "versions(id)", "RESTRICT", "RESTRICT")
-
-	database.DB.Model(&database.Product{}).AddUniqueIndex("idx_product_slug", "slug")
-	database.DB.Model(&database.Version{}).AddUniqueIndex("idx_version_slug_product", "slug", "product_id")
-	database.DB.Model(&database.User{}).AddUniqueIndex("idx_user_name", "name")
-	database.DB.Model(&database.Crash{}).AddUniqueIndex("idx_crash_signature_module", "signature", "module")
-	database.DB.Model(&database.Symfile{}).AddUniqueIndex("idx_symfile_code", "code")
-
-	database.DB.Model(&database.Report{}).AddIndex("idx_crash_id", "crash_id")
-	database.DB.Model(&database.Report{}).AddIndex("idx_product_id", "product_id")
-	database.DB.Model(&database.Report{}).AddIndex("idx_version_id", "version_id")
-
-	database.DB.Model(&database.CrashCount{}).AddIndex("idx_crashcount_crash", "crash_id")
-	database.DB.Model(&database.CrashCount{}).AddIndex("idx_crashcount_version", "version_id")
-	database.DB.Model(&database.CrashCount{}).AddIndex("idx_crashcount_os", "os")
-
 	var Migrations []database.Migration
-	var cnt uint
+	var cnt int64
 	database.DB.Find(&Migrations).Count(&cnt)
 	if cnt != 2 {
 		var cd = database.Migration{ID: uuid.NewV4(), Component: "crashdragon", Version: curVer}

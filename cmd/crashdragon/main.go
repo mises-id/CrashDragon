@@ -34,7 +34,7 @@ func main() {
 		log.Fatalf("Config error: %+v", err)
 	}
 
-	err = database.InitDB(viper.GetString("Database.Connection"))
+	err = database.InitDB(viper.GetString("DB.Connection"))
 	if err != nil {
 		log.Fatalf("Database error: %+v", err)
 	}
@@ -62,7 +62,13 @@ func main() {
 	}
 
 	log.Println("Queue empty, closing database...")
-	err = database.DB.Close()
+	sqlDB, err := database.DB.DB()
+	if err != nil {
+		log.Printf("Error closing the database!")
+		os.Exit(1)
+		return
+	}
+	err = sqlDB.Close()
 	if err != nil {
 		log.Printf("Error closing the database!")
 		os.Exit(1)

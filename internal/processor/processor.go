@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"code.videolan.org/videolan/CrashDragon/internal/database"
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 	"github.com/spf13/viper"
+	"gorm.io/gorm"
 )
 
 var rchan = make(chan database.Report, 5000)
@@ -235,7 +235,7 @@ func processCrash(tx *gorm.DB, report database.Report, reprocess bool, crash *da
 		crash.LastReported = report.CreatedAt
 	}
 
-	tx.Model(&crash).Related(&crash.Versions, "Versions")
+	tx.Model(&crash).Association("Versions").Find(&crash.Versions)
 	for _, Version := range crash.Versions {
 		if Version.ID == report.Version.ID {
 			break
