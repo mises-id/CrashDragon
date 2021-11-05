@@ -6,11 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 const checkboxOff = "off"
@@ -317,7 +317,7 @@ func GetAdminSymfiles(c *gin.Context) {
 func GetAdminDeleteSymfile(c *gin.Context) {
 	var Symfile database.Symfile
 	database.DB.Preload("Product").Preload("Version").First(&Symfile, "ID = ?", c.Param("id"))
-	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+	filepth := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 	if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
 		err := os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
 		if err != nil {

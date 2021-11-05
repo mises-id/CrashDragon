@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 var rchan = make(chan database.Report, 5000)
@@ -49,7 +49,7 @@ func Reprocess(report database.Report) {
 
 // ProcessText adds the text version of the report to the database, which is only used when the text button is clicked
 func ProcessText(report *database.Report) {
-	filepth := filepath.Join(config.C.ContentDirectory, "TXT", report.ID.String()[0:2], report.ID.String()[0:4])
+	filepth := filepath.Join(viper.GetString("Directory.Content"), "TXT", report.ID.String()[0:2], report.ID.String()[0:4])
 	err := os.MkdirAll(filepth, 0750)
 	if err != nil {
 		return
@@ -65,8 +65,8 @@ func ProcessText(report *database.Report) {
 		}
 	}()
 
-	file := filepath.Join(config.C.ContentDirectory, "Reports", report.ID.String()[0:2], report.ID.String()[0:4], report.ID.String()+".dmp")
-	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", report.Product.Slug, report.Version.Slug)
+	file := filepath.Join(viper.GetString("Directory.Content"), "Reports", report.ID.String()[0:2], report.ID.String()[0:4], report.ID.String()+".dmp")
+	symbolsPath := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", report.Product.Slug, report.Version.Slug)
 
 	dataTXT, err := runProcessor(file, symbolsPath, "txt")
 	if err != nil {
@@ -89,7 +89,7 @@ func processHandler() {
 
 func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byte, error) {
 	//#nosec G204
-	cmd := exec.Command(config.C.SymbolicatorPath, "-f", format, minidumpFile, symbolsPath)
+	cmd := exec.Command(viper.GetString("Symbolicator.Executable"), "-f", format, minidumpFile, symbolsPath)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
@@ -113,8 +113,8 @@ func runProcessor(minidumpFile string, symbolsPath string, format string) ([]byt
 func processReport(report database.Report, reprocess bool) {
 	start := time.Now()
 
-	file := filepath.Join(config.C.ContentDirectory, "Reports", report.ID.String()[0:2], report.ID.String()[0:4], report.ID.String()+".dmp")
-	symbolsPath := filepath.Join(config.C.ContentDirectory, "Symfiles", report.Product.Slug, report.Version.Slug)
+	file := filepath.Join(viper.GetString("Directory.Content"), "Reports", report.ID.String()[0:2], report.ID.String()[0:4], report.ID.String()+".dmp")
+	symbolsPath := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", report.Product.Slug, report.Version.Slug)
 
 	dataJSON, err := runProcessor(file, symbolsPath, "json")
 	tx := database.DB.Begin()
@@ -164,7 +164,7 @@ func processReport(report database.Report, reprocess bool) {
 				continue
 			}
 			if report.Module == "" || (report.Signature == "" && Frame.Function != "") {
-				if config.C.TrimModuleNames {
+				if viper.GetBool("Symbolicator.TrimModuleNames") {
 					report.Module = strings.TrimSuffix(Frame.Module, filepath.Ext(Frame.Module))
 				} else {
 					report.Module = Frame.Module

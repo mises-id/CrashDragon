@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -73,12 +73,12 @@ func migrateSymfiles() {
 	database.DB.Preload("Product").Preload("Version").Find(&Symfiles)
 	for i, Symfile := range Symfiles {
 		log.Printf("Moving symfile %d/%d", i+1, len(Symfiles))
-		filepthnew := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+		filepthnew := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 		err := os.MkdirAll(filepthnew, 0750)
 		if err != nil {
 			log.Fatal("Can not create directory ", err)
 		}
-		filepthold := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Name, Symfile.Code)
+		filepthold := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", Symfile.Name, Symfile.Code)
 		err = os.Rename(filepath.Join(filepthold, Symfile.Name+".sym"), filepath.Join(filepthnew, Symfile.Name+".sym"))
 		if err != nil {
 			log.Fatal("Could not move symfile", err)

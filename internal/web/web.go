@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -125,8 +125,8 @@ func Init() {
 	initBreakpadRoutes(breakpad)
 
 	// Static files and templates
-	router.Static("/static", config.C.AssetsDirectory)
-	router.LoadHTMLGlob(filepath.Join(config.C.TemplatesDirectory, "*.html"))
+	router.Static("/static", viper.GetString("Directory.Assets"))
+	router.LoadHTMLGlob(filepath.Join(viper.GetString("Directory.Templates"), "*.html"))
 }
 
 func runIP(ip string) {
@@ -159,10 +159,10 @@ func runSocket(sock string) {
 
 // Run runs the web server
 func Run() {
-	if config.C.UseSocket {
-		runSocket(config.C.BindSocket)
+	if viper.GetBool("Web.UseSocket") {
+		runSocket(viper.GetString("Web.BindSocket"))
 	} else {
-		runIP(config.C.BindAddress)
+		runIP(viper.GetString("Web.BindAddress"))
 	}
 }
 
@@ -174,7 +174,7 @@ func Stop() {
 		log.Fatalf("Server Shutdown: %+v", err)
 	}
 	defer cancel()
-	if config.C.UseSocket {
+	if viper.GetBool("Web.UseSocket") {
 		defer func() {
 			err := listener.Close()
 			if err != nil {

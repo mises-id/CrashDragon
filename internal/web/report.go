@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"code.videolan.org/videolan/CrashDragon/internal/processor"
 	"github.com/gin-gonic/gin"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 // PostReportCrashID allows you to change the crash id of a crashreport
@@ -228,13 +228,13 @@ func GetReport(c *gin.Context) {
 
 // DeleteReport deletes a crashreport
 func DeleteReport(c *gin.Context) {
-	filepth := filepath.Join(config.C.ContentDirectory, "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
+	filepth := filepath.Join(viper.GetString("Directory.Content"), "Reports", c.Param("id")[0:2], c.Param("id")[0:4])
 	err := os.Remove(filepath.Join(filepth, c.Param("id")+".dmp"))
 	if err != nil {
 		log.Printf("Error removing minidump: %+v", err)
 	}
 
-	filepth = filepath.Join(config.C.ContentDirectory, "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
+	filepth = filepath.Join(viper.GetString("Directory.Content"), "TXT", c.Param("id")[0:2], c.Param("id")[0:4])
 	err = os.Remove(filepath.Join(filepth, c.Param("id")+".txt"))
 	if err != nil {
 		log.Printf("Error removing txt: %+v", err)
@@ -257,7 +257,7 @@ func GetReportFile(c *gin.Context) {
 	name := c.Param("name")
 	switch name {
 	case "upload_file_minidump":
-		f, err := os.Open(filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp"))
+		f, err := os.Open(filepath.Join(viper.GetString("Directory.Content"), "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".dmp"))
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)
 			return
@@ -281,10 +281,10 @@ func GetReportFile(c *gin.Context) {
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))
 		return
 	case "processed_txt":
-		f, err := os.Open(filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt"))
+		f, err := os.Open(filepath.Join(viper.GetString("Directory.Content"), "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt"))
 		if os.IsNotExist(err) {
 			processor.ProcessText(&Report)
-			f, err = os.Open(filepath.Join(config.C.ContentDirectory, "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt"))
+			f, err = os.Open(filepath.Join(viper.GetString("Directory.Content"), "TXT", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".txt"))
 		}
 		if err != nil {
 			c.AbortWithStatus(http.StatusInternalServerError)

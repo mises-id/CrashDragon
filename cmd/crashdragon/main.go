@@ -11,6 +11,7 @@ import (
 	"code.videolan.org/videolan/CrashDragon/internal/migrations"
 	"code.videolan.org/videolan/CrashDragon/internal/processor"
 	"code.videolan.org/videolan/CrashDragon/internal/web"
+	"github.com/spf13/viper"
 )
 
 // Version holds the current version, filled by the Makefile
@@ -19,7 +20,6 @@ var Version = "Unknown"
 func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(os.Stderr)
-	cf := flag.String("config", "../etc/crashdragon.toml", "specifies the config file to use")
 	flag.Bool("version", false, "")
 	flag.Parse()
 
@@ -28,12 +28,12 @@ func main() {
 		os.Exit(0)
 	}
 
-	err := config.GetConfig(*cf)
+	err := config.GetConfig()
 	if err != nil {
 		log.Fatalf("Config error: %+v", err)
 	}
 
-	err = database.InitDB(config.C.DatabaseConnection)
+	err = database.InitDB(viper.GetString("Database.Connection"))
 	if err != nil {
 		log.Fatalf("Database error: %+v", err)
 	}

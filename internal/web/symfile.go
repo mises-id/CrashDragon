@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 )
 
 // GetSymfiles returns symfiles
@@ -61,7 +61,7 @@ func GetSymfile(c *gin.Context) {
 		c.JSON(http.StatusOK, Symfile)
 		return
 	}
-	f, err := os.Open(filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
+	f, err := os.Open(filepath.Join(viper.GetString("Directory.Content"), "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code, Symfile.Name+".sym"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return

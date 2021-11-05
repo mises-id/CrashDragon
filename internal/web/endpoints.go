@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"strings"
 
-	"code.videolan.org/videolan/CrashDragon/internal/config"
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"code.videolan.org/videolan/CrashDragon/internal/processor"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
+	"github.com/spf13/viper"
 )
 
 // PostReports processes crashreport
@@ -54,7 +54,7 @@ func PostReports(c *gin.Context) {
 	Report.ProcessUptime, _ = strconv.ParseUint(c.Request.FormValue("ptime"), 10, 64)
 	Report.EMail = c.Request.FormValue("email")
 	Report.Comment = c.Request.FormValue("comments")
-	filepth := filepath.Join(config.C.ContentDirectory, "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
+	filepth := filepath.Join(viper.GetString("Directory.Content"), "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4])
 	err = os.MkdirAll(filepth, 0750)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -148,7 +148,7 @@ func PostSymfiles(c *gin.Context) {
 		Symfile.ID = uuid.NewV4()
 		updated = false
 	} else {
-		filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+		filepth := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 		if _, existsErr := os.Stat(filepath.Join(filepth, Symfile.Name+".sym")); !os.IsNotExist(existsErr) {
 			err = os.Remove(filepath.Join(filepth, Symfile.Name+".sym"))
 		}
@@ -162,7 +162,7 @@ func PostSymfiles(c *gin.Context) {
 	Symfile.Arch = parts[2]
 	Symfile.Code = parts[3]
 	Symfile.Name = parts[4]
-	filepth := filepath.Join(config.C.ContentDirectory, "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
+	filepth := filepath.Join(viper.GetString("Directory.Content"), "Symfiles", Symfile.Product.Slug, Symfile.Version.Slug, Symfile.Name, Symfile.Code)
 	err = os.MkdirAll(filepth, 0750)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)

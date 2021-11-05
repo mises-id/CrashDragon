@@ -1,5 +1,16 @@
 # Changelog
 
+## Version x.x.x
+* Add: API endpoints
+* Add: `-version` command line argument, which prints the current CrashDragon version, then exits
+* Fix: Version selector now stays in the right order after deleting a version, #48
+* Fix: Move Crash counts to own table to get rid of numerous `count()`s on the main page, see #48
+* Change: Use Go Modules instead of third party govendor
+* Change: Module name trimming is now configurable (on or off) with the `Symbolicator.TrimModuleNames` config option
+* Change: `ProcessUptime` now uses `uint64`, see !7
+* Change: Update `breakdpad`-submodule to current `master`
+* Remove: `-config` command line argument in favor of dedicated config-search-paths (`/etc/crashdragon/config.ext`, `$HOME/.crashdragon/config.ext`, `./config.ext`)
+
 ## Version 1.2.1
 
 * Fix: Commenting on crashes possible again
