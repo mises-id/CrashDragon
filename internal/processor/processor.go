@@ -231,8 +231,12 @@ func processCrash(tx *gorm.DB, report database.Report, reprocess bool, crash *da
 		tx.Create(&crash)
 		reprocess = false
 	}
-	if !reprocess || report.CrashID == uuid.Nil {
+
+	if crash.LastReported.Before(report.CreatedAt) {
 		crash.LastReported = report.CreatedAt
+	}
+	if crash.FirstReported.After(report.CreatedAt) {
+		crash.FirstReported = report.CreatedAt
 	}
 
 	tx.Model(&crash).Association("Versions").Find(&crash.Versions)
