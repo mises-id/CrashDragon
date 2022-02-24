@@ -103,6 +103,10 @@ func GetCrash(c *gin.Context) {
 	_, ver := GetCookies(c)
 	var Crash database.Crash
 	database.DB.First(&Crash, "id = ?", c.Param("id"))
+	if Crash.ID == uuid.Nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
 	offset, err := strconv.Atoi(c.DefaultQuery("offset", "0"))
 	if err != nil {
 		offset = 0

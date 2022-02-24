@@ -165,6 +165,10 @@ func GetReports(c *gin.Context) {
 func GetReport(c *gin.Context) {
 	var Report database.Report
 	database.DB.Preload("Product").Preload("Version").First(&Report, "id = ?", c.Param("id")).Order("created_at DESC")
+	if Report.ID == uuid.Nil {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
 	database.DB.Model(&Report).Preload("User").Order("created_at ASC").Association("Comments").Find(&Report.Comments)
 	var Item struct {
 		ID             string
