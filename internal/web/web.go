@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/gin-contrib/gzip"
 )
 
 var (
@@ -110,6 +111,7 @@ func Init() {
 		Handler: router,
 	}
 
+
 	auth := router.Group("/", Auth)
 	initAuthRoutes(auth)
 
@@ -121,7 +123,7 @@ func Init() {
 	initAPIv1Routes(apiv1)
 
 	// simple-breakpad endpoints
-	breakpad := router.Group("/")
+	breakpad := router.Group("/", gzip.Gzip(gzip.DefaultCompression, gzip.WithDecompressFn(gzip.DefaultDecompressHandle)))
 	initBreakpadRoutes(breakpad)
 
 	// Static files and templates

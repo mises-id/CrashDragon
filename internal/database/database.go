@@ -358,3 +358,12 @@ func (c *Version) AfterDelete(tx *gorm.DB) error {
 	err := tx.Order("string_to_array(regexp_replace(name, '[^0-9.]', '', 'g'), '.')::int[]").Find(&Versions).Error
 	return err
 }
+
+
+func (u *CrashCount) BeforeCreate(tx *gorm.DB) (err error) {
+  u.ID = uuid.NewV4()
+
+  return
+}
+
+

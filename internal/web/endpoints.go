@@ -2,6 +2,7 @@ package web
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	//"io/ioutil"
+	//"bytes"
 
 	"code.videolan.org/videolan/CrashDragon/internal/database"
 	"code.videolan.org/videolan/CrashDragon/internal/processor"
@@ -20,8 +23,19 @@ import (
 // PostReports processes crashreport
 //nolint:funlen
 func PostReports(c *gin.Context) {
+	// Get all headers
+	headers := c.Request.Header
+
+	// Print each header
+	for key, values := range headers {
+		for _, value := range values {
+			fmt.Printf("%s: %s\n", key, value)
+		}
+	}
+
 	file, _, err := c.Request.FormFile("upload_file_minidump")
 	if err != nil {
+		log.Printf("PostReports error %+v", err)
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
@@ -31,6 +45,7 @@ func PostReports(c *gin.Context) {
 			log.Printf("Error closing Minidump file after upload: %+v", err)
 		}
 	}()
+	log.Printf("file ok");
 	var Report database.Report
 	Report.Processed = false
 	Report.ID = uuid.NewV4()
@@ -60,6 +75,31 @@ func PostReports(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
+	formf, err := os.Create(filepath.Join(filepth, Report.ID.String()+".form"))
+	if err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	defer formf.Close()
+
+	// Write form values to the file
+	for key := range c.Request.MultipartForm.Value {
+		value := c.Request.FormValue(key)
+		if _, err := formf.WriteString(fmt.Sprintf("Key: %s, Value: %s\n", key, value)); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("Error writing to file: %s", err.Error()))
+			return
+		}
+	}
+
+	logcat, _, err := c.Request.FormFile("logcat")
+	if err == nil {
+		logcatf, err := os.Create(filepath.Join(filepth, Report.ID.String()+".logcat"))
+		defer logcatf.Close()
+		if err == nil {
+			io.Copy(logcatf, logcat)
+		}
+	}
+
 	f, err := os.Create(filepath.Join(filepth, Report.ID.String()+".dmp"))
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)

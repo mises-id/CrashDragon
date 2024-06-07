@@ -284,6 +284,44 @@ func GetReportFile(c *gin.Context) {
 		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".dmp\"")
 		c.Data(http.StatusOK, "application/octet-stream", data)
 		return
+	case "logcat":
+		f, err := os.Open(filepath.Join(viper.GetString("Directory.Content"), "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".logcat"))
+		if err != nil {
+			log.Printf("Error open logcat file: %+v", err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		data, err := ioutil.ReadAll(f)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			_ = f.Close()
+			return
+		}
+		c.Data(http.StatusOK, "text/plain", data)
+		err = f.Close()
+		if err != nil {
+			log.Printf("Error closing the txt file: %+v", err)
+		}
+		return
+	case "form":
+		f, err := os.Open(filepath.Join(viper.GetString("Directory.Content"), "Reports", Report.ID.String()[0:2], Report.ID.String()[0:4], Report.ID.String()+".form"))
+		if err != nil {
+			log.Printf("Error open raw file: %+v", err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+		data, err := ioutil.ReadAll(f)
+		if err != nil {
+			c.AbortWithStatus(http.StatusInternalServerError)
+			_ = f.Close()
+			return
+		}
+		c.Data(http.StatusOK, "text/plain", data)
+		err = f.Close()
+		if err != nil {
+			log.Printf("Error closing the txt file: %+v", err)
+		}
+		return
 	case "processed_json":
 		c.Header("Content-Disposition", "attachment; filename=\""+Report.ID.String()+".json\"")
 		c.Data(http.StatusOK, "application/json", []byte(Report.ReportContentJSON))

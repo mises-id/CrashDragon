@@ -119,6 +119,7 @@ func processReport(report database.Report, reprocess bool) {
 	dataJSON, err := runProcessor(file, symbolsPath, "json")
 	tx := database.DB.Begin()
 	if err != nil {
+		log.Printf("Error process minidump file: %+v", err)
 		err = os.Remove(file)
 		if err != nil {
 			log.Printf("Error closing the minidump file: %+v", err)
